@@ -34,6 +34,7 @@ rule tokenize = parse
 | "edges" { EDGES }
 
 | "WHILE" { WHILE }
+| "," {COMMA}
 
 | "(" { LP }
 | ")" { RP }
