@@ -35,6 +35,8 @@ rule tokenize = parse
 
 | "WHILE" { WHILE }
 
+| "(" { LP }
+| ")" { RP }
 
 | eof { EOF }
 | _ { raise (Failure "Character not allowed") }

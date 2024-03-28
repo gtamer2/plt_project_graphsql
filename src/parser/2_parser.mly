@@ -8,10 +8,19 @@
 
 %%
 // BINARY OPS
-expr:
-    expr
-    | expr UNION expr { BinGraphOp($1, Union, $3) }
-    | expr INTERSECT expr { BinGraphOp($1, Intersect, $3) }
+query:
+    CREATE GRAPH LP createexpr RP AS VARIABLE {CreateGraph(G, list of vertixes, list of edges)}
+
+createexpr:
+    VERTEX LP LITERAL RP 
+    | VERTEX LP LITERAL RP COMMA 
+    | EDGE  LP LITERAL RP 
+    | EDGE  LP LITERAL RP COMMA 
+
+expr2:
+    expr2
+    | expr2 UNION expr2 { BinGraphOp($1, Union, $3) }
+    | expr2 INTERSECT expr2 { BinGraphOp($1, Intersect, $3) }
     
     // | expr ACCESSOR VERTICES
     // | expr ACCESSOR EDGES

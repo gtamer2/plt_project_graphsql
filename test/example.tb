@@ -1,1 +1,7 @@
 SELECT * FROM VARIABLE g;
+
+CREATE GRAPH (
+	VERTEX ("Vertex1"),
+	VERTEX ("Vertex2"),
+	EDGE ("Vertex1" - "Vertex2", 5),
+) AS g;
