@@ -8,3 +8,9 @@
 ## Work Left Until Completion
 
 ## Timeline
+
+## Order of operations
+
+1. "lexer" = scanner.mll
+2. parser -> parser.mly
+3.
