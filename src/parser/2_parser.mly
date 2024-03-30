@@ -1,4 +1,9 @@
-%token <int>  LITERAL
+%token <int> LITERAL
+%token <string> VARIABLE
+%token GRAPH VERTEX EDGE
+%token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
+%token LP RP LB RB LC RC COMMA DASH ARROW
+%token PLUS MINUS TIMES DIVIDE ASSIGN SEQ EQL GT LT
 
 %left PLUS MINUS
 %left TIMES DIVIDE
@@ -7,15 +12,30 @@
 %type <Ast.expr> expr
 
 %%
-// BINARY OPS
+// grammar rules for graph initialization 
 query:
-    CREATE GRAPH LP createexpr RP AS VARIABLE {CreateGraph(G, list of vertixes, list of edges)}
+    CREATE GRAPH LP graph_elements RP AS VARIABLE {CreateGraph(G, list of vertixes, list of edges)}
 
-createexpr:
-    VERTEX LP LITERAL RP 
-    | VERTEX LP LITERAL RP COMMA 
-    | EDGE  LP LITERAL RP 
-    | EDGE  LP LITERAL RP COMMA 
+
+graph_elements:
+    | /* empty */       { [] }
+    | graph_element                 { [$1] }
+    | graph_element COMMA graph_elements { $1 :: $3 }
+
+graph_element:
+    | VERTEX LP LITERAL RP  { Ast.Vertex($3) }
+    | EDGE LP VARIABLE DASH VARIABLE COMMA LITERAL RP { Ast.Edge($3, $5, $7) }
+    | EDGE LP VARIABLE ARROW VARIABLE COMMA LITERAL RP { Ast.Edge($3, $5, $7) }
+
+
+CREATE GRAPH () AS g; # initialization of an empty graph 
+
+CREATE GRAPH (
+	VERTEX ("Vertex1"),
+	VERTEX ("Vertex2"),
+	EDGE ("Vertex1" - "Vertex2", 5),
+) AS g;
+
 
 expr2:
     expr2

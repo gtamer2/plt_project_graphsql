@@ -1,5 +1,7 @@
 SELECT * FROM VARIABLE g;
 
+CREATE GRAPH () AS g; # initialization of an empty graph 
+
 CREATE GRAPH (
 	VERTEX ("Vertex1"),
 	VERTEX ("Vertex2"),
