@@ -18,7 +18,7 @@
 
 /* initialization */
 program:
-    stmts_list EOF { $1 }
+    stmt_list EOF { $1 }
 
 /* basic statement and expression structures */
 
@@ -31,8 +31,8 @@ stmt:
 
 expr:
     LITERAL    { Literal($1) }
-    VARIABLE   { Variable($1) }
-    VARIABLE ASSIGN expr   {Assign($1, $3)}
+    | VARIABLE   { Variable($1) }
+    | VARIABLE ASSIGN expr   {Assign($1, $3)}
 
 
 /* instructions splits into declarations, statements, etc*/

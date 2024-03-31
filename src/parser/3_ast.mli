@@ -33,11 +33,11 @@ type expr =
   | Literal of int
 
 type stmt =
-    Block of stmt list
-  | Expr of expr
+  Expr of expr
   (* | GraphExpr of graph_expr *)
 
 type program = stmt list
+
 
 
 

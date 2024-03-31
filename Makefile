@@ -1,33 +1,43 @@
-all : test/example.out
+# not working at the moment
+
+# variables
+
+src_parser = src/parser/
+
+test = test/
+
+
+
+all : $(test)example.out
 
 ##############################
 
 
-calc : parser.cmo scanner.cmo calc.cmo
-	ocamlc -w A -o calc $^
+$(src_parser)4_graphsql_eval : $(src_parser)2_parser.cmo $(src_parser)1_scanner.cmo $(src_parser)4_graphsql_eval
+	ocamlc -w A -o $(src_parser)4_graphsql_eval $^
 
-%.cmo : %.ml
-	ocamlc -w A -c $<
+$(src_parser)%.cmo : $(src_parser)%.ml
+	cd $(src_parser) \ ocamlc -w A -c $<
 
-%.cmi : %.mli
-	ocamlc -w A -c $<
+$(src_parser)%.cmi : $(src_parser)%.mli
+	cd $(src_parser) \ ocamlc -w A -c $<
 
-scanner.ml : scanner.mll
-	ocamllex $^
+$(src_parser)1_scanner.ml : $(src_parser)1_scanner.mll
+	cd $(src_parser) \ ocamllex $^
 
-parser.ml parser.mli : 2_parser.mly
-	ocamlyacc $^
+$(src_parser)2_parser.ml $(src_parser)2_parser.mli : $(src_parser)2_parser.mly
+	cd $(src_parser) \ ocamlyacc $^
 
-calc.out : calc calc.tb
-	./calc < test/example.tb > test/example.out
+$(test)example.out : $(src_parser)4_graphsql_eval $(test)example.tb
+	./$(src_parser)4_graphsql_eval < $(test)example.tb > $(test)example.out
 
 # Depedencies from ocamldep
-calc.cmo : scanner.cmo parser.cmi ast.cmi
-calc.cmx : scanner.cmx parser.cmx ast.cmi
-parser.cmo : ast.cmi parser.cmi
-parser.cmx : ast.cmi parser.cmi
-scanner.cmo : parser.cmi
-scanner.cmx : parser.cmx
+$(src_parser)4_graphsql_eval.cmo : $(src_parser)1_scanner.cmo $(src_parser)2_parser.cmi $(src_parser)3_ast.cmi
+$(src_parser)4_graphsql_eval.cmx : $(src_parser)1_scanner.cmx $(src_parser)2_parser.cmx $(src_parser)3_ast.cmi
+$(src_parser)2_parser.cmo : $(src_parser)3_ast.cmi $(src_parser)2_parser.cmi
+$(src_parser)2_parser.cmx : $(src_parser)3_ast.cmi $(src_parser)2_parser.cmi
+$(src_parser)1_scanner.cmo : $(src_parser)2_parser.cmi
+$(src_parser)1_scanner.cmx : $(src_parser)2_parser.cmx
 
 
 ##############################
@@ -35,4 +45,4 @@ scanner.cmx : parser.cmx
 
 .PHONY : clean
 clean :
-	rm -rf src/*.cmi src/*.cmo src/parser.ml src/parser.mli src/scanner.ml test/example.out test/example
+	rm -rf $(src_parser)*.cmi $(src_parser)*.cmo $(src_parser)2_parser.ml $(src_parser)2_parser.mli $(src_parser)1_scanner.ml $(test)example.out $(src_parser)4_graphsql_eval

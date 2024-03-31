@@ -19,28 +19,23 @@ let map_to_str m =
   in "[" ^ (String.concat ", " inners) ^ "]"
 
 let rec eval_stmt stmt mp = match stmt with
-      | Block(stmt_list) -> 
-        match stmt_list with
-          | [] -> stmt, mp
-          | stmt :: stmt_list -> 
-            let stmt_val, mp2 = eval_stmt stmt mp in
-            eval_stmt stmt_list mp2
-      | Expr(expr) -> eval_expr expr mp
-    and eval_expr expr mp = match expr with
-      | Literal(x) -> x, mp
-      | Assign(id, vl) -> 
-        let v1, mp1 = eval_expr id vl in
-        let mp2 = StringMap.add vl v1 mp1 in
-        v1, mp2
-      | Variable(id) ->
-        let vl = StringMap.find id mp in
-        vl, mp
+    | Expr(expr) -> eval_expr expr mp
+  and eval_expr expr mp = match expr with
+    | Literal(x) -> x, mp
+    | Assign(id, vl) -> 
+      let v1, mp1 = eval_expr vl mp in
+      let mp2 = StringMap.add id v1 mp1 in
+      v1, mp2
+    | Variable(id) ->
+      let vl = StringMap.find id mp in
+      vl, mp
 
 let rec eval program mp = match program with 
-    | [] -> program, mp
-    | stmt :: stmt_list -> 
-      let stmt_result, mp = eval_stmt stmt mp in 
-      eval stmt_list mp
+  | [] -> program, mp
+  | stmt :: stmt_list -> 
+    let stmt_result, mp = eval_stmt stmt mp in 
+    eval stmt_list mp
+
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
