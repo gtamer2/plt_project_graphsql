@@ -1,4 +1,4 @@
-let rec eval = function 
+(* let rec eval = function 
     Lit(x)            -> x
   | BinGraphOp(e1, op, e2) ->
       let v1  = eval e1 in
@@ -6,11 +6,45 @@ let rec eval = function
       (match op with
 	    | Intersect -> v1 + v2
       | Union -> v1 + v2
-      )
+      ) *)
       
+open Ast
+
+module StringMap = Map.Make(String)
+
+let m = StringMap.empty
+
+let map_to_str m = 
+  let inners = List.map (fun (k, v) -> k ^ " -> " ^ (string_of_int v)) (StringMap.bindings m)
+  in "[" ^ (String.concat ", " inners) ^ "]"
+
+let rec eval_stmt stmt mp = match stmt with
+      | Block(stmt_list) -> 
+        match stmt_list with
+          | [] -> stmt, mp
+          | stmt :: stmt_list -> 
+            let stmt_val, mp2 = eval_stmt stmt mp in
+            eval_stmt stmt_list mp2
+      | Expr(expr) -> eval_expr expr mp
+    and eval_expr expr mp = match expr with
+      | Literal(x) -> x, mp
+      | Assign(id, vl) -> 
+        let v1, mp1 = eval_expr id vl in
+        let mp2 = StringMap.add vl v1 mp1 in
+        v1, mp2
+      | Variable(id) ->
+        let vl = StringMap.find id mp in
+        vl, mp
+
+let rec eval program mp = match program with 
+    | [] -> program, mp
+    | stmt :: stmt_list -> 
+      let stmt_result, mp = eval_stmt stmt mp in 
+      eval stmt_list mp
+
 let _ =
   let lexbuf = Lexing.from_channel stdin in
-  let expr = Parser.expr Scanner.tokenize lexbuf in
-  let result = eval expr in
-  print_endline (string_of_int result)
+  let program = Parser.program Scanner.tokenize lexbuf in
+  let result, mp = eval program m in
+  print_endline (map_to_str mp)
 

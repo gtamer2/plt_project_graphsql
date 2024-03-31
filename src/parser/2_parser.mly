@@ -1,26 +1,56 @@
+
+%{
+    open Ast
+%}
+
+%token SEQ ASSIGN
 %token <int>  LITERAL
+%token <string> VARIABLE
+%token EOF
 
-%left PLUS MINUS
-%left TIMES DIVIDE
+// %left PLUS MINUS
+// %left TIMES DIVIDE
 
-%start expr
-%type <Ast.expr> expr
+%start program
+%type <Ast.program> program
 
 %%
+
+/* initialization */
+program:
+    stmts_list EOF { $1 }
+
+/* basic statement and expression structures */
+
+stmt_list:
+    /* nothing */ { [] }
+    | stmt stmt_list { $1::$2 }
+
+stmt:
+    expr SEQ   { Expr $1 }
+
+expr:
+    LITERAL    { Literal($1) }
+    VARIABLE   { Variable($1) }
+    VARIABLE ASSIGN expr   {Assign($1, $3)}
+
+
+/* instructions splits into declarations, statements, etc*/
+
 // BINARY OPS
-query:
-    CREATE GRAPH LP createexpr RP AS VARIABLE {CreateGraph(G, list of vertixes, list of edges)}
+// query:
+//     CREATE GRAPH LP createexpr RP AS VARIABLE {CreateGraph(G, list of vertixes, list of edges)}
 
-createexpr:
-    VERTEX LP LITERAL RP 
-    | VERTEX LP LITERAL RP COMMA 
-    | EDGE  LP LITERAL RP 
-    | EDGE  LP LITERAL RP COMMA 
+// createexpr:
+//     VERTEX LP LITERAL RP 
+//     | VERTEX LP LITERAL RP COMMA 
+//     | EDGE  LP LITERAL RP 
+//     | EDGE  LP LITERAL RP COMMA 
 
-expr2:
-    expr2
-    | expr2 UNION expr2 { BinGraphOp($1, Union, $3) }
-    | expr2 INTERSECT expr2 { BinGraphOp($1, Intersect, $3) }
+// expr2:
+//     expr2
+//     | expr2 UNION expr2 { BinGraphOp($1, Union, $3) }
+//     | expr2 INTERSECT expr2 { BinGraphOp($1, Intersect, $3) }
     
     // | expr ACCESSOR VERTICES
     // | expr ACCESSOR EDGES

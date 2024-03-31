@@ -1,4 +1,46 @@
+
+
+type arithbinop = Add | Sub | Mult | Divd | Mod | Eq | Neq | Gteq | Steq | Gt | St
+
 type bigraphoperator = Union | Intersect
+
+type typ = Int | Bool | Float | String
+
+type graphdirect = Undirected | Directed
+
+type graphweight = Unweighted | Weighted
+
+type vertex = 
+  Prim of typ
+
+type edge = {
+  vertex1: vertex;
+  vertex2: vertex;
+  direct_type: graphdirect;
+  weight_type: graphweight;
+}
+
+type graph = {
+  vertices: vertex list;
+  edges: edge list;
+  direct_type: graphdirect;
+  weight_type: graphweight;
+}
+
+type expr =
+    Variable of string
+  | Assign of string * expr
+  | Literal of int
+
+type stmt =
+    Block of stmt list
+  | Expr of expr
+  (* | GraphExpr of graph_expr *)
+
+type program = stmt list
+
+
+
 
 (* type CreateGraph  *)
 (* type expr =

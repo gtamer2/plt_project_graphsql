@@ -39,5 +39,8 @@ rule tokenize = parse
 | "(" { LP }
 | ")" { RP }
 
+| "{" { LB }
+| "}" { RB }
+
 | eof { EOF }
 | _ { raise (Failure "Character not allowed") }
