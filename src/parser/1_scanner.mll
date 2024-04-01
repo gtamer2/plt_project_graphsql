@@ -13,14 +13,19 @@ rule tokenize = parse
 | ';' { SEQ }
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | letter (letter | digit | '_')* as id { VARIABLE( id ) }
+| "True" { BLIT(true) }
+| "False" { BLIT(false) }
 
 
+
+| "DEFINE" { DEFINE }
+| "FUNCTION" { FUNCTION }
 
 | "CREATE" { CREATE }
 | "SELECT" { SELECT }
-| "FROM" { FROM}
+| "FROM" { FROM }
 | "AS" { AS }
-| "WHERE" { AS }
+| "WHERE" { WHERE }
 
 | "UNION" { UNION }
 | "INTERSECT" { INTERSECT }

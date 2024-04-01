@@ -4,14 +4,19 @@ type arithbinop = Add | Sub | Mult | Divd | Mod | Eq | Neq | Gteq | Steq | Gt | 
 
 type bigraphoperator = Union | Intersect
 
-type typ = Int | Bool | Float | String
+type typ = Int | Bool | Float | String | Void
 
 type graphdirect = Undirected | Directed
 
 type graphweight = Unweighted | Weighted
 
 type vertex = 
-  Prim of typ
+    VerLiteral of int
+  | VerBoolLit of bool
+  | VerFloatLit of float
+  | VerStringLit of string
+
+type bind = typ * string
 
 type edge = {
   vertex1: vertex;
@@ -29,14 +34,39 @@ type graph = {
 
 type expr =
     Variable of string
-  | Assign of string * expr
   | Literal of int
+  | BoolLit of bool
+  | FloatLit of float
+  | Assign of string * expr
+
+type graph_expr =
+    Vertex of vertex
+  | Edge of edge
+  | Graph of graph
+
+type graph_stmt = 
+    Create of string * graph_expr
+  | Insert of 
+  | Delete of
+  | Update of 
 
 type stmt =
   Expr of expr
-  (* | GraphExpr of graph_expr *)
+  | Block of stmt list
+  | If of expr * stmt * stmt
+  | While of expr * stmt
+  | Return of expr
+  | GraphStmt of graph_stmt
 
-type program = stmt list
+type func_def = {
+  rtyp: typ;
+  fname: string;
+  formals: bind list;
+  locals: bind list;
+  body: stmt list;
+}
+
+type program = bind list * stmt list * func_def list
 
 
 

@@ -7,6 +7,8 @@
 	    | Intersect -> v1 + v2
       | Union -> v1 + v2
       ) *)
+
+(* the current eval is only working with basic assignments and int literals *)
       
 open Ast
 

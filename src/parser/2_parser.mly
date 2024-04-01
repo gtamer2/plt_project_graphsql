@@ -3,9 +3,14 @@
     open Ast
 %}
 
+%token DEFINE FUNCTION LP RP LB RB
+%token CREATE SELECT FROM AS WHERE
+%token GRAPH VERTEX EDGE
 %token SEQ ASSIGN
 %token <int>  LITERAL
+%token <bool> BLIT
 %token <string> VARIABLE
+%token COMMA
 %token EOF
 
 // %left PLUS MINUS
@@ -15,6 +20,8 @@
 %type <Ast.program> program
 
 %%
+
+/* TODO: need to figure out how to do things without forward declaration */
 
 /* initialization */
 program:
@@ -28,11 +35,70 @@ stmt_list:
 
 stmt:
     expr SEQ   { Expr $1 }
+    | graph_stmt SEQ { $1 }
 
 expr:
     LITERAL    { Literal($1) }
     | VARIABLE   { Variable($1) }
     | VARIABLE ASSIGN expr   {Assign($1, $3)}
+
+fdef:
+    DEFINE FUNCTION VARIABLE LP formals_opt RP LB stmt_list RB
+    {
+        {
+            rtype=
+            fname=$3
+            formals=$5
+            body=$7
+        }
+    }
+
+graph_stmt:
+    CREATE GRAPH LP graph_args_opt RP AS VARIABLE 
+    {
+        {
+
+        }
+    }
+    /* inserts, deletes etc */
+
+graph_args_opt:
+    /* nothing */ { [] }
+    | graph_args { $1 }
+
+graph_args:
+    graph_expr { [$1] }
+    | graph_expr COMMA graph_args { $1::$3 }
+
+graph_expr:
+    VERTEX LP vertex RP { ($3) }
+    | EDGE LP edge_args RP { ($3) }
+
+edge_args:
+    vertex direction vertex 
+    {
+        {
+            vertex1=$1;
+            vertex2=$3;
+            direction_type=$2;
+            weight_type=Unweighted
+        }
+    } /* unweighted */
+    | vertex direction vertex COMMA weight 
+    {
+        {
+            vertex1=$1;
+            vertex2=$3;
+
+
+        }
+    } /* weighted */
+
+vertex:
+    LITERAL {VerLiteral($1)}
+    | BLIT  {VerBoolLit($1)}
+    | /* float */
+    | /* string */
 
 
 /* instructions splits into declarations, statements, etc*/
