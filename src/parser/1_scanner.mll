@@ -10,7 +10,13 @@ rule tokenize = parse
 | '*' { TIMES }
 | '/' { DIVIDE }
 | '=' { ASSIGN }
-| ';' { SEQ }
+| '<' { LT }
+| '<' { LTEQ }
+| '>' { GT }
+| '>=' { GTEQ }
+| '==' { EQL }
+| '!=' { NOTEQL }
+| ';' { SEMI }
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | letter (letter | digit | '_')* as id { VARIABLE( id ) }
 | "True" { BLIT(true) }
@@ -27,25 +33,38 @@ rule tokenize = parse
 | "AS" { AS }
 | "WHERE" { WHERE }
 
+| "INSERT" { INSERT }
 | "UNION" { UNION }
 | "INTERSECT" { INTERSECT }
+| "APPLY" { APPLY }
 
 | "GRAPH" { GRAPH }
 | "VERTEX" { VERTEX }
 | "EDGE" { EDGE }
+| "NOT" { NOT }
+| "WHILE" { WHILE }
 
 | "." { ACCESSOR }
 | "vertices" { VERTICES }
 | "edges" { EDGES }
 
-| "WHILE" { WHILE }
 | "," {COMMA}
+| """ {QUOTES}
 
 | "(" { LP }
 | ")" { RP }
+| "[" { LB }
+| "]" { RB }
+| "{" { LC }
+| "}" { RC }
+| "," { COMMA }
+| "-" { DASH }
+| "->" { ARROW }
+
 
 | "{" { LB }
 | "}" { RB }
 
 | eof { EOF }
 | _ { raise (Failure "Character not allowed") }
+| "#" { COMMENT }

@@ -1,2 +1,4 @@
-j = 2;
+SELECT * FROM VARIABLE g;
+
+CREATE GRAPH () AS g; # initialization of an empty graph 
 
