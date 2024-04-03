@@ -2,6 +2,7 @@
 
 let letter = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
+let quote = '\"'
 
 rule tokenize = parse
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
@@ -12,17 +13,18 @@ rule tokenize = parse
 | '%' { MODULUS}
 | '=' { ASSIGN }
 | '<' { LT }
-| '<' { LTEQ }
+| "<=" { LTEQ }
 | '>' { GT }
-| '>=' { GTEQ }
-| '==' { EQL }
-| '!=' { NOTEQL }
+| ">=" { GTEQ }
+| "==" { EQL }
+| "!=" { NOTEQL }
 | ';' { SEMI }
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | letter (letter | digit | '_')* as id { VARIABLE( id ) }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
-| -?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(fltit)}
+| '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) }
+(* | quote[ -~]quote as str { STRINGLIT(str) } *)
 
 
 | "AND" { AND }

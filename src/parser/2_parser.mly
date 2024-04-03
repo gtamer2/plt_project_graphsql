@@ -7,17 +7,23 @@
 %token <bool> BLIT
 %token <string> VARIABLE
 %token <float> FLOATLIT
+%token <string> STRINGLIT
 %token GRAPH VERTEX EDGE
 %token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
 %token LP RP LB RB LC RC COMMA DASH ARROW
-%token PLUS MINUS TIMES DIVIDE ASSIGN SEQ EQL NOTEQL GT LT GTEQ LTEQ 
+%token PLUS MINUS TIMES DIVIDE ASSIGN SEQ EQL NOTEQL GT LT GTEQ LTEQ AND OR
 %token EOF
 
 %token DEFINE FUNCTION
 
-
-%left PLUS MINUS
+%right ASSIGN
+%left OR
+%left AND
+%left EQL NOTEQL
+%left GT LT GTEQ LTEQ
+%left MODULUS
 %left TIMES DIVIDE
+%left PLUS MINUS
 
 %start program
 %type <Ast.program> program
@@ -35,7 +41,6 @@ program:
 stmt_list:
     /* nothing */ { [] }
     | stmt stmt_list { $1::$2 }
-    | LC stmt_list RC { $2 }
 
 stmt:
     expr SEQ   { Expr $1 }
@@ -50,6 +55,8 @@ stmt:
 expr:
     LITERAL    { Literal($1) }
     | FLOATLIT { FloatLit($1) }
+    | BLIT     { BoolLit($1) }
+    | QUOTES STRINGLIT QUOTES { StringLit($2) }
     | VARIABLE   { Variable($1) }
     | VARIABLE ASSIGN expr   {Assign($1, $3)}
     | expr PLUS expr { Binop($1, Add, $3) }
@@ -72,10 +79,16 @@ expr:
 args_opt:
     /* nothing */ { [] }
     | args { $1 }
+    | graph_args { $1 }
 
 args:
     expr { [$1] }
     | expr COMMA args { $1::$3 }
+
+/* graph args used for function operating on graphs */
+
+graph_args:
+    |
 
 
 fdef:
@@ -106,7 +119,7 @@ graph_stmt:
             weight_type=
         }
     }
-    | INSERT 
+    | DELETE
 
 graph_args_opt:
     /* nothing */ { [] }
@@ -119,6 +132,9 @@ graph_args:
 graph_expr:
     VERTEX LP vertex RP { ($3) }
     | EDGE LP edge_args RP { ($3) }
+    | INSERT INTO VARIABLE graph_expr SEQ {  }
+    | SELECT 
+    | UPDATE 
 
 edge_args:
     vertex direction vertex 
@@ -143,8 +159,8 @@ edge_args:
 vertex:
     LITERAL {VerLiteral($1)}
     | BLIT  {VerBoolLit($1)}
-    | /* float */  {VerFloatLit($1)}
-    | /* string */ {VerStringLit($1)}
+    | FLOATLIT  {VerFloatLit($1)}
+    | STRINGLIT {VerStringLit($1)}
 
 
 /* instructions splits into declarations, statements, etc*/

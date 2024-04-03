@@ -9,7 +9,9 @@ type typ = Int | Bool | Float | String | Void
 
 type graphdirect = Undirected | Directed
 
-type graphweight = Unweighted | Weighted
+type graphweight = 
+  Unweighted 
+  | Weighted of int
 
 type vertex = 
     VerLiteral of int

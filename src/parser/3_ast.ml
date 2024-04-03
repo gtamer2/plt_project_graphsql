@@ -8,7 +8,9 @@ type typ = Int | Bool | Float | String | Void
 
 type graphdirect = Undirected | Directed
 
-type graphweight = Unweighted | Weighted
+type graphweight = 
+  Unweighted 
+  | Weighted of int
 
 type vertex = 
     VerLiteral of int
@@ -35,6 +37,7 @@ type expr =
   | Literal of int
   | BoolLit of bool
   | FloatLit of float
+  | StringLit of string
   | Assign of string * expr
   | Binop of expr * binop * expr
   | Call of string * expr list
@@ -111,13 +114,45 @@ let rec string_of_binop = function
   | And -> "AND"
   | Or -> "OR"
 
+let rec string_of_vertex = function
+  VerLiteral(l) -> string_of_int l
+  | VerBoolLit(true) -> "True"
+  | VerBoolLit(false) -> "False"
+  | VerFloatLit(f) -> string_of_float f
+  | VerStringLit(s) -> "\"" ^ s ^ "\""
+
+let rec string_of_edge edge = match edge.weight_type, edge.direct_type with
+  | Unweighted, Undirected -> 
+    "EDGE(" ^ string_of_vertex edge.vertex1 ^ "-" ^ string_of_vertex edge.vertex2 ^ ")"
+  | Weighted(w), Undirected  -> 
+    "EDGE(" ^ string_of_vertex edge.vertex1 ^ "-" ^ string_of_vertex edge.vertex2 ^ "," ^ string_of_int w ^ ")"
+  | Unweighted, Directed -> 
+    "EDGE(" ^ string_of_vertex edge.vertex1 ^ "->" ^ string_of_vertex edge.vertex2 ^ ")"
+  | Weighted(w), Directed  -> 
+    "EDGE(" ^ string_of_vertex edge.vertex1 ^ "->" ^ string_of_vertex edge.vertex2 ^ "," ^ string_of_int w ^ ")"
+
 let rec string_of_expr = function
   Variable(s) -> s
   | Literal(l) -> string_of_int l
   | BoolLit(true) -> "True"
   | BoolLit(false) -> "False"
   | FloatLit(f) -> string_of_float f
+  | StringLit(s) -> "\"" ^ s ^ "\""
   | Assign(v, e) -> v ^ " = " ^ string_of_expr e
   | Binop(e1, o, e2) ->
     string_of_expr e1 ^ " " ^ string_of_binop o ^ " " ^ string_of_expr e2
-  | Call(f, el) ->
+  | Call(f, el) -> 
+    "APPLY(" ^ f ^ "," ^ String.concat "," (List.map string_of_expr el) ^ ")" 
+
+let rec string_of_stmt = function
+  Expr(e) -> string_of_expr e
+  | Block(stmts) -> 
+    "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
+  | If(e, s1, s2) -> 
+    "IF " ^ string_of_expr e ^ "\n" ^
+    string_of_stmt s1 ^ "ELSE\n" ^ string_of_stmt s2
+  | While(e, s) -> "WHILE " ^ string_of_expr e ^ " " ^ string_of_stmt s
+  | Return(expr) -> "RETURN " ^ string_of_expr expr ^ ";\n"
+  | GraphStmt(stmt) -> string_of
+
+
