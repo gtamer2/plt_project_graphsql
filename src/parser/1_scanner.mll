@@ -9,6 +9,7 @@ rule tokenize = parse
 | '-' { MINUS }
 | '*' { TIMES }
 | '/' { DIVIDE }
+| '%' { MODULUS}
 | '=' { ASSIGN }
 | '<' { LT }
 | '<' { LTEQ }
@@ -21,8 +22,11 @@ rule tokenize = parse
 | letter (letter | digit | '_')* as id { VARIABLE( id ) }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
+| -?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(fltit)}
 
 
+| "AND" { AND }
+| "OR" { OR }
 
 | "DEFINE" { DEFINE }
 | "FUNCTION" { FUNCTION }
@@ -49,7 +53,7 @@ rule tokenize = parse
 | "edges" { EDGES }
 
 | "," {COMMA}
-| """ {QUOTES}
+| "\"" {QUOTES}
 
 | "(" { LP }
 | ")" { RP }
@@ -61,9 +65,6 @@ rule tokenize = parse
 | "-" { DASH }
 | "->" { ARROW }
 
-
-| "{" { LB }
-| "}" { RB }
 
 | eof { EOF }
 | _ { raise (Failure "Character not allowed") }

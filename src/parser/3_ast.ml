@@ -1,4 +1,3 @@
-
 type binop = Add | Sub | Mult | Divd | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 
 type uniop = Not | Dot
@@ -40,7 +39,7 @@ type expr =
   | Binop of expr * binop * expr
   | Call of string * expr list
 
-  type bind = typ * expr
+type bind = typ * expr
 
 type graph_expr =
     Vertex of vertex
@@ -74,6 +73,7 @@ type program = bind list * stmt list * func_def list
 
 
 
+
 (* type CreateGraph  *)
 (* type expr =
 graph name, list of vertixes, list of edges)
@@ -95,3 +95,29 @@ graph name, list of vertixes, list of edges)
 
 (* pretty printer functions *)
 
+
+let rec string_of_binop = function
+  | Add -> "+"
+  | Sub -> "-"
+  | Mult -> "*"
+  | Divd -> "/"
+  | Mod -> "%"
+  | Eq -> "=="
+  | Neq -> "!="
+  | Gteq -> ">="
+  | Lteq -> "<="
+  | Gt -> ">"
+  | Lt -> "<"
+  | And -> "AND"
+  | Or -> "OR"
+
+let rec string_of_expr = function
+  Variable(s) -> s
+  | Literal(l) -> string_of_int l
+  | BoolLit(true) -> "True"
+  | BoolLit(false) -> "False"
+  | FloatLit(f) -> string_of_float f
+  | Assign(v, e) -> v ^ " = " ^ string_of_expr e
+  | Binop(e1, o, e2) ->
+    string_of_expr e1 ^ " " ^ string_of_binop o ^ " " ^ string_of_expr e2
+  | Call(f, el) ->

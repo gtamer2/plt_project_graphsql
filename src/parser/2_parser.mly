@@ -3,18 +3,21 @@
     open Ast
 %}
 
-%token DEFINE FUNCTION LP RP LB RB LC RC COMMA DASH ARROW
-%token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
-%token GRAPH VERTEX EDGE
-%token SEQ ASSIGN
 %token <int>  LITERAL
 %token <bool> BLIT
 %token <string> VARIABLE
+%token <float> FLOATLIT
+%token GRAPH VERTEX EDGE
+%token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
+%token LP RP LB RB LC RC COMMA DASH ARROW
+%token PLUS MINUS TIMES DIVIDE ASSIGN SEQ EQL NOTEQL GT LT GTEQ LTEQ 
 %token EOF
 
+%token DEFINE FUNCTION
 
-// %left PLUS MINUS
-// %left TIMES DIVIDE
+
+%left PLUS MINUS
+%left TIMES DIVIDE
 
 %start program
 %type <Ast.program> program
@@ -32,15 +35,48 @@ program:
 stmt_list:
     /* nothing */ { [] }
     | stmt stmt_list { $1::$2 }
+    | LC stmt_list RC { $2 }
 
 stmt:
     expr SEQ   { Expr $1 }
     | graph_stmt SEQ { $1 }
+    | LC stmt_list RC { Block $2 }
+    | WHILE expr stmt_list { While($2, $3) }
+    | IF expr stmt_list ELSE stmt_list { If($2, $3, $5) }
+    | RETURN expr SEQ { Return $2 }
+    | typ expr SEQ { ($1, $2) }
+    | SEQ { } /* null statement */
 
 expr:
     LITERAL    { Literal($1) }
+    | FLOATLIT { FloatLit($1) }
     | VARIABLE   { Variable($1) }
     | VARIABLE ASSIGN expr   {Assign($1, $3)}
+    | expr PLUS expr { Binop($1, Add, $3) }
+    | expr MINUS expr { Binop($1, Sub, $3) }
+    | expr TIMES expr { Binop($1, Mult, $3) }
+    | expr DIVIDE expr { Binop($1, Divd, $3) }
+    | expr MODULUS expr { Binop($1, Mod, $3) }
+    | expr EQL expr { Binop($1, Eq, $3) }
+    | expr NOTEQL expr { Binop($1, Neq, $3) }
+    | expr GT expr { Binop($1, Gt, $3) }
+    | expr LT expr { Binop($1, Lt, $3) }
+    | expr GTEQ expr { Binop($1, Gteq, $3) }
+    | expr LTEQ expr { Binop($1, Lteq, $3) }
+    | LP expr RP { $2 }
+    | expr AND expr { Binop($1, And, $3) }
+    | expr OR expr { Binop($1, Or, $3) }
+    | Not expr { }
+    | APPLY LP VARIABLE args_opt RP { Call($3, $4) }
+
+args_opt:
+    /* nothing */ { [] }
+    | args { $1 }
+
+args:
+    expr { [$1] }
+    | expr COMMA args { $1::$3 }
+
 
 fdef:
     DEFINE FUNCTION VARIABLE LP formals_opt RP LB stmt_list RB
@@ -53,14 +89,24 @@ fdef:
         }
     }
 
+formals_opt:
+    /* nothing */ { [] }
+    | formals_list { $1 }
+
+formals_list:
+    formal
+
 graph_stmt:
     CREATE GRAPH LP graph_args_opt RP AS VARIABLE 
     {
         {
-
+            vertices=
+            edges=
+            direct_type=
+            weight_type=
         }
     }
-    /* inserts, deletes etc */
+    | INSERT 
 
 graph_args_opt:
     /* nothing */ { [] }
@@ -97,8 +143,8 @@ edge_args:
 vertex:
     LITERAL {VerLiteral($1)}
     | BLIT  {VerBoolLit($1)}
-    | /* float */
-    | /* string */
+    | /* float */  {VerFloatLit($1)}
+    | /* string */ {VerStringLit($1)}
 
 
 /* instructions splits into declarations, statements, etc*/
