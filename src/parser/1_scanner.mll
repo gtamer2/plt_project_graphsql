@@ -54,6 +54,12 @@ rule tokenize = parse
 | "-" { DASH }
 | "->" { ARROW }
 
+| "IF" { IF }
+| "ELSE" { ELSE }
+| "ELIF" { ELIF }
+| "True" { BLIT(true) }
+| "False" { BLIT(false) }
+
 
 | eof { EOF }
 | _ { raise (Failure "Character not allowed") }
