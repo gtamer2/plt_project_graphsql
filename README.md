@@ -4,8 +4,10 @@
 **`/src` directory**: contains the compiler implementation, including scanner and parser code, AST definitions, and AST pretty printer
 
 ## Work Done so Far
-Scanner, parser, ast implemented but noy yet tested 
-Some tests created 
+Scanner: primitive and derived data types, operators, keywords, separators, comments
+Parser: functions, graph statements, graph expressions
+Ast: vertex, edges, expressions function types defined
+Basic Scanner Unit tests implemented
 
 ## Work Left Until Completion
 1. More test cases for front-end (scanner, parser, ast), both unit tests and integration tests
