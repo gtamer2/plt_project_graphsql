@@ -12,6 +12,7 @@
 %token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
 %token LP RP LB RB LC RC COMMA DASH ARROW
 %token PLUS MINUS TIMES DIVIDE ASSIGN SEQ EQL NOTEQL GT LT GTEQ LTEQ AND OR
+%token IF ELSE ELIF
 %token EOF
 
 %token DEFINE FUNCTION
@@ -92,7 +93,7 @@ graph_args:
 
 
 fdef:
-    DEFINE FUNCTION VARIABLE LP formals_opt RP LB stmt_list RB
+    DEFINE FUNCTION VARIABLE LP formals_opt RP LC stmt_list RC
     {
         {
             rtype=
@@ -151,8 +152,8 @@ edge_args:
         {
             vertex1=$1;
             vertex2=$3;
-
-
+            direction_type=$2;
+            weight_type=Weighted(weight)
         }
     } /* weighted */
 
@@ -178,28 +179,28 @@ vertex:
 
 
 
-query:
-    CREATE GRAPH LP graph_elements RP AS VARIABLE {CreateGraph(G, list of vertixes, list of edges)}
+// query:
+//     CREATE GRAPH LP graph_elements RP AS VARIABLE {CreateGraph(G, list of vertixes, list of edges)}
 
 
-graph_elements:
-    | /* empty */       { [] }
-    | graph_element                 { [$1] }
-    | graph_element COMMA graph_elements { $1 :: $3 }
+// graph_elements:
+//     | /* empty */       { [] }
+//     | graph_element                 { [$1] }
+//     | graph_element COMMA graph_elements { $1 :: $3 }
 
-graph_element:
-    | VERTEX LP LITERAL RP  { Ast.Vertex($3) }
-    | EDGE LP VARIABLE DASH VARIABLE COMMA LITERAL RP { Ast.Edge($3, $5, $7) }
-    | EDGE LP VARIABLE ARROW VARIABLE COMMA LITERAL RP { Ast.Edge($3, $5, $7) }
+// graph_element:
+//     | VERTEX LP LITERAL RP  { Ast.Vertex($3) }
+//     | EDGE LP VARIABLE DASH VARIABLE COMMA LITERAL RP { Ast.Edge($3, $5, $7) }
+//     | EDGE LP VARIABLE ARROW VARIABLE COMMA LITERAL RP { Ast.Edge($3, $5, $7) }
 
 
-CREATE GRAPH () AS g; # initialization of an empty graph 
+// CREATE GRAPH () AS g; # initialization of an empty graph 
 
-CREATE GRAPH (
-	VERTEX ("Vertex1"),
-	VERTEX ("Vertex2"),
-	EDGE ("Vertex1" - "Vertex2", 5),
-) AS g;
+// CREATE GRAPH (
+// 	VERTEX ("Vertex1"),
+// 	VERTEX ("Vertex2"),
+// 	EDGE ("Vertex1" - "Vertex2", 5),
+// ) AS g;
 
 
 // expr2:

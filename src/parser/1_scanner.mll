@@ -18,7 +18,7 @@ rule tokenize = parse
 | ">=" { GTEQ }
 | "==" { EQL }
 | "!=" { NOTEQL }
-| ';' { SEMI }
+| ';' { SEQ }
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | letter (letter | digit | '_')* as id { VARIABLE( id ) }
 | "True" { BLIT(true) }
@@ -70,8 +70,6 @@ rule tokenize = parse
 | "IF" { IF }
 | "ELSE" { ELSE }
 | "ELIF" { ELIF }
-| "True" { BLIT(true) }
-| "False" { BLIT(false) }
 
 
 | eof { EOF }

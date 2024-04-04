@@ -9,7 +9,7 @@ type typ = Int | Bool | Float | String | Void
 type graphdirect = Undirected | Directed
 
 type graphweight = 
-  Unweighted 
+  Unweighted (* set to 1? *)
   | Weighted of int
 
 type vertex = 
@@ -49,6 +49,7 @@ type graph_expr =
   | Edge of edge
   | Graph of graph
 
+  (* definitiely more than just string * graph_expr *)
 type graph_stmt = 
     Create of string * graph_expr
   | Insert of string * graph_expr
@@ -71,6 +72,7 @@ type func_def = {
   body: stmt list;
 }
 
+(* very place holder, maybe just stmt list? *)
 type program = bind list * stmt list * func_def list
 
 
