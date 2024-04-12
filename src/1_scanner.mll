@@ -73,5 +73,5 @@ rule tokenize = parse
 
 
 | eof { EOF }
-| _ { raise (Failure "Character not allowed") }
 | "#" { COMMENT }
+| _ { raise (Failure "Character not allowed") }
