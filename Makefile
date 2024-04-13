@@ -29,7 +29,7 @@ $(src)2_parser.ml $(src)2_parser.mli : $(src)2_parser.mly
 $(test)example.out : $(src)4_graphsql_eval $(test)example.tb
 	./$(src)4_graphsql_eval < $(test)example.tb > $(test)example.out
 
-Depedencies from ocamldep
+# Depedencies from ocamldep
 $(src)4_graphsql_eval.cmo : $(src)1_scanner.cmo $(src)2_parser.cmi $(src)3_ast.cmi
 $(src)4_graphsql_eval.cmx : $(src)1_scanner.cmx $(src)2_parser.cmx $(src)3_ast.cmi
 $(src)2_parser.cmo : $(src)3_ast.cmi $(src)2_parser.cmi
