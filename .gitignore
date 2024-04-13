@@ -3,3 +3,5 @@ scratch/
 .DS_store
 src/.DS_store
 *scanner.ml
+
+test/scanner/outputs/
