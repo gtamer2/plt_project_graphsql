@@ -2,6 +2,10 @@
 scratch/
 .DS_store
 src/.DS_store
-*scanner.ml
 
+# Ocaml compiler artifacts
+*scanner.ml
+*_build
+
+# Test outputs
 test/scanner/outputs/
