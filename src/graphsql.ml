@@ -31,7 +31,7 @@ let rec eval mymap = function
       (**try*)
       while true do
           try
-                let program = Parser.program Scanner.tokenize lexbuf in
+                let program = Parser.expr Scanner.tokenize lexbuf in
                 let mymap = StringMap.empty in
                 let result = eval mymap program in
                 print_endline (string_of_int result)

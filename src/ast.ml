@@ -2,11 +2,11 @@ type binop = Add | Sub | Mult | Divd | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | 
 
 type uniop = Not | Dot
 
-type bigraphoperator = Union | Intersect
+(* type bigraphoperator = Union | Intersect *)
 
 type typ = Int | Bool | Float | String | Void
 
-type graphdirect = Undirected | Directed
+(* type graphdirect = Undirected | Directed
 
 type graphweight = 
   Unweighted (* set to 1? *)
@@ -21,8 +21,8 @@ type vertex =
 type edge = {
   vertex1: vertex;
   vertex2: vertex;
-  direct_type: graphdirect;
-  weight_type: graphweight;
+  is_directed: graphdirect;
+  is_weighted: graphweight;
 }
 
 type graph = {
@@ -30,7 +30,7 @@ type graph = {
   edges: edge list;
   direct_type: graphdirect;
   weight_type: graphweight;
-}
+} *)
 
 type expr =
     Variable of string
@@ -40,40 +40,42 @@ type expr =
   | StringLit of string
   | Assign of string * expr
   | Binop of expr * binop * expr
-  | Call of string * expr list
+  (*| Call of string * expr list *)
+  | Seq of expr * expr
 
-type bind = typ * expr
+(*type bind = typ * expr *)
 
-type graph_expr =
+(* type graph_expr =
     Vertex of vertex
   | Edge of edge
-  | Graph of graph
+  | Graph of graph *)
 
   (* definitiely more than just string * graph_expr *)
-type graph_stmt = 
+(* type graph_stmt = 
     Create of string * graph_expr
   | Insert of string * graph_expr
   | Delete of string * graph_expr
-  | Update of string * graph_expr
+  | Update of string * graph_expr *)
 
-type stmt =
+(*type stmt =
   Expr of expr
   | Block of stmt list
   | If of expr * stmt * stmt
   | While of expr * stmt
-  | Return of expr
-  | GraphStmt of graph_stmt
+  | Return of expr*)
+  (* | GraphStmt of graph_stmt *)
 
-type func_def = {
+(* type func_def = {
   rtyp: typ;
   fname: string;
   formals: bind list;
   locals: bind list;
   body: stmt list;
-}
+} *)
 
 (* very place holder, maybe just stmt list? *)
-type program = bind list * stmt list * func_def list
+(*type program = expr*)
+(* type program = bind list * stmt list * func_def list *)
 
 
 
@@ -101,7 +103,7 @@ graph name, list of vertixes, list of edges)
 (* pretty printer functions *)
 
 
-let rec string_of_binop = function
+(*let rec string_of_binop = function
   | Add -> "+"
   | Sub -> "-"
   | Mult -> "*"
@@ -114,9 +116,9 @@ let rec string_of_binop = function
   | Gt -> ">"
   | Lt -> "<"
   | And -> "AND"
-  | Or -> "OR"
+  | Or -> "OR"*)
 
-let rec string_of_vertex = function
+(* let rec string_of_vertex = function
   VerLiteral(l) -> string_of_int l
   | VerBoolLit(true) -> "True"
   | VerBoolLit(false) -> "False"
@@ -131,9 +133,9 @@ let rec string_of_edge edge = match edge.weight_type, edge.direct_type with
   | Unweighted, Directed -> 
     "EDGE(" ^ string_of_vertex edge.vertex1 ^ "->" ^ string_of_vertex edge.vertex2 ^ ")"
   | Weighted(w), Directed  -> 
-    "EDGE(" ^ string_of_vertex edge.vertex1 ^ "->" ^ string_of_vertex edge.vertex2 ^ "," ^ string_of_int w ^ ")"
+    "EDGE(" ^ string_of_vertex edge.vertex1 ^ "->" ^ string_of_vertex edge.vertex2 ^ "," ^ string_of_int w ^ ")" *)
 
-let rec string_of_expr = function
+(*let rec string_of_expr = function
   Variable(s) -> s
   | Literal(l) -> string_of_int l
   | BoolLit(true) -> "True"
@@ -145,8 +147,10 @@ let rec string_of_expr = function
     string_of_expr e1 ^ " " ^ string_of_binop o ^ " " ^ string_of_expr e2
   | Call(f, el) -> 
     "APPLY(" ^ f ^ "," ^ String.concat "," (List.map string_of_expr el) ^ ")" 
+*)
 
-let rec string_of_stmt = function
+
+(*let rec string_of_stmt = function
   Expr(e) -> string_of_expr e
   | Block(stmts) -> 
     "{\n" ^ String.concat "" (List.map string_of_stmt stmts) ^ "}\n"
@@ -155,6 +159,4 @@ let rec string_of_stmt = function
     string_of_stmt s1 ^ "ELSE\n" ^ string_of_stmt s2
   | While(e, s) -> "WHILE " ^ string_of_expr e ^ " " ^ string_of_stmt s
   | Return(expr) -> "RETURN " ^ string_of_expr expr ^ ";\n"
-  | GraphStmt(stmt) -> string_of
-
-
+  | GraphStmt(stmt) -> string_of *)

@@ -2,3 +2,5 @@
 scratch/
 .DS_store
 src/.DS_store
+
+*_build

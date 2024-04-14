@@ -26,15 +26,14 @@
 %left TIMES DIVIDE
 %left PLUS MINUS
 
-%start program
-%type <Ast.program> program
+%start expr
+%type <Ast.expr> expr
 
 %%
 
-/* TODO: need to figure out how to do things without forward declaration */
 
 /* initialization */
-program:
+(*program:
     stmt_list EOF { $1 }
 
 stmt_list:
@@ -51,6 +50,7 @@ stmt:
     | RETURN expr SEQ { Return $2 }
     //| typ expr SEQ { ($1, $2) }
     | SEQ { } /* null statement */
+*)
 
 expr:
     LITERAL    { Literal($1) } //done
