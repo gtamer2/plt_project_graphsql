@@ -4,3 +4,4 @@ scratch/
 src/.DS_store
 
 *_build
+*scanner.ml
