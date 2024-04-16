@@ -3,6 +3,8 @@
     open Ast
 %}
 
+%token EOF 
+%token PLUS MINUS TIMES DIVIDE MODULUS ASSIGN SEMICOLON EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
 %token <int>  LITERAL
 %token <bool> BLIT
 %token <string> VARIABLE
@@ -11,9 +13,7 @@
 %token GRAPH VERTEX EDGE VERTICES EDGES
 %token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
 %token LP RP LB RB LC RC COMMA DASH ARROW ACCESSOR QUOTES COMMENT
-%token PLUS MINUS TIMES DIVIDE MODULUS ASSIGN SEQ EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
 %token IF ELSE ELIF
-%token EOF
 
 %token DEFINE FUNCTION
 
@@ -30,7 +30,6 @@
 %type <Ast.expr> expr
 
 %%
-
 
 /* initialization */
 (*program:
@@ -73,3 +72,8 @@ expr:
     | LP expr RP { $2 }
     | expr AND expr { Binop($1, And, $3) }
     | expr OR expr { Binop($1, Or, $3) }
+    | expr SEMICOLON expr { Sequence($1, $3) }
+    | expr SEMICOLON {$1}
+
+entry:
+| expr EOF { $1 }
