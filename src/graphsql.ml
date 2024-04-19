@@ -64,8 +64,12 @@ let rec eval env = function
       eval env1 e2
   | Asn(var, e) ->
       let (value, env1) = eval env e in
-      let env2 = VarMap.add var value env1 in
-      (value, env2)
+      match value with
+        | Ast.graph_element list ->  GraphMap.add var value env1 in
+        | int -> VarMap.add var value env1 in 
+      (value, env2) (* TODO -- HOW TO GET ENV2 FROM BOTH BRANCHES *)
+      (* let env2 = VarMap.add var value env1 in *)
+      (* (value, env2) *)
   | Var(var) ->
       VarMap.find var env, env  
 

@@ -105,7 +105,7 @@ expr:
     | expr OR expr { Binop($1, Or, $3) }
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
-    | expr AS VARIABLE { Asn($3, $1)}
+    | expr AS VARIABLE { Asn($3, $1)} // THIS MIGHT BE AN ISSUE
     | CREATE GRAPH LP RP { Graph([], []) }
 
 entry:
