@@ -5,3 +5,8 @@ src/.DS_store
 
 *_build
 *scanner.ml
+
+*.cmi
+*.cmo
+*.mli
+*.native
