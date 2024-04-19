@@ -1,67 +1,62 @@
+%{ open Ast %}
 
-%{
-    open Ast
-%}
-
-%token EOF 
-%token PLUS MINUS TIMES DIVIDE MODULUS ASSIGN SEMICOLON EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
+%token PLUS MINUS TIMES DIVIDE ASSIGN SEMICOLON MODULUS EOF
 %token <int>  LITERAL
 %token <bool> BLIT
 %token <string> VARIABLE
 %token <float> FLOATLIT
 %token <string> STRINGLIT
+%token <string> IDENTIFIER
+
+
+%token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
 %token GRAPH VERTEX EDGE VERTICES EDGES
 %token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
 %token LP RP LB RB LC RC COMMA DASH ARROW ACCESSOR QUOTES COMMENT
 %token IF ELSE ELIF
-
 %token DEFINE FUNCTION
 
+%left SEMICOLON
 %right ASSIGN
-%left OR
-%left AND
+%left PLUS MINUS
+%left TIMES DIVIDE
+%left MODULUS
+%left OR AND
 %left EQL NOTEQL
 %left GT LT GTEQ LTEQ
-%left MODULUS
-%left TIMES DIVIDE
-%left PLUS MINUS
 
-%start expr
-%type <Ast.expr> expr
+// %start expr
+// %type <Ast.expr> expr
+%start program
+%type <Ast.expr> program
 
 %%
 
-/* initialization */
-(*program:
-    stmt_list EOF { $1 }
+program:
+  | statements EOF { $1 }
 
-stmt_list:
-    /* nothing */ { [] }
-    | stmt stmt_list { $1::$2 }
+statements:
+  | statement SEMICOLON statements { Seq($1, $3) }
+  | statement { $1 }
 
-stmt:
-    expr SEQ   { Expr $1 }
-    
-   // | graph_stmt SEQ { $1 }
-   /* | LC stmt_list RC { Block $2 }
-    | WHILE expr stmt_list { While($2, $3) }
-    | IF expr stmt_list ELSE stmt_list { If($2, $3, $5) }
-    | RETURN expr SEQ { Return $2 }
-    //| typ expr SEQ { ($1, $2) }
-    | SEQ { } /* null statement */
-*)
+statement:
+  | expr { $1 }
+  | graph_init { $1 }
 
-expr:
-    LITERAL    { Literal($1) } //done
+graph_init:
+  | CREATE GRAPH LP RP AS IDENTIFIER { NamedGraph($6, [], []) }
+
+expr:    
+    LITERAL    { Lit($1) } //done
     | FLOATLIT { FloatLit($1) } //done
     | BLIT     { BoolLit($1) }
    // | QUOTES STRINGLIT QUOTES { StringLit($2) }
-    | VARIABLE   { Variable($1) } //done
-    | VARIABLE ASSIGN expr   {Assign($1, $3)} //done
+    | VARIABLE   { Var($1) } //done
+    | VARIABLE ASSIGN expr   {Asn($1, $3)} //done
     | expr PLUS expr { Binop($1, Add, $3) } //done
     | expr MINUS expr { Binop($1, Sub, $3) } //done
-    | expr TIMES expr { Binop($1, Mult, $3) } //done
-    | expr DIVIDE expr { Binop($1, Divd, $3) } //done
+    | expr TIMES expr { Binop($1, Mul, $3) } //done
+    | expr DIVIDE expr { Binop($1, Div, $3) } //done
     | expr MODULUS expr { Binop($1, Mod, $3) } //done
     | expr EQL expr { Binop($1, Eq, $3) }
     | expr NOTEQL expr { Binop($1, Neq, $3) }
@@ -72,8 +67,10 @@ expr:
     | LP expr RP { $2 }
     | expr AND expr { Binop($1, And, $3) }
     | expr OR expr { Binop($1, Or, $3) }
-    | expr SEMICOLON expr { Sequence($1, $3) }
+    | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
+    // | graph_init
 
-entry:
-| expr EOF { $1 }
+
+// entry:
+//   | expr EOF { $1 }

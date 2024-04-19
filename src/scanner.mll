@@ -10,8 +10,12 @@ rule tokenize = parse
 | '-' { MINUS }
 | '*' { TIMES }
 | '/' { DIVIDE }
-| '%' { MODULUS}
+| ';' { SEMICOLON }
 | '=' { ASSIGN }
+| ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
+| ['a'-'z']+ as id { VARIABLE(id) }
+| eof { EOF }
+| '%' { MODULUS}
 | '<' { LT }
 | "<=" { LTEQ }
 | '>' { GT }
@@ -62,4 +66,3 @@ rule tokenize = parse
 | "ELIF" { ELIF }
 | _ { raise (Failure "Character not allowed") }
 | "#" { COMMENT }
-| eof { EOF }
