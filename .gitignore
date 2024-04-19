@@ -10,3 +10,6 @@ src/.DS_store
 *.cmo
 *.mli
 *.native
+
+src/graphsql
+src/parser.ml

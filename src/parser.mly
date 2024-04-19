@@ -42,8 +42,7 @@
 //   | expr { $1 }
 //   | graph_init { $1 }
 
-// graph_init:
-//   | CREATE GRAPH LP RP AS IDENTIFIER { NamedGraph($6, [], []) }
+
 
 // expr:    
 //     LITERAL    { Lit($1) } //done
@@ -80,6 +79,9 @@
 
 %%
 
+// graph_init:
+//   | CREATE GRAPH LP RP AS IDENTIFIER { NamedGraph($6, [], []) }
+
 expr:    
     LITERAL    { Lit($1) } //done
     | FLOATLIT { FloatLit($1) } //done
@@ -103,7 +105,8 @@ expr:
     | expr OR expr { Binop($1, Or, $3) }
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
-
+    | expr AS VARIABLE { Asn($3, $1)}
+    | CREATE GRAPH LP RP { Graph([], []) }
 
 entry:
 | expr EOF { $1 }

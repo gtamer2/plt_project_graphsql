@@ -1,7 +1,7 @@
 # default target that 'make' will attempt to build if no target specified
 # all : calc_test.out graph_init.out
-# all : graph_init.out
-all : calc_test.out
+all : graph_init.out
+# all : calc_test.out
 
 ##############################
 graphsql : ast.cmo parser.cmo scanner.cmo graphsql.cmo
@@ -25,11 +25,11 @@ scanner.ml : scanner.mll
 parser.ml parser.mli : parser.mly
 	ocamlyacc $^
 
-calc_test.out : graphsql calc_test.tb
-	./graphsql < calc_test.tb > calc_test.out
+# calc_test.out : graphsql calc_test.tb
+# 	./graphsql < calc_test.tb > calc_test.out
 
-# graph_init.out : graphsql graph_init.tb
-# 	./graphsql < graph_init.tb > graph_init.out
+graph_init.out : graphsql graph_init.tb
+	./graphsql < graph_init.tb > graph_init.out
 
 # Depedencies from ocamldep
 graphsql.cmo : scanner.cmo parser.cmi ast.cmo

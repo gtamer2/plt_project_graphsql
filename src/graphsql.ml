@@ -1,18 +1,22 @@
 open Ast
 open Printf
 module VarMap = Map.Make(String)
-(* module GraphMap = Map.Make(String) *)
-
-(* Define a new environment type that includes both variable and graph maps *)
-type environment = {
-  vars: int VarMap.t;
-  (* graphs: (string * Ast.graph_element list) list GraphMap.t; *)
-}
+module GraphMap = Map.Make(String)
 
 (* Initial empty environment *)
 let empty_env = {
   vars = VarMap.empty;
-  (* graphs = GraphMap.empty; *)
+  graphs = GraphMap.empty;
+}
+
+(* Define a new environment type that includes both variable and graph maps *)
+type environment = {
+  vars: int VarMap.t;
+  (* graphs is a map from strings (graph variable names) to list of graph elements (nodes and edges mixed in)  *)
+  (* note that we could store a graph as two separate lists nodes and edges, but simpler to have one list for now*)
+  (* TODO: NOTE THAT THIS IS ONE SOURCE OF ERROR *)
+  (* graphs: (string * Ast.graph_element list) list GraphMap.t; *)
+  graphs: Ast.graph_element list GraphMap.t;
 }
 
 (* let rec eval env = function
@@ -65,19 +69,27 @@ let rec eval env = function
   | Var(var) ->
       VarMap.find var env, env  
 
+  (* NOTE: this is to _create_ a graph *)
+  (* ISSUE IDENTIFIED:  *)
+  | Graph(vertices, edges) ->
+    (* let graph_repr = [("Vertices", vertices); ("Edges", edges)] in *)
+    let graph_repr = vertices @ edges (* concatenate vertices and edges into one list *)
+    let graphs = GraphMap.add "name" graph_repr env.graphs in
+    (0, { env with graphs })
 
-(* let _ =
-  let lexbuf = Lexing.from_channel stdin in
-  (* let expr = Parser.expr Scanner.tokenize lexbuf in *)
-  let expr = Parser.program Scanner.tokenize lexbuf in
-  let result, _ = eval empty_env expr in
-  Printf.printf "Result: %s\n" (string_of_expr expr) *)
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
   let expr = Parser.expr Scanner.tokenize lexbuf in
+  (* let expr = Parser.program Scanner.tokenize lexbuf in *)
+  let result, _ = eval empty_env expr in
+  Printf.printf "Result: %s\n" (string_of_expr expr)
+
+(* let _ =
+  let lexbuf = Lexing.from_channel stdin in
+  let expr = Parser.expr Scanner.tokenize lexbuf in
   let result, _ = eval VarMap.empty expr in
-  print_endline (string_of_int result)
+  print_endline (string_of_int result) *)
   (*
   match expr with
   | Graph(_, _) -> 
