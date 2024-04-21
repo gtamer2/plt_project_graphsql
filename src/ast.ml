@@ -28,7 +28,7 @@ type expr =
   (* | Asn of string * Graph
   | Asn of string * primitive *)
   | Asn of string * expr
-  | Var of strings
+  | Var of string
   | Lit of int
   | FloatLit of float 
   | BoolLit of bool
