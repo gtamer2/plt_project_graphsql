@@ -3,12 +3,6 @@ open Printf
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
 
-(* Initial empty environment *)
-let empty_env = {
-  vars = VarMap.empty;
-  graphs = GraphMap.empty;
-}
-
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   vars: int VarMap.t;
@@ -19,34 +13,11 @@ type environment = {
   graphs: Ast.graph_element list GraphMap.t;
 }
 
-(* let rec eval env = function
-  | Lit(x) -> (x, env)
-  | Binop(e1, op, e2) ->
-    let (v1, env1) = eval env e1 in
-    let (v2, env2) = eval env1 e2 in
-    let result = match op with
-      | Add -> v1 + v2
-      | Sub -> v1 - v2
-      | Mul -> v1 * v2
-      | Div -> v1 / v2 in
-    (result, env2)
-  | Seq(e1, e2) ->
-      let (_, env1) = eval env e1 in
-      eval env1 e2
-  | Asn(var, e) ->
-    let (value, env1) = eval env e in
-    let vars = VarMap.add var value env1.vars in  (* Update vars within the environment *)
-    (value, { env1 with vars })  (* Return updated environment *)
-  | Var(var) ->
-    let value = 
-      try VarMap.find var env.vars 
-      with Not_found -> failwith (Printf.sprintf "Variable '%s' not found" var) in
-    (value, env)
-  (*| Graph(vertices, edges) ->
-    let graph_repr = [("Vertices", vertices); ("Edges", edges)] in
-    let graphs = GraphMap.add "generic_graph_key" graph_repr env.graphs in
-    (0, { env with graphs })*)
-  | _ -> failwith "Expression type not supported" *)
+(* Initial empty environment *)
+let empty_env = {
+  vars = VarMap.empty;
+  graphs = GraphMap.empty;
+}
 
 let rec eval env = function
   | Lit(x) -> (x, env)
@@ -64,22 +35,42 @@ let rec eval env = function
       eval env1 e2
   | Asn(var, e) ->
       let (value, env1) = eval env e in
-      match value with
-        | Ast.graph_element list ->  GraphMap.add var value env1 in
-        | int -> VarMap.add var value env1 in 
-      (value, env2) (* TODO -- HOW TO GET ENV2 FROM BOTH BRANCHES *)
-      (* let env2 = VarMap.add var value env1 in *)
-      (* (value, env2) *)
+      let env2 =
+        match value with
+        (* | (_, graph_list) :: _ ->
+          { env1 with graphs = GraphMap.add var graph_list env1.graphs }
+        | _, int_value ->
+            { env1 with vars = VarMap.add var int_value env1.vars } *)
+        | [] -> failwith "Cannot assign an empty list"
+        | Vertex _ :: _ ->
+            { env1 with graphs = GraphMap.add var value env1.graphs }
+        | int ->
+          { env1 with vars = VarMap.add var value env1.vars }
+        | _ ->
+          failwith "Assignment to a variable must be either a graph or an integer" 
+      in
+      (value, env2)
   | Var(var) ->
-      VarMap.find var env, env  
+      (match VarMap.find_opt var env with
+      | Some value -> value, env
+      | None -> (match GraphMap.find_opt var env.graphs with
+             | Some value -> value, env
+             | None -> failwith ("Variable not found: " ^ var))), env
+      (* begin match VarMap.find_opt var env.vars, GraphMap.find_opt var env.graphs with
+      | Some value, _ -> value, env
+      | _, Some value -> value, env
+      | None, None -> (* Return nothing *)
+          (* You need to decide what to return here. For now, let's return a default value. *)
+          failwith "Variable not found"
+      end *)
 
   (* NOTE: this is to _create_ a graph *)
   (* ISSUE IDENTIFIED:  *)
   | Graph(vertices, edges) ->
     (* let graph_repr = [("Vertices", vertices); ("Edges", edges)] in *)
-    let graph_repr = vertices @ edges (* concatenate vertices and edges into one list *)
-    let graphs = GraphMap.add "name" graph_repr env.graphs in
-    (0, { env with graphs })
+    let graph_repr = vertices @ edges in (* concatenate vertices and edges into one list *)
+    (* let graphs = GraphMap.add "name" graph_repr env.graphs in *)
+    (graph_repr, env)
 
 
 let _ =
