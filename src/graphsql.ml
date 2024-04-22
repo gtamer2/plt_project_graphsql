@@ -41,7 +41,7 @@ let rec eval env = function
           { env1 with graphs = GraphMap.add var graph_list env1.graphs }
         | _, int_value ->
             { env1 with vars = VarMap.add var int_value env1.vars } *)
-        | [] -> failwith "Cannot assign an empty list"
+        (* | [] -> failwith "Cannot assign an empty list" *)
         | Vertex _ :: _ ->
             { env1 with graphs = GraphMap.add var value env1.graphs }
         | int ->
@@ -49,7 +49,16 @@ let rec eval env = function
         | _ ->
           failwith "Assignment to a variable must be either a graph or an integer" 
       in
-      (value, env2)
+      (* (value, env2) *)
+      eval env2 (Var var)
+      (* From Gargi *)
+      (* 
+      | Asn(id, value) -> 
+      let v = eval mymap value in
+      let tmp = StringMap.add id v mymap in
+      eval tmp (Var id) 
+      *)
+
   | Var(var) ->
       (match VarMap.find_opt var env with
       | Some value -> value, env
