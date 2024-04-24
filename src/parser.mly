@@ -15,19 +15,15 @@
 %token IF ELSE ELIF
 %token DEFINE FUNCTION
 
+%left OR AND
 %left SEMICOLON
 %right ASSIGN
 %left PLUS MINUS
 %left TIMES DIVIDE
 %left MODULUS
-%left OR AND
+
 %left EQL NOTEQL
 %left GT LT GTEQ LTEQ
-
-// %start expr
-// %type <Ast.expr> expr
-// %start program
-// %type <Ast.expr> program
 
 // %%
 
@@ -44,31 +40,6 @@
 
 // graph_init:
 //   | CREATE GRAPH LP RP AS IDENTIFIER { NamedGraph($6, [], []) }
-
-// expr:    
-//     LITERAL    { Lit($1) } //done
-//     | FLOATLIT { FloatLit($1) } //done
-//     | BLIT     { BoolLit($1) }
-//    // | QUOTES STRINGLIT QUOTES { StringLit($2) }
-//     | VARIABLE   { Var($1) } //done
-//     | VARIABLE ASSIGN expr   {Asn($1, $3)} //done
-//     | expr PLUS expr { Binop($1, Add, $3) } //done
-//     | expr MINUS expr { Binop($1, Sub, $3) } //done
-//     | expr TIMES expr { Binop($1, Mul, $3) } //done
-//     | expr DIVIDE expr { Binop($1, Div, $3) } //done
-//     | expr MODULUS expr { Binop($1, Mod, $3) } //done
-//     | expr EQL expr { Binop($1, Eq, $3) }
-//     | expr NOTEQL expr { Binop($1, Neq, $3) }
-//     | expr GT expr { Binop($1, Gt, $3) }
-//     | expr LT expr { Binop($1, Lt, $3) }
-//     | expr GTEQ expr { Binop($1, Gteq, $3) }
-//     | expr LTEQ expr { Binop($1, Lteq, $3) }
-//     | LP expr RP { $2 }
-//     | expr AND expr { Binop($1, And, $3) }
-//     | expr OR expr { Binop($1, Or, $3) }
-//     | expr SEMICOLON expr { Seq($1, $3) }
-//     | expr SEMICOLON {$1}
-//     // | graph_init
 
 
 // // entry:
@@ -92,15 +63,15 @@ expr:
     | expr TIMES expr { Binop($1, Mul, $3) } //done
     | expr DIVIDE expr { Binop($1, Div, $3) } //done
     | expr MODULUS expr { Binop($1, Mod, $3) } //done
-    | expr EQL expr { Binop($1, Eq, $3) }
-    | expr NOTEQL expr { Binop($1, Neq, $3) }
-    | expr GT expr { Binop($1, Gt, $3) }
-    | expr LT expr { Binop($1, Lt, $3) }
-    | expr GTEQ expr { Binop($1, Gteq, $3) }
-    | expr LTEQ expr { Binop($1, Lteq, $3) }
+    | expr EQL expr { Bool_Binop($1, Eq, $3) }
+    | expr NOTEQL expr { Bool_Binop($1, Neq, $3) }
+    | expr GT expr { Bool_Binop($1, Gt, $3) }
+    | expr LT expr { Bool_Binop($1, Lt, $3) }
+    | expr GTEQ expr { Bool_Binop($1, Gteq, $3) }
+    | expr LTEQ expr { Bool_Binop($1, Lteq, $3) }
     | LP expr RP { $2 }
-    | expr AND expr { Binop($1, And, $3) }
-    | expr OR expr { Binop($1, Or, $3) }
+    | expr AND expr { Bool_Binop($1, And, $3) }
+    | expr OR expr { Bool_Binop($1, Or, $3) }
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
 
