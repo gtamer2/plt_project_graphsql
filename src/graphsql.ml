@@ -22,10 +22,10 @@ let rec eval env = function
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
     | BoolLit(b) -> (BoolLit b, env)    
-    | Vertex(vertex) -> 
+    (* | Vertex(vertex) -> 
       (Vertex vertex, env)
     | Edge(edge) ->
-      (Edge edge, env)
+      (Edge edge, env) *)
     | Binop(e1, op, e2) ->
       let (v1, env1) = eval env e1 in
       let (v2, env2) = eval env e2 in
@@ -44,8 +44,12 @@ let rec eval env = function
     | Var(var) ->
         (match VarMap.find_opt var env.vars with
         | Some value -> (Lit value, env)
-        | None -> failwith ("Variable not found: " ^ var))
+        | None -> 
+          match GraphMap.find_opt var env.graphs with
+          | Some value -> (Graph value, env)
+          | None -> failwith ("Variable not found: " ^ var))
     | Graph(graph_elements) ->
+        Printf.printf "we're here";
         (Graph graph_elements, env)
     | Asn(var, e) ->
       let (value, env1) = eval env e in
@@ -55,6 +59,8 @@ let rec eval env = function
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
     | GraphAsn(var, e) ->
+      (* let str = var ^ " = " ^ string_of_expr e in
+      Printf.printf "Graph Assignment: %s\n" str; *)
       let (value, env1) = eval env e in
       match value with
       | Graph graph_elements ->
@@ -68,4 +74,4 @@ let _ =
   let expr = Parser.expr Scanner.tokenize lexbuf in
   Printf.printf "Initial Expression: %s\n" (string_of_expr expr);
   let result, _ = eval empty_env expr in
-  Printf.printf "Result: %s\n" (string_of_expr result)
+  Printf.printf "Result: %s\n" (string_of_expr result);
