@@ -75,6 +75,5 @@ expr:
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
 
-
 entry:
 | expr EOF { $1 }

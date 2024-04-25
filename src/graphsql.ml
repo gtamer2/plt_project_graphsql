@@ -17,6 +17,11 @@ let empty_env = {
 
 let rec eval env = function
   | Lit(x) -> (x, env)
+  | BoolLit(x) ->
+      let result =  match x with
+      | true -> 1
+      | false -> 0 in
+   (result, env)
   | Binop(e1, op, e2) ->
       let (v1, env1) = eval env e1 in
       let (v2, env2) = eval env1 e2 in
@@ -34,7 +39,8 @@ let rec eval env = function
       let env2 = VarMap.add var value env1 in
       (value, env2)
   | Var(var) ->
-      VarMap.find var env, env  
+    (try VarMap.find var env, env 
+      with not_found -> failwith (sprintf "Variable '%s' not found" var))
 
   let rec bool_eval env = function
   | Bool_Binop(e1, op, e2) ->
@@ -62,4 +68,3 @@ let _ =
   let expr = Parser.expr Scanner.tokenize lexbuf in
   let result, _ = eval VarMap.empty expr in
   print_endline (string_of_int result)
- 
