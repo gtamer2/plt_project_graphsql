@@ -23,6 +23,8 @@ type expr =
   | FloatLit of float 
   | BoolLit of bool
   | Var of string
+  | Vertex of vertex
+  | Edge of edge  
   | Graph of graph_element list
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
