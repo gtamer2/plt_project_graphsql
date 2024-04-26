@@ -10,26 +10,30 @@ type vertex = {
 type edge = {
   source: string;
   target: string;
-  weight: float option; 
+  weight: float; 
 }
 
 type graph_element =
-  | Vertex of vertex
-  | Edge of edge
+  | Vertex of string (**vertex**)
+  | Edge of string * string * float
+  (*| Edge of edge *)
 
 type expr =
   | Lit of int
   | FloatLit of float 
   | BoolLit of bool
   | Var of string
-  | Vertex of vertex
-  | Edge of edge  
+  (* | Vertex of vertex *)
+  (* | Edge of edge   *)
   | Graph of graph_element list
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
   | Seq of expr * expr
   | Asn of string * expr
   | GraphAsn of string * expr
+  (* | Vertex of string 
+  | Edge of string * string * float *)
+  
   (* | Graph of graph_element list * graph_element list   *)
   (* | NamedGraph of string * (graph_element list) * (graph_element list) *)
 
@@ -67,14 +71,14 @@ let rec string_of_expr = function
   | GraphAsn(v, e) -> "GraphAsn: " ^ v  ^ string_of_expr e
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
 
-and string_of_graph_element = function
+ and string_of_graph_element = function
   | Vertex(vertex) -> string_of_vertex vertex
-  | Edge(edge) -> string_of_edge edge
+  (* | Edge(n1, n2, weight) -> string_of_edge n1 n2 *)
 and string_of_vertex vertex =
-  "\"" ^ vertex.id ^ "\""
-and string_of_edge edge =
+  "\"" ^ vertex ^ "\""
+(* and string_of_edge edge =
   let weight_str = match edge.weight with
     | Some w -> string_of_float w
     | None -> "None"
   in
-  "Edge(\"" ^ edge.source ^ "\", \"" ^ edge.target ^ "\", " ^ weight_str ^ ")"
+  "Edge(\"" ^ edge.source ^ "\", \"" ^ edge.target ^ "\", " ^ weight_str ^ ")" *)

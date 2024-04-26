@@ -1,0 +1,5 @@
+CREATE GRAPH (
+	[VERTEX ("Vertex1"),
+	VERTEX ("Vertex2"),
+	EDGE ("Vertex1", "Vertex2", 5.0)]
+) AS g;

@@ -50,21 +50,20 @@
 graph_element:
     | VERTEX LP VARIABLE RP { Vertex($3) }
     //| EDGE LP VARIABLE DASH VARIABLE COMMA FLOATLIT RP { Edge($3, $5, $7) } //weighted undirected 
-    | EDGE LP VARIABLE DASH VARIABLE RP { Edge($3, $5) } //unweighted undirected
-
+    | EDGE LP VARIABLE DASH VARIABLE COMMA FLOATLIT RP { Edge($3, $5, $7) } //unweighted undirected
 
 graph_elements:
     | graph_element COMMA graph_elements { $1::$3 }
-    | graph_element
+    | /*empty*/ {[]} // this should be empty list
 
 
 graph_elements_list:
-    | LB graph_elements RB
-    | _
+    | LB graph_elements RB {$2}
+
 
 graph_init:
-    | CREATE GRAPH LP RP { Graph([]) }
-    | CREATE GRAPH LP graph_elements_list RP { Graph([$4]) }
+    | CREATE GRAPH LP RP { Graph([]) } //eventually can remove this 
+    | CREATE GRAPH LP graph_elements_list RP { Graph($4) }
 
 expr:    
     // NON-RECURSIVE

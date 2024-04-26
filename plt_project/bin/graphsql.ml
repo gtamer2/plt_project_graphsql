@@ -6,7 +6,8 @@ module GraphMap = Map.Make(String)
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   vars: int VarMap.t;
-  graphs: Ast.graph_element list GraphMap.t;
+  graphs: graph_element list GraphMap.t;
+  (* graphs: Ast.graph_element list GraphMap.t; *)
 }
 
 (* Initial empty environment *)
@@ -49,7 +50,9 @@ let rec eval env = function
       Printf.printf "Graph Assignment: %s\n" str; *)
       match e with
       | Graph graph_elements ->
+        (* First we add the map to the graph map*)
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
+        (* Then we iterate through the graph elements*)
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"
     | Graph [] -> Printf.printf "hi"; (Graph [], env)
@@ -65,9 +68,13 @@ let rec eval env = function
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
+   (** //| Vertex(graph_name, vertex_name, env) ->
+      //graph_elements = graph_elements::vertex_name 
+    //in  (Graph graph_elements, env) 
+      //TODO: add vertex to list graph elements **)
+    | Vertex(vname) ->
+      Printf.printf "we're here";
     | _ -> failwith "not supported"
-
-
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
