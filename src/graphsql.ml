@@ -1,91 +1,77 @@
 open Ast
 open Printf
 module VarMap = Map.Make(String)
-(* module GraphMap = Map.Make(String) *)
+module GraphMap = Map.Make(String)
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   vars: int VarMap.t;
-  (* graphs: (string * Ast.graph_element list) list GraphMap.t; *)
+  graphs: Ast.graph_element list GraphMap.t;
 }
 
 (* Initial empty environment *)
 let empty_env = {
   vars = VarMap.empty;
-  (* graphs = GraphMap.empty; *)
+  graphs = GraphMap.empty;
 }
 
-(* let rec eval env = function
-  | Lit(x) -> (x, env)
-  | Binop(e1, op, e2) ->
-    let (v1, env1) = eval env e1 in
-    let (v2, env2) = eval env1 e2 in
-    let result = match op with
-      | Add -> v1 + v2
-      | Sub -> v1 - v2
-      | Mul -> v1 * v2
-      | Div -> v1 / v2 in
-    (result, env2)
-  | Seq(e1, e2) ->
-      let (_, env1) = eval env e1 in
-      eval env1 e2
-  | Asn(var, e) ->
-    let (value, env1) = eval env e in
-    let vars = VarMap.add var value env1.vars in  (* Update vars within the environment *)
-    (value, { env1 with vars })  (* Return updated environment *)
-  | Var(var) ->
-    let value = 
-      try VarMap.find var env.vars 
-      with Not_found -> failwith (Printf.sprintf "Variable '%s' not found" var) in
-    (value, env)
-  (*| Graph(vertices, edges) ->
-    let graph_repr = [("Vertices", vertices); ("Edges", edges)] in
-    let graphs = GraphMap.add "generic_graph_key" graph_repr env.graphs in
-    (0, { env with graphs })*)
-  | _ -> failwith "Expression type not supported" *)
-
 let rec eval env = function
-  | Lit(x) -> (x, env)
-  | Binop(e1, op, e2) ->
+  | expr -> 
+    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); (* This assumes you have a working string_of_expr function *)
+    match expr with
+    | Lit(x) -> (Lit x, env)
+    | FloatLit(f) -> (FloatLit f, env) 
+    | BoolLit(b) -> (BoolLit b, env)    
+    | Binop(e1, op, e2) ->
       let (v1, env1) = eval env e1 in
-      let (v2, env2) = eval env1 e2 in
-      let result = match op with
-        | Add -> v1 + v2
-        | Sub -> v1 - v2
-        | Mul -> v1 * v2
-        | Div -> v1 / v2 in
+      let (v2, env2) = eval env e2 in
+      let result = match (v1, v2) with
+        | (Lit v1, Lit v2) ->
+            (match op with
+            | Add -> Lit (v1 + v2)
+            | Sub -> Lit (v1 - v2)
+            | Mul -> Lit (v1 * v2)
+            | Div -> Lit (v1 / v2))
+        | _ -> failwith "Invalid operands for binary operation" in
       (result, env2)
-  | Seq(e1, e2) ->
-      let (_, env1) = eval env e1 in
-      eval env1 e2
-  | Asn(var, e) ->
+    | Seq(e1, e2) ->
+        let (_, env1) = eval env e1 in
+        eval env1 e2
+    | Var(var) ->
+        (match VarMap.find_opt var env.vars with
+        | Some value -> (Lit value, env)
+        | None -> 
+          match GraphMap.find_opt var env.graphs with
+          | Some value -> (Graph value, env)
+          | None -> failwith ("Variable not found: " ^ var))
+    | GraphAsn(var, e) ->
+      let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
+      Printf.printf "Graph Assignment: %s\n" str;
+      match e with
+      | Graph graph_elements ->
+        let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
+        (Graph graph_elements, env1)
+      | _ -> failwith "Graph assignment expects a graph"
+    | Graph [] -> Printf.printf "hi"; (Graph [], env)
+    | Graph (graph_elements) ->
+      Printf.printf "we're here";
+      (Graph graph_elements, env)
+    | Asn(var, e) ->
+      let str = var ^ " = " ^ string_of_expr e in
+      Printf.printf "variable Assignment: %s\n" str;
       let (value, env1) = eval env e in
-      let env2 = VarMap.add var value env1 in
-      (value, env2)
-  | Var(var) ->
-      VarMap.find var env, env  
+      match value with
+      | Lit x ->
+        let env2 = { env1 with vars = VarMap.add var x env1.vars } in
+        (Lit x, env2)
+      | _ -> failwith "Assignment expects a literal integer"
+    | _ -> failwith "not supported"
 
 
-(* let _ =
-  let lexbuf = Lexing.from_channel stdin in
-  (* let expr = Parser.expr Scanner.tokenize lexbuf in *)
-  let expr = Parser.program Scanner.tokenize lexbuf in
-  let result, _ = eval empty_env expr in
-  Printf.printf "Result: %s\n" (string_of_expr expr) *)
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
   let expr = Parser.expr Scanner.tokenize lexbuf in
-  let result, _ = eval VarMap.empty expr in
-  print_endline (string_of_int result)
-  (*
-  match expr with
-  | Graph(_, _) -> 
-      Printf.printf "Graph initialized: %s\n" (string_of_expr expr)
-  | _ -> 
-      Printf.printf "Result: %s\n" (string_of_expr expr)*)
-
-  (* print_endline (string_of_int result) *)
-  (* match expr with
-  | Graph(_, _, _) -> print_endline "Graph created."  (* Specific handling for graph creation *)
-  | _ -> print_endline (string_of_int result) *)
+  Printf.printf "Initial Expression: %s\n" (string_of_expr expr);
+  let result, _ = eval empty_env expr in
+  Printf.printf "Result: %s\n" (string_of_expr result);
