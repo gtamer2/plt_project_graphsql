@@ -1,6 +1,6 @@
 # default target that 'make' will attempt to build if no target specified
-all : calc_test.out graph_init.out
-# all : graph_init.out
+# all : calc_test.out graph_init.out
+all : graph_init.out
 # all : calc_test.out
 
 ##############################

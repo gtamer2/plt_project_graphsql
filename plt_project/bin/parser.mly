@@ -47,8 +47,24 @@
 
 %%
 
+graph_element:
+    | VERTEX LP VARIABLE RP { Vertex($3) }
+    //| EDGE LP VARIABLE DASH VARIABLE COMMA FLOATLIT RP { Edge($3, $5, $7) } //weighted undirected 
+    | EDGE LP VARIABLE DASH VARIABLE RP { Edge($3, $5) } //unweighted undirected
+
+
+graph_elements:
+    | graph_element COMMA graph_elements { $1::$3 }
+    | graph_element
+
+
+graph_elements_list:
+    | LB graph_elements RB
+    | _
+
 graph_init:
     | CREATE GRAPH LP RP { Graph([]) }
+    | CREATE GRAPH LP graph_elements_list RP { Graph([$4]) }
 
 expr:    
     // NON-RECURSIVE
@@ -74,7 +90,6 @@ expr:
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
     | graph_init AS VARIABLE { GraphAsn($3, $1)} // THIS MIGHT BE AN ISSUE
-    
 
 entry:
 | expr EOF { $1 }

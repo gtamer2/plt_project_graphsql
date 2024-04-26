@@ -45,8 +45,8 @@ let rec eval env = function
           | Some value -> (Graph value, env)
           | None -> failwith ("Variable not found: " ^ var))
     | GraphAsn(var, e) ->
-      let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
-      Printf.printf "Graph Assignment: %s\n" str;
+      (* let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
+      Printf.printf "Graph Assignment: %s\n" str; *)
       match e with
       | Graph graph_elements ->
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
