@@ -1,4 +1,3 @@
-
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
 (* type primitive = Int | Bool | Float | String | Void 

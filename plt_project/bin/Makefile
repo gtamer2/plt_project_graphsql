@@ -25,8 +25,8 @@ scanner.ml : scanner.mll
 parser.ml parser.mli : parser.mly
 	ocamlyacc $^
 
-calc_test.out : graphsql calc_test.tb
-	./graphsql < calc_test.tb > calc_test.out
+# calc_test.out : graphsql calc_test.tb
+# 	./graphsql < calc_test.tb > calc_test.out
 
 graph_init.out : graphsql graph_init.tb
 	./graphsql < graph_init.tb > graph_init.out
