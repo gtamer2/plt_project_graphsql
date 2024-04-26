@@ -22,10 +22,6 @@ let rec eval env = function
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
     | BoolLit(b) -> (BoolLit b, env)    
-    (* | Vertex(vertex) -> 
-      (Vertex vertex, env)
-    | Edge(edge) ->
-      (Edge edge, env) *)
     | Binop(e1, op, e2) ->
       let (v1, env1) = eval env e1 in
       let (v2, env2) = eval env e2 in
@@ -48,25 +44,29 @@ let rec eval env = function
           match GraphMap.find_opt var env.graphs with
           | Some value -> (Graph value, env)
           | None -> failwith ("Variable not found: " ^ var))
-    | Graph(graph_elements) ->
-        Printf.printf "we're here";
-        (Graph graph_elements, env)
+    | GraphAsn(var, e) ->
+      let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
+      Printf.printf "Graph Assignment: %s\n" str;
+      match e with
+      | Graph graph_elements ->
+        let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
+        (Graph graph_elements, env1)
+      | _ -> failwith "Graph assignment expects a graph"
+    | Graph [] -> Printf.printf "hi"; (Graph [], env)
+    | Graph (graph_elements) ->
+      Printf.printf "we're here";
+      (Graph graph_elements, env)
     | Asn(var, e) ->
+      let str = var ^ " = " ^ string_of_expr e in
+      Printf.printf "variable Assignment: %s\n" str;
       let (value, env1) = eval env e in
       match value with
       | Lit x ->
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
-    | GraphAsn(var, e) ->
-      (* let str = var ^ " = " ^ string_of_expr e in
-      Printf.printf "Graph Assignment: %s\n" str; *)
-      let (value, env1) = eval env e in
-      match value with
-      | Graph graph_elements ->
-        let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
-        (Graph graph_elements, env2)
-      | _ -> failwith "Graph assignment expects a graph"
+    | _ -> failwith "not supported"
+
 
 
 let _ =

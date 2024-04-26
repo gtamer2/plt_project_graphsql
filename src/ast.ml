@@ -65,7 +65,7 @@ let rec string_of_expr = function
     op_str ^ string_of_expr e
   | Graph(elements) ->
     "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
-  | GraphAsn(v, e) -> v ^ " = " ^ string_of_expr e
+  | GraphAsn(v, e) -> "GraphAsn: " ^ v  ^ string_of_expr e
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
 
 and string_of_graph_element = function
