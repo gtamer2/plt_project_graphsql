@@ -22,12 +22,14 @@ type expr =
   | FloatLit of float 
   | BoolLit of bool
   | Var of string
-  | Graph of graph_element list
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
   | Seq of expr * expr
+  | Graph of graph_element list
+  | GraphAccess of string * string (* graph_name * field_name *)
   | GraphAsn of string * expr
   | Asn of string * expr
+  (* | AccessResult of graph_element list *)
 
  
 let rec string_of_expr = function
@@ -61,10 +63,14 @@ let rec string_of_expr = function
     op_str ^ string_of_expr e
   | Graph(elements) ->
     "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
-  | GraphAsn(v, elt_list) -> "GraphAsn: " ^ v  ^ "<elt_list goes here>"
+  | GraphAccess(graphname, fieldname) -> "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
+  | GraphAsn(v, elt_list) -> 
+     "GraphAsn: " ^ v  ^ "TODO print all elements "
+    (* let elements_str = List.map string_of_expr elt_list |> String.concat ", " in *)
+    (* "GraphAsn " ^ v ^ (List.map string_of_graph_element elt_list) ^ "])" *)
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
 
- and string_of_graph_element = function
+and string_of_graph_element = function
   | Vertex(vertex) -> "vertex:" ^ vertex
   | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
   
