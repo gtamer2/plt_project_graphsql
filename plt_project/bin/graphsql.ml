@@ -53,6 +53,8 @@ let rec eval env = function
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"
+    
+    
     | Graph (graph_elements) ->
       (Graph(graph_elements), env)
     | Asn(var, e) ->
@@ -64,7 +66,12 @@ let rec eval env = function
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
+    
+        
     | GraphAccess(graph_name, field_name) -> 
+      Printf.printf "printing expression: %s\n" (string_of_expr expr); 
+      Printf.printf "printing graph: %s\n" (graph_name); 
+      Printf.printf "printing field: %s\n" (field_name); 
       match GraphMap.find_opt graph_name env.graphs with
         | Some graph_elements ->
             (* STEP 1: fetch the graph from graph map *)
@@ -80,13 +87,14 @@ let rec eval env = function
             | Vertex _ -> v_output := element :: !v_output
             | Edge _ -> e_output := element :: !e_output
           ) graph_elements;
-
-          match field_name with 
-            | "vertices" -> (v_output, env)
-            | "edges" -> (e_output, env)
-            | _ -> failwith "Graph has no property named " ^ field_name
-
+          (Graph !v_output, env)
+          (* match field_name with 
+            | "vertices" -> (Graph !v_output, env)
+            | "edges" -> (Graph !e_output, env)
+            | _ ->  (Graph !e_output, env) *)
+            (* | _ -> failwith "Graph has no property named " ^ field_name () (*TODO FIX*) *)
         | _ -> failwith ("Graph not found: " ^ graph_name)
+        
     | _ -> failwith "not supported"
 
 let _ =

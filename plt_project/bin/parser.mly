@@ -12,9 +12,9 @@
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
 %token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
-// %token GRAPH VERTEX EDGE VERTICES EDGES
 
-%token VERTEX EDGE DOT VERTICES EDGES 
+%token DOT 
+%token VERTEX EDGE VERTICES EDGES
 %token LP RP LB RB LC RC COMMA DASH ARROW QUOTES COMMENT
 %token GRAPH
 %token IF ELSE ELIF
@@ -104,7 +104,6 @@ expr:
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
     | graph_init AS VARIABLE { GraphAsn($3, $1)} // DONE
-    
 
 entry:
 | expr EOF { $1 }

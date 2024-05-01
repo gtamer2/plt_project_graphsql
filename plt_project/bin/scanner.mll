@@ -13,6 +13,8 @@ rule tokenize = parse
 | ';' { SEMICOLON }
 | '=' { ASSIGN }
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
+| "vertices" { VERTICES }
+| "edges" { EDGES }
 | ['a'-'z']+ as id { VARIABLE(id) }
 | eof { EOF }
 | '%' { MODULUS}
@@ -48,8 +50,7 @@ rule tokenize = parse
 | "NOT" { NOT }
 | "WHILE" { WHILE }
 | "." { DOT }
-| "vertices" { VERTICES }
-| "edges" { EDGES }
+
 | "," {COMMA}
 | "\"" {QUOTES}
 | "(" { LP }
