@@ -26,8 +26,6 @@ rule tokenize = parse
 | "==" { EQL }
 | "!=" { NOTEQL }
 | ';' { SEMICOLON }
-(* | ['0'-'9']+ as lit { LITERAL(int_of_string lit) } *)
-(* | letter (letter | digit | '_')* as id { VARIABLE( id ) } *)
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
 (* | '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) } *)
@@ -50,7 +48,10 @@ rule tokenize = parse
 | "EDGE" { EDGE }
 | "NOT" { NOT }
 | "WHILE" { WHILE }
-
+| "IF" { IF }
+| "ELSE" { ELSE }
+| "ELIF" { ELIF }
+| letter (letter | digit | '_')* as id { VARIABLE( id ) }
 | "," {COMMA}
 | "\"" {QUOTES}
 | "(" { LP }
@@ -62,8 +63,5 @@ rule tokenize = parse
 | "," { COMMA }
 | "-" { DASH }
 | "->" { ARROW }
-| "IF" { IF }
-| "ELSE" { ELSE }
-| "ELIF" { ELIF }
 | _ { raise (Failure "Character not allowed") }
 | "#" { COMMENT }
