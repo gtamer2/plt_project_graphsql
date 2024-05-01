@@ -12,8 +12,10 @@ rule tokenize = parse
 | '/' { DIVIDE }
 | ';' { SEMICOLON }
 | '=' { ASSIGN }
+| "." { DOT }
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
-| ['a'-'z']+ as id { VARIABLE(id) }
+| "vertices" { VERTICES }
+| "edges" { EDGES }
 | eof { EOF }
 | '%' { MODULUS}
 | '<' { LT }
@@ -25,9 +27,7 @@ rule tokenize = parse
 | ';' { SEMICOLON }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
-| ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
-| letter (letter | digit | '_')* as id { VARIABLE( id ) }
-| '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) }
+(* | '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) } *)
 (* | quote[ -~]quote as str { STRINGLIT(str) } *)
 | "AND" { AND }
 | "OR" { OR }
@@ -47,9 +47,10 @@ rule tokenize = parse
 | "EDGE" { EDGE }
 | "NOT" { NOT }
 | "WHILE" { WHILE }
-| "." { ACCESSOR }
-| "vertices" { VERTICES }
-| "edges" { EDGES }
+| "IF" { IF }
+| "ELSE" { ELSE }
+| "ELIF" { ELIF }
+| letter (letter | digit | '_')* as id { VARIABLE( id ) }
 | "," {COMMA}
 | "\"" {QUOTES}
 | "(" { LP }
@@ -59,10 +60,6 @@ rule tokenize = parse
 | "{" { LC }
 | "}" { RC }
 | "," { COMMA }
-| "-" { DASH }
 | "->" { ARROW }
-| "IF" { IF }
-| "ELSE" { ELSE }
-| "ELIF" { ELIF }
 | _ { raise (Failure "Character not allowed") }
 | "#" { COMMENT }
