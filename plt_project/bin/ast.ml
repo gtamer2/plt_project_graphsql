@@ -1,4 +1,5 @@
-type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
+type binop = Add | Sub | Mul | Div | Mod  
+type boolbinop = Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
 (* type primitive = Int | Bool | Float | String | Void 
 type object = Graph *)
@@ -22,22 +23,23 @@ type expr =
   | FloatLit of float 
   | BoolLit of bool
   | Var of string
+  | Asn of string * expr 
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
   | Seq of expr * expr
   | Graph of graph_element list
   | GraphAccess of string * string (* graph_name * field_name *)
   | GraphAsn of string * expr
-  | Asn of string * expr
+  | Bool_Binop of expr * boolbinop * expr
   (* | AccessResult of graph_element list *)
 
- 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
   | FloatLit(f) -> string_of_float f
   | BoolLit(b) -> string_of_bool b
   | Var(v) -> v
   | Asn(v, e) -> v ^ " = " ^ string_of_expr e
+  (* | Asn(v, e) -> v ^ " = " ^ string_of_expr e *)
   | Binop(e1, op, e2) ->
     let op_str = match op with
       | Add -> "+"
@@ -45,6 +47,10 @@ let rec string_of_expr = function
       | Mul -> "*"
       | Div -> "/"
       | Mod -> "%"
+    in
+    "(" ^ string_of_expr e1 ^ " " ^ op_str ^ " " ^ string_of_expr e2 ^ ")"
+  | Bool_Binop(e1, op, e2) ->
+    let op_str = match op with
       | Eq -> "=="
       | Neq -> "!="
       | Gteq -> ">="

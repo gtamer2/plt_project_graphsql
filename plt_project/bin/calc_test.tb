@@ -1,2 +1,3 @@
-foo = True ; 
-bar = baz = 3 ; 
+foo = 4;
+bar = 3;
+foo > bar;
