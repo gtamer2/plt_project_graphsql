@@ -6,7 +6,7 @@ module GraphMap = Map.Make(String)
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   vars: int VarMap.t;
-  graphs: Ast.graph_element list GraphMap.t;
+  graphs: graph_element list GraphMap.t;
 }
 
 (* Initial empty environment *)
@@ -17,7 +17,8 @@ let empty_env = {
 
 let rec eval env = function
   | expr -> 
-    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); (* This assumes you have a working string_of_expr function *)
+    (* This assumes you have a working string_of_expr function *)
+    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
     match expr with
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
@@ -52,10 +53,8 @@ let rec eval env = function
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"
-    | Graph [] -> Printf.printf "hi"; (Graph [], env)
     | Graph (graph_elements) ->
-      Printf.printf "we're here";
-      (Graph graph_elements, env)
+      (Graph(graph_elements), env)
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
       Printf.printf "variable Assignment: %s\n" str;
@@ -66,8 +65,6 @@ let rec eval env = function
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
     | _ -> failwith "not supported"
-
-
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in

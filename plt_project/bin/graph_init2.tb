@@ -1,0 +1,6 @@
+CREATE GRAPH (
+	[VERTEX (vertexone),
+	VERTEX (vertextwo),
+	EDGE (vertexone,vertextwo,10)
+    ]
+) AS g;
