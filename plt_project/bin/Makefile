@@ -28,8 +28,8 @@ parser.ml parser.mli : parser.mly
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
 
-graph_init.out : graphsql graph_init.tb
-	./graphsql < graph_init.tb > graph_init.out
+graph_init.out : graphsql graph_init2.tb
+	./graphsql < graph_init2.tb > graph_init.out
 
 graph_init.out : graphsql graph_init2.tb
 	./graphsql < graph_init2.tb > graph_init2.out
