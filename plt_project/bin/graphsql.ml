@@ -17,7 +17,6 @@ let empty_env = {
 
 let rec eval env = function
   | expr -> 
-    (* This assumes you have a working string_of_expr function *)
     Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
     match expr with
     | Lit(x) -> (Lit x, env)
@@ -45,6 +44,37 @@ let rec eval env = function
           match GraphMap.find_opt var env.graphs with
           | Some value -> (Graph value, env)
           | None -> failwith ("Variable not found: " ^ var))
+    | Graph (graph_elements) ->
+      (Graph(graph_elements), env)
+    
+  
+    | GraphAccess(graphname, fieldname) -> 
+      Printf.printf "printing expression: %s\n" (string_of_expr expr); 
+      Printf.printf "printing graph: %s\n" (graphname); 
+      Printf.printf "printing field: %s\n" (fieldname); 
+      (* begin match GraphMap.find_opt graphname env.graphs with
+        | Some graph_elements -> (Lit 0, env)
+        | None -> (Lit 1, env)
+      end
+      (Lit 0, env) *)
+      begin match GraphMap.find_opt graphname env.graphs with
+        | Some graph_elements ->
+            let v_output : graph_element list ref = ref [] in
+            let e_output : graph_element list ref = ref [] in
+            
+            List.iter (fun element ->
+              match element with
+              | Vertex _ -> v_output := element :: !v_output
+              | Edge _ -> e_output := element :: !e_output
+              | _ -> failwith ("Not a graph element")
+            ) graph_elements;
+            match fieldname with 
+              | "vertices" -> (Graph !v_output, env)
+              | "edges" -> (Graph !e_output, env)
+              | _ -> failwith ("Invalid field name: " ^ fieldname)
+        | _ -> failwith ("Graph not found: " ^ graphname)
+      end
+
     | GraphAsn(var, e) ->
       let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
       Printf.printf "Graph Assignment: %s\n" str;
@@ -53,10 +83,6 @@ let rec eval env = function
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"
-    
-    
-    | Graph (graph_elements) ->
-      (Graph(graph_elements), env)
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
       Printf.printf "variable Assignment: %s\n" str;
@@ -65,37 +91,12 @@ let rec eval env = function
       | Lit x ->
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
-      | _ -> failwith "Assignment expects a literal integer"
+      | _ -> failwith "Assignment expects a literal integer"     
     
-        
-    | GraphAccess(graph_name, field_name) -> 
-      Printf.printf "printing expression: %s\n" (string_of_expr expr); 
-      Printf.printf "printing graph: %s\n" (graph_name); 
-      Printf.printf "printing field: %s\n" (field_name); 
-      match GraphMap.find_opt graph_name env.graphs with
-        | Some graph_elements ->
-            (* STEP 1: fetch the graph from graph map *)
-          (* let graph = Var(graph_name) in *)
-          (* let elts = do something to access the elts *)
-          (* STeP 2: Iterate through graph.graph_elements and only keep matching elts *)
-          let v_output : graph_element list ref = ref [] in
-          let e_output : graph_element list ref = ref [] in
-          
-          (* Step 3: add to vertices and edges list) *)
-          List.iter (fun element ->
-            match element with
-            | Vertex _ -> v_output := element :: !v_output
-            | Edge _ -> e_output := element :: !e_output
-          ) graph_elements;
-          (Graph !v_output, env)
-          (* match field_name with 
-            | "vertices" -> (Graph !v_output, env)
-            | "edges" -> (Graph !e_output, env)
-            | _ ->  (Graph !e_output, env) *)
-            (* | _ -> failwith "Graph has no property named " ^ field_name () (*TODO FIX*) *)
-        | _ -> failwith ("Graph not found: " ^ graph_name)
-        
     | _ -> failwith "not supported"
+
+
+ 
 
 let _ =
   let lexbuf = Lexing.from_channel stdin in
