@@ -18,7 +18,8 @@ let empty_env = {
 
 let rec eval env = function
   | expr -> 
-    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); (* This assumes you have a working string_of_expr function *)
+    (* This assumes you have a working string_of_expr function *)
+    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
     match expr with
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
@@ -46,8 +47,8 @@ let rec eval env = function
           | Some value -> (Graph value, env)
           | None -> failwith ("Variable not found: " ^ var))
     | GraphAsn(var, e) ->
-      (* let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
-      Printf.printf "Graph Assignment: %s\n" str; *)
+      let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
+      Printf.printf "Graph Assignment: %s\n" str;
       match e with
       | Graph graph_elements ->
         (* First we add the map to the graph map*)
@@ -55,7 +56,6 @@ let rec eval env = function
         (* Then we iterate through the graph elements*)
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"
-    | Graph [] -> Printf.printf "hi"; (Graph [], env)
     | Graph (graph_elements) ->
       Printf.printf "we're here";
       (Graph graph_elements, env)
@@ -68,12 +68,9 @@ let rec eval env = function
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
-   (** //| Vertex(graph_name, vertex_name, env) ->
-      //graph_elements = graph_elements::vertex_name 
-    //in  (Graph graph_elements, env) 
-      //TODO: add vertex to list graph elements **)
     | Vertex(vname) ->
       Printf.printf "we're here";
+      (vname, env)
     | _ -> failwith "not supported"
 
 let _ =

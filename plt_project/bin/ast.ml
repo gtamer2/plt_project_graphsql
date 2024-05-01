@@ -10,33 +10,26 @@ type vertex = {
 type edge = {
   source: string;
   target: string;
-  weight: float; 
+  weight: int; 
 }
 
 type graph_element =
-  | Vertex of string (**vertex**)
-  | Edge of string * string * float
-  (*| Edge of edge *)
+  | Vertex of string
+  | Edge of string * string * int
 
 type expr =
   | Lit of int
   | FloatLit of float 
   | BoolLit of bool
   | Var of string
-  (* | Vertex of vertex *)
-  (* | Edge of edge   *)
   | Graph of graph_element list
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
   | Seq of expr * expr
-  | Asn of string * expr
   | GraphAsn of string * expr
-  (* | Vertex of string 
-  | Edge of string * string * float *)
-  
-  (* | Graph of graph_element list * graph_element list   *)
-  (* | NamedGraph of string * (graph_element list) * (graph_element list) *)
+  | Asn of string * expr
 
+ 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
   | FloatLit(f) -> string_of_float f
@@ -68,17 +61,14 @@ let rec string_of_expr = function
     op_str ^ string_of_expr e
   | Graph(elements) ->
     "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
-  | GraphAsn(v, e) -> "GraphAsn: " ^ v  ^ string_of_expr e
+  | GraphAsn(v, elt_list) -> "GraphAsn: " ^ v  ^ "hello"
+  (* | GraphAsn(v, e) -> "GraphAsn: " ^ v  ^ string_of_expr e *)
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
+  (* | Vertex(vertex) -> vertex *)
+  (* | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_float(weight) *)
 
  and string_of_graph_element = function
-  | Vertex(vertex) -> string_of_vertex vertex
-  (* | Edge(n1, n2, weight) -> string_of_edge n1 n2 *)
+  | Vertex(vertex) -> vertex
+  (* | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_float(weight) *)
 and string_of_vertex vertex =
   "\"" ^ vertex ^ "\""
-(* and string_of_edge edge =
-  let weight_str = match edge.weight with
-    | Some w -> string_of_float w
-    | None -> "None"
-  in
-  "Edge(\"" ^ edge.source ^ "\", \"" ^ edge.target ^ "\", " ^ weight_str ^ ")" *)
