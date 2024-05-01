@@ -47,7 +47,7 @@ rule tokenize = parse
 | "EDGE" { EDGE }
 | "NOT" { NOT }
 | "WHILE" { WHILE }
-| "." { ACCESSOR }
+| "." { DOT }
 | "vertices" { VERTICES }
 | "edges" { EDGES }
 | "," {COMMA}

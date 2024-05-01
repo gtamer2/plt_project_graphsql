@@ -28,6 +28,7 @@ type expr =
   | Seq of expr * expr
   | GraphAsn of string * expr
   | Asn of string * expr
+  | GraphAccess of string * string (* graph_name * field_name *)
 
  
 let rec string_of_expr = function

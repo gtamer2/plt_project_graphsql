@@ -64,6 +64,29 @@ let rec eval env = function
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
+    | GraphAccess(graph_name, field_name) -> 
+      match GraphMap.find_opt graph_name env.graphs with
+        | Some graph_elements ->
+            (* STEP 1: fetch the graph from graph map *)
+          (* let graph = Var(graph_name) in *)
+          (* let elts = do something to access the elts *)
+          (* STeP 2: Iterate through graph.graph_elements and only keep matching elts *)
+          let v_output : graph_element list ref = ref [] in
+          let e_output : graph_element list ref = ref [] in
+          
+          (* Step 3: add to vertices and edges list) *)
+          List.iter (fun element ->
+            match element with
+            | Vertex _ -> v_output := element :: !v_output
+            | Edge _ -> e_output := element :: !e_output
+          ) graph_elements;
+
+          match field_name with 
+            | "vertices" -> (v_output, env)
+            | "edges" -> (e_output, env)
+            | _ -> failwith "Graph has no property named " ^ field_name
+
+        | _ -> failwith ("Graph not found: " ^ graph_name)
     | _ -> failwith "not supported"
 
 let _ =

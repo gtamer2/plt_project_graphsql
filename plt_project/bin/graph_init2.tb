@@ -4,3 +4,5 @@ CREATE GRAPH (
 	EDGE (vertexone,vertextwo,10)
     ]
 ) AS g;
+g.vertices 
+g.edges
