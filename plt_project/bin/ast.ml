@@ -61,15 +61,12 @@ let rec string_of_expr = function
     op_str ^ string_of_expr e
   | Graph(elements) ->
     "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
-  | GraphAsn(v, elt_list) -> "GraphAsn: " ^ v  ^ "hello"
-  (* | GraphAsn(v, e) -> "GraphAsn: " ^ v  ^ string_of_expr e *)
+  | GraphAsn(v, elt_list) -> "GraphAsn: " ^ v  ^ "<elt_list goes here>"
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
-  (* | Vertex(vertex) -> vertex *)
-  (* | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_int(weight) *)
 
  and string_of_graph_element = function
-  | Vertex(vertex) -> vertex
-  | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_int(weight)
+  | Vertex(vertex) -> "vertex:" ^ vertex
+  | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
   
 and string_of_vertex vertex =
   "\"" ^ vertex ^ "\""

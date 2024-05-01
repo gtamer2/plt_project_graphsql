@@ -7,7 +7,6 @@ module GraphMap = Map.Make(String)
 type environment = {
   vars: int VarMap.t;
   graphs: graph_element list GraphMap.t;
-  (* graphs: Ast.graph_element list GraphMap.t; *)
 }
 
 (* Initial empty environment *)
@@ -51,21 +50,11 @@ let rec eval env = function
       Printf.printf "Graph Assignment: %s\n" str;
       match e with
       | Graph graph_elements ->
-        (* First we add the map to the graph map*)
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
-        (* Then we iterate through the graph elements*)
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"
     | Graph (graph_elements) ->
-      Printf.printf "we're here\n";
-      let env = List.fold_left (fun acc_env graph_element ->
-        match graph_element with
-        | Vertex(vname) ->
-            Printf.printf "Vertex: %s\n" vname;
-        | Edge(one, two, weight) ->
-            Printf.printf "Edge: %s -> %s -> %i\n" one two weight;
-      ) env graph_elements in
-      (Graph graph_elements, env)
+      (Graph(graph_elements), env)
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
       Printf.printf "variable Assignment: %s\n" str;
