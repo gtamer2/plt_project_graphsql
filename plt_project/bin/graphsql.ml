@@ -57,7 +57,14 @@ let rec eval env = function
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"
     | Graph (graph_elements) ->
-      Printf.printf "we're here";
+      Printf.printf "we're here\n";
+      let env = List.fold_left (fun acc_env graph_element ->
+        match graph_element with
+        | Vertex(vname) ->
+            Printf.printf "Vertex: %s\n" vname;
+        | Edge(one, two, weight) ->
+            Printf.printf "Edge: %s -> %s -> %i\n" one two weight;
+      ) env graph_elements in
       (Graph graph_elements, env)
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
@@ -68,9 +75,6 @@ let rec eval env = function
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer"
-    | Vertex(vname) ->
-      Printf.printf "we're here";
-      (vname, env)
     | _ -> failwith "not supported"
 
 let _ =

@@ -65,10 +65,11 @@ let rec string_of_expr = function
   (* | GraphAsn(v, e) -> "GraphAsn: " ^ v  ^ string_of_expr e *)
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
   (* | Vertex(vertex) -> vertex *)
-  (* | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_float(weight) *)
+  (* | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_int(weight) *)
 
  and string_of_graph_element = function
   | Vertex(vertex) -> vertex
-  (* | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_float(weight) *)
+  | Edge(n1, n2, weight) ->  n1  ^ n2 ^ string_of_int(weight)
+  
 and string_of_vertex vertex =
   "\"" ^ vertex ^ "\""
