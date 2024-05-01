@@ -16,7 +16,6 @@ rule tokenize = parse
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | "vertices" { VERTICES }
 | "edges" { EDGES }
-| ['a'-'z']+ as id { VARIABLE(id) }
 | eof { EOF }
 | '%' { MODULUS}
 | '<' { LT }
