@@ -1,7 +1,7 @@
 CREATE GRAPH (
 	[VERTEX (vertexone),
-	VERTEX (vertextwo),
-	EDGE (vertexone,vertextwo,10)
+	VERTEX (VERTEX_two9876),
+	EDGE (vertexone - vertextwo,10)
     ]
 ) AS g;
 g.edges
