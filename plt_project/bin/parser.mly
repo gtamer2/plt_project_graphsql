@@ -69,14 +69,14 @@ expr:
     | expr TIMES expr { Binop($1, Mul, $3) } //done
     | expr DIVIDE expr { Binop($1, Div, $3) } //done
     | expr MODULUS expr { Binop($1, Mod, $3) } //done
-    | expr EQL expr { Bool_Binop($1, Eq, $3) }
-    | expr NOTEQL expr { Bool_Binop($1, Neq, $3) }
-    | expr GT expr { Bool_Binop($1, Gt, $3) }
-    | expr LT expr { Bool_Binop($1, Lt, $3) }
-    | expr GTEQ expr { Bool_Binop($1, Gteq, $3) }
-    | expr LTEQ expr { Bool_Binop($1, Lteq, $3) }
-    | expr AND expr { Bool_Binop($1, And, $3) }
-    | expr OR expr { Bool_Binop($1, Or, $3) }
+    | expr EQL expr { Binop($1, Eq, $3) }
+    | expr NOTEQL expr { Binop($1, Neq, $3) }
+    | expr GT expr { Binop($1, Gt, $3) }
+    | expr LT expr { Binop($1, Lt, $3) }
+    | expr GTEQ expr { Binop($1, Gteq, $3) }
+    | expr LTEQ expr { Binop($1, Lteq, $3) }
+    | expr AND expr { Binop($1, And, $3) }
+    | expr OR expr { Binop($1, Or, $3) }
     | LP expr RP { $2 } //should this be moved
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}

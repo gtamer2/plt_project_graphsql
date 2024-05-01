@@ -1,5 +1,4 @@
-type binop = Add | Sub | Mul | Div | Mod  
-type boolbinop = Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
+type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
 (* type primitive = Int | Bool | Float | String | Void 
 type object = Graph *)
@@ -30,7 +29,6 @@ type expr =
   | Graph of graph_element list
   | GraphAccess of string * string (* graph_name * field_name *)
   | GraphAsn of string * expr
-  | Bool_Binop of expr * boolbinop * expr
   (* | AccessResult of graph_element list *)
 
 let rec string_of_expr = function
@@ -47,10 +45,6 @@ let rec string_of_expr = function
       | Mul -> "*"
       | Div -> "/"
       | Mod -> "%"
-    in
-    "(" ^ string_of_expr e1 ^ " " ^ op_str ^ " " ^ string_of_expr e2 ^ ")"
-  | Bool_Binop(e1, op, e2) ->
-    let op_str = match op with
       | Eq -> "=="
       | Neq -> "!="
       | Gteq -> ">="
