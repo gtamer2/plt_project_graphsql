@@ -11,7 +11,6 @@ rule tokenize = parse
 | '*' { TIMES }
 | '/' { DIVIDE }
 | ';' { SEMICOLON }
-| '=' { ASSIGN }
 | "." { DOT }
 | ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | "vertices" { VERTICES }
@@ -25,6 +24,7 @@ rule tokenize = parse
 | "==" { EQL }
 | "!=" { NOTEQL }
 | ';' { SEMICOLON }
+| '=' { ASSIGN }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
 (* | '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) } *)
