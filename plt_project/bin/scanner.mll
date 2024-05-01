@@ -60,7 +60,6 @@ rule tokenize = parse
 | "{" { LC }
 | "}" { RC }
 | "," { COMMA }
-| "-" { DASH }
 | "->" { ARROW }
 | _ { raise (Failure "Character not allowed") }
 | "#" { COMMENT }

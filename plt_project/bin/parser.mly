@@ -15,7 +15,7 @@
 
 %token DOT 
 %token VERTEX EDGE VERTICES EDGES
-%token LP RP LB RB LC RC COMMA DASH ARROW QUOTES COMMENT
+%token LP RP LB RB LC RC COMMA ARROW QUOTES COMMENT
 %token GRAPH
 %token IF ELSE ELIF
 %token DEFINE FUNCTION
@@ -38,7 +38,7 @@
 
 graph_element:
     | VERTEX LP VARIABLE RP { Vertex($3) }
-    | EDGE LP VARIABLE COMMA VARIABLE COMMA LITERAL RP { Edge($3, $5, $7) }
+    | EDGE LP VARIABLE MINUS VARIABLE COMMA LITERAL RP { Edge($3, $5, $7) }
 
 graph_elements:
     | graph_element COMMA graph_elements { $1::$3 }
