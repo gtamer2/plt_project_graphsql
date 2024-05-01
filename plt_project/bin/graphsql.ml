@@ -31,24 +31,15 @@ let rec eval env = function
             | Add -> Lit (v1 + v2)
             | Sub -> Lit (v1 - v2)
             | Mul -> Lit (v1 * v2)
-            | Div -> Lit (v1 / v2))
+            | Div -> Lit (v1 / v2)
+            | Eq -> BoolLit (v1 = v2)
+            | Neq -> BoolLit (v1 <> v2)
+            | Gt -> BoolLit (v1 > v2)
+            | Lt -> BoolLit (v1 < v2)
+            | Gteq -> BoolLit (v1 >= v2)
+            | Lteq -> BoolLit (v1 <= v2))
         | _ -> failwith "Invalid operands for binary operation" in
       (result, env2)
-    | Bool_Binop(e1, op, e2) ->
-      let (v1, env1) = eval env e1 in
-      let (v2, env2) = eval env e2 in
-      let result = match (v1, v2) with
-        | (Lit v1, Lit v2) ->
-          begin match op with
-          | Eq -> BoolLit (v1 = v2)
-          | Neq -> BoolLit (v1 <> v2)
-          | Gt -> BoolLit (v1 > v2)
-          | Lt -> BoolLit (v1 < v2)
-          | Gteq -> BoolLit (v1 >= v2)
-          | Lteq -> BoolLit (v1 <= v2)
-          end
-        | _ -> failwith "Invalid operands for bool binary operation" in
-        (result, env2)
     | Seq(e1, e2) ->
         let (_, env1) = eval env e1 in
         eval env1 e2
