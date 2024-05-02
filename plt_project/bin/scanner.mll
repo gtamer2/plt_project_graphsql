@@ -27,6 +27,7 @@ rule tokenize = parse
 | '=' { ASSIGN }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
+| '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
 (* | '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) } *)
 (* | quote[ -~]quote as str { STRINGLIT(str) } *)
 | "AND" { AND }
@@ -61,5 +62,5 @@ rule tokenize = parse
 | "}" { RC }
 | "," { COMMA }
 | "->" { ARROW }
-| _ { raise (Failure "Character not allowed") }
 | "#" { COMMENT }
+| _ { raise (Failure "Character not allowed") }
