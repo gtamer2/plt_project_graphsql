@@ -15,6 +15,8 @@ let empty_env = {
   graphs = GraphMap.empty;
 }
 
+let int_of_bool b = if b then 1 else 0
+
 let rec eval env = function
   | expr -> 
     Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
@@ -24,21 +26,52 @@ let rec eval env = function
     | BoolLit(b) -> (BoolLit b, env)  
     | Binop(e1, op, e2) ->
       let (v1, env1) = eval env e1 in
-      let (v2, env2) = eval env e2 in
-      let result = match (v1, v2) with
-        | (Lit v1, Lit v2) ->
-            (match op with
-            | Add -> Lit (v1 + v2)
-            | Sub -> Lit (v1 - v2)
-            | Mul -> Lit (v1 * v2)
-            | Div -> Lit (v1 / v2)
+      let (v2, env2) = eval env1 e2 in
+      let eval_float_op v1 op v2 =
+        begin match op with 
+            | Add -> FloatLit (v1 +. v2)
+            | Sub -> FloatLit (v1 -. v2)
+            | Mul -> FloatLit (v1 *. v2)
+            | Div -> FloatLit (v1 /. v2)
             | Eq -> BoolLit (v1 = v2)
             | Neq -> BoolLit (v1 <> v2)
             | Gt -> BoolLit (v1 > v2)
             | Lt -> BoolLit (v1 < v2)
             | Gteq -> BoolLit (v1 >= v2)
-            | Lteq -> BoolLit (v1 <= v2))
-        | _ -> failwith "Invalid operands for binary operation" in
+            | Lteq -> BoolLit (v1 <= v2)
+            | _ -> failwith "Operator is not supported for int binop int"
+          end
+        in
+      let result = begin match (v1, v2) with
+        | (Lit v1, Lit v2) ->
+            begin match op with
+              | Add -> Lit (v1 + v2)
+              | Sub -> Lit (v1 - v2)
+              | Mul -> Lit (v1 * v2)
+              | Mod -> Lit (v1 mod v2)
+              | Div -> Lit (v1 / v2)
+              | Eq -> BoolLit (v1 = v2)
+              | Neq -> BoolLit (v1 <> v2)
+              | Gt -> BoolLit (v1 > v2)
+              | Lt -> BoolLit (v1 < v2)
+              | Gteq -> BoolLit (v1 >= v2)
+              | Lteq -> BoolLit (v1 <= v2)
+              | _ -> failwith "Operator is not supported for int binop int"
+            end
+        | (BoolLit v1, BoolLit v2) ->
+            begin match op with
+              | And -> BoolLit ( v1 && v2)
+              | Or -> BoolLit (v1 || v2)
+              | _ -> failwith ("Operator is not supported for bool op bool")
+            end
+        | (FloatLit v1, FloatLit v2) ->
+            eval_float_op v1 op v2
+        | (Lit v1, FloatLit v2) ->
+            eval_float_op (float_of_int v1) op v2
+        | (FloatLit v1, Lit v2) ->
+            eval_float_op v1 op (float_of_int v2)
+        | _ -> failwith "Invalid operands for binary operation"
+        end in
       (result, env2)
     | Seq(e1, e2) ->
         let (_, env1) = eval env e1 in

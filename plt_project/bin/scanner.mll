@@ -12,7 +12,7 @@ rule tokenize = parse
 | '/' { DIVIDE }
 | ';' { SEMICOLON }
 | "." { DOT }
-| ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
+| ('-'?)['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | "vertices" { VERTICES }
 | "edges" { EDGES }
 | eof { EOF }
@@ -27,6 +27,7 @@ rule tokenize = parse
 | '=' { ASSIGN }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
+| '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
 (* | '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) } *)
 (* | quote[ -~]quote as str { STRINGLIT(str) } *)
 | "AND" { AND }
@@ -61,5 +62,5 @@ rule tokenize = parse
 | "}" { RC }
 | "," { COMMA }
 | "->" { ARROW }
-| _ { raise (Failure "Character not allowed") }
 | "#" { COMMENT }
+| _ { raise (Failure "Character not allowed") }
