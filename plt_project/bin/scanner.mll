@@ -12,7 +12,7 @@ rule tokenize = parse
 | '/' { DIVIDE }
 | ';' { SEMICOLON }
 | "." { DOT }
-| ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
+| ('-'?)['0'-'9']+ as lit { LITERAL(int_of_string lit) }
 | "vertices" { VERTICES }
 | "edges" { EDGES }
 | eof { EOF }
