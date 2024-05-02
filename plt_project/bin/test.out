@@ -1,5 +1,7 @@
-Initial Expression: foo = 4; bar = 3; (foo > bar)
-Evaluating expression: foo = 4; bar = 3; (foo > bar)
+Parsing if/else
+Initial Expression: foo = 4; bar = 3; IF((foo > 7)) THEN bar = 5ELSE bar = 0; bar
+Evaluating expression: foo = 4; bar = 3; IF((foo > 7)) THEN bar = 5ELSE bar = 0; bar
+Evaluating expression: foo = 4; bar = 3; IF((foo > 7)) THEN bar = 5ELSE bar = 0
 Evaluating expression: foo = 4; bar = 3
 Evaluating expression: foo = 4
 variable Assignment: foo = 4
@@ -7,7 +9,12 @@ Evaluating expression: 4
 Evaluating expression: bar = 3
 variable Assignment: bar = 3
 Evaluating expression: 3
-Evaluating expression: (foo > bar)
+Evaluating expression: IF((foo > 7)) THEN bar = 5ELSE bar = 0
+Evaluating expression: (foo > 7)
 Evaluating expression: foo
+Evaluating expression: 7
+Evaluating expression: bar = 0
+variable Assignment: bar = 0
+Evaluating expression: 0
 Evaluating expression: bar
-Result: true
+Result: 0

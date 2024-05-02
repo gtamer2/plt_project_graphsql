@@ -80,6 +80,8 @@ expr:
     | LP expr RP { $2 } //should this be moved
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
+    | IF LP expr RP LC expr RC { print_endline "Parsing if"; If($3, $6)}
+    | IF LP expr RP LC expr RC ELSE LC expr RC { print_endline "Parsing if/else"; IfElse($3, $6, $10)}
 
 entry:
 | expr EOF { $1 }

@@ -97,6 +97,28 @@ let rec eval env = function
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer" 
       end
+    | If (ifcondition, ifbody)->
+      let (v1, env1) = eval env ifcondition in
+      (* TODO: check that v1 is of type Bool *)
+      begin match v1 with
+        | (BoolLit v1) ->
+          if v1 then
+            let (v2, env2) = eval env1 ifbody in (v2, env2)
+          else 
+            (BoolLit v1 ,env)
+        | _ -> failwith "If excepts a boolean expression" 
+        end
+      | IfElse (ifcondition, ifbody, elsebody)->
+          let (v1, env1) = eval env ifcondition in
+          (* TODO: check that v1 is of type Bool *)
+          begin match v1 with
+            | (BoolLit v1) ->
+              if v1 then
+                let (v2, env2) = eval env1 ifbody in (v2, env2)
+              else 
+                let (v2, env2) = eval env1 elsebody in (v2, env2)
+            | _ -> failwith "If excepts a boolean expression" 
+            end
     | _ -> failwith "not supported"
  
 
