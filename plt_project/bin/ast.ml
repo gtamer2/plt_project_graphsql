@@ -1,7 +1,7 @@
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
-(* type primitive = Int | Bool | Float | String | Void 
-type object = Graph *)
+type typ = Int | Bool | Float | String (* | Void *)
+(* type object = Graph *)
 
 type vertex = {
   id: string;
@@ -12,6 +12,10 @@ type edge = {
   target: string;
   weight: float option; 
 }
+
+type typ_graph = (* types for the graph elements *)
+  | Vertex of vertex
+  | Edge of edge
 
 type graph_element =
   | Vertex of vertex
