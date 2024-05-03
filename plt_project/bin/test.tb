@@ -3,4 +3,23 @@ bar = 3;
 IF (foo > 7)
 {
     bar = 5;
+} 
+ELSE
+{
+    zip = 0;
+    car = 1;
+    WHILE (car < foo) {
+        car = car + 1;
+    }
+
+    IF(car == 4)
+    {
+        foo = 7;
+    }
+    ELSE
+    { 
+        foo = -1;
+    }
+    car;
 }
+bar;

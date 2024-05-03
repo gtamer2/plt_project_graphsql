@@ -18,10 +18,21 @@ let empty_env = {
 let int_of_bool b = if b then 1 else 0
 
 
+(* let rec eval_stmt_list env = function *)
+  (* | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
+  | stmt :: rest ->
+      let (result, new_env) = eval_stmt env stmt in *)
+      (* Check if there's an early termination condition *)
+      (* match result with
+      | BoolLit b when not b -> (BoolLit false, new_env) (* Propagate the early termination *)
+      | _ -> eval_stmt_list new_env rest Continue evaluating the rest of the statements *)
+
+
 let rec eval_expr env = function
   | expr -> 
     Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
     begin match expr with
+    
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
     | BoolLit(b) -> (BoolLit b, env)  
@@ -105,19 +116,19 @@ let rec eval_expr env = function
       let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
       (* Printf.printf "Graph Assignment: %s\n" str; *)
       begin match e with
-      | Graph(graph_elements) ->
-        let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
-        (Graph graph_elements, env1)
-      | GraphAccess(graphname, fieldname) -> 
-        let (graph, env1) = eval_expr env (GraphAccess(graphname, fieldname)) in
-        begin match graph with
         | Graph(graph_elements) ->
-          let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
-          (Graph(graph_elements), env2)
-        | _ -> failwith "GraphAccess did not return a graph"
-      | _ -> failwith "Graph assignment expects a graph"   
+          let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
+          (Graph graph_elements, env1)
+        | GraphAccess(graphname, fieldname) -> 
+          let (graph, env1) = eval_expr env (GraphAccess(graphname, fieldname)) in
+          begin match graph with
+            | Graph(graph_elements) ->
+              let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+              (Graph(graph_elements), env2)
+            | _ -> failwith "GraphAccess did not return a graph"
+          end
+        | _ -> failwith "Graph assignment expects a graph"   
       end
-
     | GraphOp(gname, graph_elements, optype) ->
       begin match optype with
       | "insert" -> 
@@ -154,44 +165,46 @@ let rec eval_expr env = function
         end 
       | _ -> failwith ("Unsupported operation type: " ^ optype)
       end 
-      
-    | Asn(var, e) ->
-      let str = var ^ " = " ^ string_of_expr e in
-      (* Printf.printf "variable Assignment: %s\n" str; *)
-      let (value, env1) = eval_expr env e in
-      begin match value with
-      | Lit x ->
-        let env2 = { env1 with vars = VarMap.add var x env1.vars } in
-        (Lit x, env2)
-      | _ -> failwith "Assignment expects a literal integer" 
-      end
-    
-    | _ -> failwith "not supported"
+      | Asn(var, e) ->
+        let str = var ^ " = " ^ string_of_expr e in
+        (* Printf.printf "variable Assignment: %s\n" str; *)
+        let (value, env1) = eval_expr env e in
+        begin match value with
+        | Lit x ->
+          let env2 = { env1 with vars = VarMap.add var x env1.vars } in
+          (Lit x, env2)
+        | _ -> failwith "Assignment expects a literal integer" 
+        end
+      | _ -> failwith "not supported"
     end
-  end
  
 
 
-
-let rec eval_stmt env = function
+let rec eval_stmt_list env = function 
+  | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
+  | stmt :: rest ->
+      let (result, new_env) = eval_stmt env stmt in eval_stmt_list new_env rest
+    (* for each stmt eval_stmt *)
+    
+  and 
+  eval_stmt env = function
   | stmt -> 
     begin match stmt with
-    (* | Block (stmt_list) -> 
-      begin match stmt_list with
+    (* | Block (stmt_list) ->  *)
+      (* Printf.printf "Evaluating block\n"; *)
+      (* begin match stmt_list with
         | [] -> (true, env)
-        | stmts -> List.fold_left (fun new_env statement -> eval_stmt new_env statement) env stmts
-        (*List.fold_left (fun sum e -> sum + e) 0 [42; 17; 128]*)
-        (*List.fold_left f a [b1; ...;bn] = f (...(f (f a b1) b2)...) bn*)
-        (*process next and recursively process rest*)
+        | stmts -> List.fold_left (fun (_, new_env) statement -> eval_stmt new_env statement) _ env stmts
+        | _ -> failwith "Invalid parsing of stmt_list"
       end *)
     | Expr (expr) -> eval_expr env expr
-    | If (ifcondition, ifbody)->
+    | If (ifcondition, ifbody) ->
       let (v1, env1) = eval_expr env ifcondition in
       (* TODO: check that v1 is of type Bool *)
       begin match v1 with
         | (BoolLit v1) ->
           if v1 then
-            let (v2, env2) = eval_stmt env1 ifbody in (v2, env2)
+            let (v2, env2) = eval_stmt_list env1 ifbody in (v2, env2)
           else 
             (BoolLit v1 ,env)
         | _ -> failwith "If excepts a boolean expression" 
@@ -202,9 +215,9 @@ let rec eval_stmt env = function
         begin match is_true with
           | (BoolLit is_true) ->
             if is_true then
-              let (v2, env2) = eval_stmt env1 ifbody in (v2, env2)
+              let (v2, env2) = eval_stmt_list env1 ifbody in (v2, env2)
             else 
-              let (v2, env2) = eval_stmt env1 elsebody in (v2, env2)
+              let (v2, env2) = eval_stmt_list env1 elsebody in (v2, env2)
           | _ -> failwith "If excepts a boolean expression" 
           end
     | While (whilecondition, whilebody)->
@@ -212,7 +225,7 @@ let rec eval_stmt env = function
         begin match should_continue with
           | (BoolLit should_continue) ->
             if should_continue then
-              let (_, env2) = eval_stmt env1 whilebody in
+              let (_, env2) = eval_stmt_list env1 whilebody in
               eval_stmt env2 (While (whilecondition, whilebody))
             else
               (BoolLit should_continue, env1)
@@ -226,5 +239,5 @@ let rec eval_stmt env = function
   let lexbuf = Lexing.from_channel stdin in
   let stmt_list = Parser.stmt_list Scanner.tokenize lexbuf in
   Printf.printf "Initial Expression: %s\n" (string_of_stmt_list stmt_list);
-  (* let result, _ = eval_expr empty_env expr in
-  Printf.printf "Result: %s\n" (string_of_expr result);  *)
+  let result, _ = eval_stmt_list empty_env stmt_list in
+  Printf.printf "Result: %s\n" (string_of_expr result); 

@@ -62,9 +62,9 @@ stmt_list:
 stmt:
     | expr SEMICOLON { Expr($1) }
     | LC stmt_list RC { Block($2) }
-    | IF LP expr RP LC stmt RC { print_endline("Parser If"); If($3, $6) }
-    | IF LP expr RP LC stmt RC ELSE LC stmt RC { IfElse($3, $6, $10)}
-    | WHILE LP expr RP LC stmt RC { While($3, $6)}
+    | IF LP expr RP LC stmt_list RC { print_endline("Parser If"); If($3, $6) }
+    | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
+    | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
 
 expr:    
     | LITERAL    { Lit($1) } //done

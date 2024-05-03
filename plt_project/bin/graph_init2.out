@@ -2,5 +2,13 @@ Processing all stmts
 Processing all stmts
 Processing all stmts
 Initial Expression: 
+GraphAsn: gTODO print all elements  
+GraphAsn: graph_verticesTODO print all elements  graph_vertices 
+Evaluating expression: 
 GraphAsn: gTODO print all elements 
-GraphAsn: graph_verticesTODO print all elements graph_vertices
+Evaluating expression: 
+GraphAsn: graph_verticesTODO print all elements 
+Evaluating expression: 
+GraphAccessing... graphname:g, fieldname:vertices
+Evaluating expression: graph_vertices
+Result: true

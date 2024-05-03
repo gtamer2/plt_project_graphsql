@@ -34,9 +34,9 @@ type expr =
 type stmt = 
   | Block of stmt list
   | Expr of expr
-  | If of expr * stmt
-  | IfElse of expr * stmt * stmt
-  | While of expr * stmt
+  | If of expr * stmt list
+  | IfElse of expr * stmt list * stmt list
+  | While of expr * stmt list
 
 type stmt_list = stmt list 
 (*empty?*)
@@ -87,15 +87,13 @@ and string_of_vertex vertex =
 "\"" ^ vertex ^ "\""
 
 
-
 let rec string_of_stmt = function
-  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt body
-  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt truebody ^ " ELSE " ^ string_of_stmt elsebody
-  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt body
-  | Expr(expr) -> string_of_expr expr
+  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list body
+  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ " ELSE " ^ string_of_stmt_list elsebody
+  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
+  | Expr(expr) -> string_of_expr expr ^ " "
   | Block(stmts) -> "TODO BLOCK " 
 
-
-let rec string_of_stmt_list = function
+and  string_of_stmt_list = function
   | [] -> ""
   | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest
