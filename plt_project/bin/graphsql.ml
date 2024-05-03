@@ -86,14 +86,9 @@ let rec eval env = function
     | Graph (graph_elements) ->
       (Graph(graph_elements), env)
     | GraphAccess(graphname, fieldname) -> 
-      Printf.printf "printing expression: %s\n" (string_of_expr expr); 
+      (* Printf.printf "printing expression: %s\n" (string_of_expr expr); 
       Printf.printf "printing graph: %s\n" (graphname); 
-      Printf.printf "printing field: %s\n" (fieldname); 
-      (* begin match GraphMap.find_opt graphname env.graphs with
-        | Some graph_elements -> (Lit 0, env)
-        | None -> (Lit 1, env)
-      end
-      (Lit 0, env) *)
+      Printf.printf "printing field: %s\n" (fieldname);  *)
       begin match GraphMap.find_opt graphname env.graphs with
         | Some graph_elements ->
             let v_output : graph_element list ref = ref [] in
@@ -120,6 +115,31 @@ let rec eval env = function
         (Graph graph_elements, env1)
       | _ -> failwith "Graph assignment expects a graph"   
       end
+
+    | GraphOp(gname, graph_elements, optype) ->
+      begin match optype with
+      | "insert" -> 
+        begin match GraphMap.find_opt gname env.graphs with
+        | Some existing_elements -> 
+          (*Iterate through graph_elements to seperate vertices and edges*)
+          let v_output : graph_element list ref = ref [] in
+          let e_output : graph_element list ref = ref [] in
+          List.iter (fun element ->
+            match element with
+            | Vertex _ -> v_output := element :: !v_output
+            | Edge _ -> e_output := element :: !e_output
+            | _ -> failwith ("Not a graph element")
+          ) graph_elements;
+        (*TODO: add vertices and edges to graph and update env.graphs GraphMap*)
+        let updated_graph_elements = !v_output @ !e_output @ existing_elements in
+        let updated_env = { env with graphs = GraphMap.add gname updated_graph_elements env.graphs } in
+        (Graph updated_graph_elements, updated_env)
+
+        | None -> failwith ("Graph not found: " ^ gname)
+        end 
+      | _ -> failwith ("Unsupported operation type: " ^ optype)
+      end 
+      
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
       Printf.printf "variable Assignment: %s\n" str;

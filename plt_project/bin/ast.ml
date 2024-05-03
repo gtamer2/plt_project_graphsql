@@ -29,6 +29,7 @@ type expr =
   | Graph of graph_element list
   | GraphAccess of string * string (* graph_name * field_name *)
   | GraphAsn of string * expr
+  | GraphOp of string * graph_element list * string
   | If of expr * expr
   | IfElse of expr * expr * expr
   (* | AccessResult of graph_element list *)
@@ -64,15 +65,17 @@ let rec string_of_expr = function
     in
     op_str ^ string_of_expr e
   | Graph(elements) ->
-    "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
-  | GraphAccess(graphname, fieldname) -> "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
+    "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
+  | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
-     "GraphAsn: " ^ v  ^ "TODO print all elements "
-    (* let elements_str = List.map string_of_expr elt_list |> String.concat ", " in *)
-    (* "GraphAsn " ^ v ^ (List.map string_of_graph_element elt_list) ^ "])" *)
+    "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
+    (* let elements_str = List.map string_of_expr elt_list |> String.concat ", " in
+    "GraphAsn " ^ v ^ (List.map string_of_graph_element elt_list) ^ "])" *)
+  | GraphOp(gname, elements, optype) -> 
+    "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
-  | If(condition, body) -> "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr body
-  | IfElse(condition, truebody, elsebody) -> "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr truebody ^ " ELSE " ^ string_of_expr elsebody
+  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr body
+  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr truebody ^ " ELSE " ^ string_of_expr elsebody
 
 and string_of_graph_element = function
   | Vertex(vertex) -> "vertex:" ^ vertex
