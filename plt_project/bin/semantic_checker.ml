@@ -81,7 +81,7 @@ let check init_env init_expr =
                 string_of_typ rt ^ " in " ^ string_of_expr exit
       in *)
       match t with
-      | typ -> let env2 = { env1 with vars = VarMap.add var x env1.vars } in 
+      | typ -> let env2 = { env1 with vars = VarMap.add var e' env1.vars } in 
         ((t, SAsn(var, e')), env2)
       (* | graph_element -> let env2 = { env1 with vars = GraphMap.add graph x env1.graphs } in
       | graph_element list ->

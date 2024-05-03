@@ -47,7 +47,7 @@ let rec string_of_expr = function
   | Asn(v, e) -> v ^ " = " ^ string_of_expr e
   (* | Asn(v, e) -> v ^ " = " ^ string_of_expr e *)
   | Binop(e1, op, e2) ->
-    let op_str = string_of_op
+    let op_str = string_of_op op
     in
     "(" ^ string_of_expr e1 ^ " " ^ op_str ^ " " ^ string_of_expr e2 ^ ")"
   | Uniop(op, e) ->
@@ -74,6 +74,7 @@ and string_of_graph_element = function
 and string_of_vertex vertex =
   "\"" ^ vertex ^ "\""
 
+(* convert op to string separated out as a separate function *)
 and string_of_op op = match op with
   | Add -> "+"
   | Sub -> "-"
