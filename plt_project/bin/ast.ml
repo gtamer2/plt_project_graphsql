@@ -32,6 +32,7 @@ type expr =
   | GraphOp of string * graph_element list * string
   | If of expr * expr
   | IfElse of expr * expr * expr
+  | While of expr * expr
 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
@@ -72,6 +73,7 @@ let rec string_of_expr = function
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
   | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr body
   | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr truebody ^ " ELSE " ^ string_of_expr elsebody
+  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_expr body
 
 and string_of_graph_element = function
   | Vertex(vertex) -> "vertex:" ^ vertex
