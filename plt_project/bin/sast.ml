@@ -41,8 +41,8 @@ let string_of_typ t = match t with
   | Bool -> "Bool"
   | Float -> "Float"
   | String -> "String"
-  | Vertex -> "Vertex"
-  | Edge -> "Edge"
+  (* | Vertex -> "Vertex"
+  | Edge -> "Edge" *)
 
 let rec string_of_sexpr (t, e) =
   "(" ^ string_of_typ t ^ " : " ^ (match e with
@@ -71,13 +71,13 @@ let rec string_of_sexpr (t, e) =
       | SAsn(p, q) -> p ^ " = " ^ string_of_sexpr q
       | SGraph(elements) ->
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
-      | GraphAsn(p, q) -> "GraphAsn: " ^ p  ^ string_of_sexpr q
+      | SGraphAsn(p, q) -> "GraphAsn: " ^ p  ^ string_of_sexpr q
       | SSeq(e1, e2) -> string_of_sexpr e1 ^ "; " ^ string_of_sexpr e2
         
   )
 
 and string_of_sgraph_element (t , e) =
-  "(" ^ string_of_typ t ^ ":"  ^ ( match e with
+  "(" ^ string_of_graph_element t ^ ":"  ^ ( match e with
     SVertex(svertex) -> string_of_svertex svertex
   | SEdge(sedge) -> string_of_sedge sedge
   )

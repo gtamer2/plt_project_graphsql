@@ -4,6 +4,9 @@ all : graph_init.out graph_init2.out
 # all : calc_test.out
 
 ##############################
+semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo
+	ocamlc -w A -o semant_eval ast.cmo sast.com parser.cmo scanner.cmo semant_eval.cmo semantic_checker.cmo
+
 graphsql : ast.cmo parser.cmo scanner.cmo graphsql.cmo
 	ocamlc -w A -o graphsql ast.cmo parser.cmo scanner.cmo graphsql.cmo
 
@@ -41,6 +44,13 @@ parser.cmo : ast.cmo parser.cmi
 parser.cmx : ast.cmo parser.cmi
 scanner.cmo : parser.cmi
 scanner.cmx : parser.cmx
+
+# Dependencies for semantic_checker
+semant_eval.cmo : scanner.cmo parser.cmi ast.cmo sast.cmo semantic_checker.cmo
+semant_eval.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx
+semantic_checker.cmo : ast.cmo sast.cmo
+semantic_checker.cmx : ast.cmo sast.cmo
+
 
 
 ##############################
