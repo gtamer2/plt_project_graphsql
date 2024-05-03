@@ -11,11 +11,13 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT APPLY WHILE
 
+%token QUOTES
 %token DOT 
 %token VERTEX EDGE VERTICES EDGES
-%token LP RP LB RB LC RC COMMA ARROW QUOTES COMMENT
+%token LP RP LB RB LC RC COMMA ARROW COMMENT
+// %token LP RP LB RB LC RC COMMA ARROW QUOTES COMMENT
 %token GRAPH
 %token IF ELSE ELIF
 %token DEFINE FUNCTION
@@ -37,8 +39,8 @@
 %%
 
 graph_element:
-    | VERTEX LP VARIABLE RP { Vertex($3) }
-    | EDGE LP VARIABLE MINUS VARIABLE COMMA LITERAL RP { Edge($3, $5, $7) }
+    | VERTEX LP QUOTES VARIABLE QUOTES RP { Vertex($4) }
+    | EDGE LP QUOTES VARIABLE QUOTES MINUS QUOTES VARIABLE QUOTES COMMA LITERAL RP { Edge($4, $8, $11) }
 
 graph_elements:
     | graph_element COMMA graph_elements { $1::$3 }
@@ -64,6 +66,8 @@ expr:
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
     | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
     | graph_init AS VARIABLE { GraphAsn($3, $1)} // DONE
+    | INSERT INTO VARIABLE graph_elements_list {GraphOp($3, $4, "insert")}
+    | DELETE graph_elements_list FROM VARIABLE {GraphOp($4, $2, "delete")}
     | expr PLUS expr {Binop($1, Add, $3) } //done
     | expr MINUS expr { Binop($1, Sub, $3) } //done
     | expr TIMES expr { Binop($1, Mul, $3) } //done
