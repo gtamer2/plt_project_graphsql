@@ -163,6 +163,19 @@ let rec eval env = function
                 (BoolLit should_continue, env1)
             | _ -> failwith "While excepts a boolean expression"
           end
+      | For (init, condition, update, body) ->
+          let (_, env1) = eval env init in
+          let (should_continue, env2) = eval env1 condition in
+          begin match should_continue with
+            | (BoolLit should_continue) ->
+              if should_continue then
+                let (_, env3) = eval env2 body in
+                let (_, env4) = eval env3 update in
+                eval env4 (For (init, condition, update, body))
+              else
+                (BoolLit should_continue, env2)
+            | _ -> failwith "For excepts a boolean expression"
+          end
     | _ -> failwith "not supported"
     end
  
@@ -171,5 +184,5 @@ let _ =
   let lexbuf = Lexing.from_channel stdin in
   let expr = Parser.expr Scanner.tokenize lexbuf in
   Printf.printf "Initial Expression: %s\n" (string_of_expr expr);
-  let result, _ = eval empty_env expr in
-  Printf.printf "Result: %s\n" (string_of_expr result); 
+  (* let result, _ = eval empty_env expr in
+  Printf.printf "Result: %s\n" (string_of_expr result);  *)

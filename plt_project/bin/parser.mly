@@ -11,7 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
+%token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE FOR
 
 %token DOT 
 %token VERTEX EDGE VERTICES EDGES
@@ -77,12 +77,15 @@ expr:
     | expr LTEQ expr { Binop($1, Lteq, $3) }
     | expr AND expr { Binop($1, And, $3) }
     | expr OR expr { Binop($1, Or, $3) }
+    | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC expr RC { For($3, $5, $7, $10)}
+    | WHILE LP expr RP LC expr RC { While($3, $6)}
     | LP expr RP { $2 } //should this be moved
     | expr SEMICOLON expr { Seq($1, $3) }
     | expr SEMICOLON {$1}
     | IF LP expr RP LC expr RC { print_endline "Parsing if"; If($3, $6)}
     | IF LP expr RP LC expr RC ELSE LC expr RC { print_endline "Parsing if/else"; IfElse($3, $6, $10)}
-    | WHILE LP expr RP LC expr RC { While($3, $6)}
+    
+    
 
 entry:
 | expr EOF { $1 }

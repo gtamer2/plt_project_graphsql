@@ -1,0 +1,5 @@
+boo = 4;
+WHILE (boo > 2) {
+    boo = boo - 1
+};
+boo;
