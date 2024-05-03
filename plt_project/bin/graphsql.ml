@@ -19,7 +19,7 @@ let int_of_bool b = if b then 1 else 0
 
 let rec eval env = function
   | expr -> 
-    (* Printf.printf "Evaluating expression: %s\n" (string_of_expr expr);  *)
+    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
     match expr with
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
@@ -85,10 +85,11 @@ let rec eval env = function
           | None -> failwith ("Variable not found: " ^ var))
     | Graph (graph_elements) ->
       (Graph(graph_elements), env)
+
     | GraphAccess(graphname, fieldname) -> 
-      (* Printf.printf "printing expression: %s\n" (string_of_expr expr); 
+      Printf.printf "printing expression for GraphAccess: %s\n" (string_of_expr expr); 
       Printf.printf "printing graph: %s\n" (graphname); 
-      Printf.printf "printing field: %s\n" (fieldname);  *)
+      Printf.printf "printing field: %s\n" (fieldname); 
       begin match GraphMap.find_opt graphname env.graphs with
         | Some graph_elements ->
             let v_output : graph_element list ref = ref [] in
@@ -108,11 +109,18 @@ let rec eval env = function
       end
     | GraphAsn(var, e) ->
       let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
-      (* Printf.printf "Graph Assignment: %s\n" str; *)
+      Printf.printf "Graph Assignment: %s\n" str;
       begin match e with
-      | Graph graph_elements ->
+      | Graph(graph_elements) ->
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
         (Graph graph_elements, env1)
+      | GraphAccess(graphname, fieldname) -> 
+        let (graph, env1) = eval env (GraphAccess(graphname, fieldname)) in
+        begin match graph with
+        | Graph(graph_elements) ->
+          let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+          (Graph(graph_elements), env2)
+        | _ -> failwith "GraphAccess did not return a graph"
       | _ -> failwith "Graph assignment expects a graph"   
       end
 
@@ -130,7 +138,7 @@ let rec eval env = function
             | Edge _ -> e_output := element :: !e_output
             | _ -> failwith ("Not a graph element")
           ) graph_elements;
-        (*TODO: add vertices and edges to graph and update env.graphs GraphMap*)
+        (*add vertices and edges to graph and update env.graphs GraphMap*)
         let updated_graph_elements = !v_output @ !e_output @ existing_elements in
         let updated_env = { env with graphs = GraphMap.add gname updated_graph_elements env.graphs } in
         (Graph updated_graph_elements, updated_env)
@@ -185,7 +193,8 @@ let rec eval env = function
                 let (v2, env2) = eval env1 elsebody in (v2, env2)
             | _ -> failwith "If excepts a boolean expression" 
             end
-    | _ -> failwith "not supported"
+    | _ -> failwith "constructor not supported"
+    end
  
 
 let _ =
