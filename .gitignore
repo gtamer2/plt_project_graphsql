@@ -11,7 +11,7 @@ src/.DS_store
 *.mli
 *.native
 
-src/graphsql
-src/parser.ml
+*/graphsql
+*/parser.ml
 
 _opam
