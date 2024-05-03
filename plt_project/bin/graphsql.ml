@@ -249,16 +249,6 @@ let rec eval_stmt_list env = function
     | _ -> failwith "Invalid parsing of stmt" 
     end
 
-(**let rec for_loop start stop step f =
-  if start <= stop then begin
-    f start;
-    for_loop (start + step) stop step f
-  end
-
-(* Example usage *)
-let () =
-  for_loop 1 10 1 (fun i -> print_int i; print_newline())**)
-
   let _ =
   let lexbuf = Lexing.from_channel stdin in
   let stmt_list = Parser.stmt_list Scanner.tokenize lexbuf in
