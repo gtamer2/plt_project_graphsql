@@ -31,6 +31,7 @@ type expr =
   | GraphAsn of string * expr
   | If of expr * expr
   | IfElse of expr * expr * expr
+  | While of expr * expr
   (* | AccessResult of graph_element list *)
 
 let rec string_of_expr = function
@@ -73,6 +74,7 @@ let rec string_of_expr = function
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
   | If(condition, body) -> "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr body
   | IfElse(condition, truebody, elsebody) -> "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr truebody ^ " ELSE " ^ string_of_expr elsebody
+  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_expr body
 
 and string_of_graph_element = function
   | Vertex(vertex) -> "vertex:" ^ vertex
