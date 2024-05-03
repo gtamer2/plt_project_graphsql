@@ -3,6 +3,7 @@ type uniop = Not | Dot
 type typ = Int | Bool | Float | String (* | Void *)
 (* type object = Graph *)
 
+
 type vertex = {
   id: string;
 }
@@ -13,13 +14,14 @@ type edge = {
   weight: int; 
 }
 
-type typ_graph = (* types for the graph elements *)
-  | Vertex of vertex
-  | Edge of edge
-
 type graph_element =
   | Vertex of string
   | Edge of string * string * int
+
+type unified_type = 
+  | Typ of typ
+  | GraphElement of graph_element
+  | Graph of graph_element list
 
 type expr =
   | Lit of int

@@ -12,7 +12,7 @@ type sedge = {
   sweight: float option; 
 }
 
-type sgraph_element = typ_graph * graph_element_x
+type sgraph_element = graph_element * graph_element_x
 and graph_element_x =
   | SVertex of svertex
   | SEdge of sedge
