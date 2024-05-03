@@ -38,10 +38,9 @@ type stmt =
   | IfElse of expr * stmt * stmt
   | While of expr * stmt
 
-let rec string_of_stmt = function
-  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt body
-  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt truebody ^ " ELSE " ^ string_of_stmt elsebody
-  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt body
+type stmt_list = stmt list 
+(*empty?*)
+
 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
@@ -81,8 +80,22 @@ let rec string_of_expr = function
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
 
 and string_of_graph_element = function
-  | Vertex(vertex) -> "vertex:" ^ vertex
-  | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
-  
+| Vertex(vertex) -> "vertex:" ^ vertex
+| Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
+
 and string_of_vertex vertex =
-  "\"" ^ vertex ^ "\""
+"\"" ^ vertex ^ "\""
+
+
+
+let rec string_of_stmt = function
+  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt body
+  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt truebody ^ " ELSE " ^ string_of_stmt elsebody
+  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt body
+  | Expr(expr) -> string_of_expr expr
+  | Block(stmts) -> "TODO BLOCK " 
+
+
+let rec string_of_stmt_list = function
+  | [] -> ""
+  | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest
