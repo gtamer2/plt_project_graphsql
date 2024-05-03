@@ -17,7 +17,50 @@ let empty_env = {
 
 let int_of_bool b = if b then 1 else 0
 
-let rec eval env = function
+
+let rec eval_stmt env = function
+  | stmt -> 
+    begin match stmt with
+    | Block (stmt_list) -> TODO
+    | Expr (expr) -> eval expr
+    | If (ifcondition, ifbody)->
+      let (v1, env1) = eval env ifcondition in
+      (* TODO: check that v1 is of type Bool *)
+      begin match v1 with
+        | (BoolLit v1) ->
+          if v1 then
+            let (v2, env2) = eval env1 ifbody in (v2, env2)
+          else 
+            (BoolLit v1 ,env)
+        | _ -> failwith "If excepts a boolean expression" 
+        end
+    | IfElse (ifcondition, ifbody, elsebody)->
+        let (v1, env1) = eval env ifcondition in
+        (* TODO: check that v1 is of type Bool *)
+        begin match v1 with
+          | (BoolLit v1) ->
+            if v1 then
+              let (v2, env2) = eval env1 ifbody in (v2, env2)
+            else 
+              let (v2, env2) = eval env1 elsebody in (v2, env2)
+          | _ -> failwith "If excepts a boolean expression" 
+          end
+    | While (whilecondition, whilebody)->
+        let (should_continue, env1) = eval env whilecondition in
+        begin match should_continue with
+          | (BoolLit should_continue) ->
+            if should_continue then
+              let (_, env2) = eval env1 whilebody in
+              eval env2 (While (whilecondition, whilebody))
+            else
+              (BoolLit should_continue, env1)
+          | _ -> failwith "While excepts a boolean expression"
+        end
+    | _ -> failwith "Invalid parsing of stmt" 
+    end
+
+
+let rec eval_expr env = function
   | expr -> 
     Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
     begin match expr with
@@ -73,9 +116,6 @@ let rec eval env = function
         | _ -> failwith "Invalid operands for binary operation"
         end in
       (result, env2)
-    | Seq(e1, e2) ->
-        let (_, env1) = eval env e1 in
-        eval env1 e2
     | Var(var) ->
         (match VarMap.find_opt var env.vars with
         | Some value -> (Lit value, env)
@@ -85,11 +125,7 @@ let rec eval env = function
           | None -> failwith ("Variable not found: " ^ var))
     | Graph (graph_elements) ->
       (Graph(graph_elements), env)
-
     | GraphAccess(graphname, fieldname) -> 
-      (* Printf.printf "printing expression: %s\n" (string_of_expr expr); 
-      Printf.printf "printing graph: %s\n" (graphname); 
-      Printf.printf "printing field: %s\n" (fieldname);  *)
       begin match GraphMap.find_opt graphname env.graphs with
         | Some graph_elements ->
             let v_output : graph_element list ref = ref [] in
@@ -171,41 +207,10 @@ let rec eval env = function
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer" 
       end
-    | If (ifcondition, ifbody)->
-      let (v1, env1) = eval env ifcondition in
-      (* TODO: check that v1 is of type Bool *)
-      begin match v1 with
-        | (BoolLit v1) ->
-          if v1 then
-            let (v2, env2) = eval env1 ifbody in (v2, env2)
-          else 
-            (BoolLit v1 ,env)
-        | _ -> failwith "If excepts a boolean expression" 
-        end
-      | IfElse (ifcondition, ifbody, elsebody)->
-          let (v1, env1) = eval env ifcondition in
-          (* TODO: check that v1 is of type Bool *)
-          begin match v1 with
-            | (BoolLit v1) ->
-              if v1 then
-                let (v2, env2) = eval env1 ifbody in (v2, env2)
-              else 
-                let (v2, env2) = eval env1 elsebody in (v2, env2)
-            | _ -> failwith "If excepts a boolean expression" 
-            end
-      | While (whilecondition, whilebody)->
-          let (should_continue, env1) = eval env whilecondition in
-          begin match should_continue with
-            | (BoolLit should_continue) ->
-              if should_continue then
-                let (_, env2) = eval env1 whilebody in
-                eval env2 (While (whilecondition, whilebody))
-              else
-                (BoolLit should_continue, env1)
-            | _ -> failwith "While excepts a boolean expression"
-          end
+    
     | _ -> failwith "not supported"
     end
+  end
  
 
 let _ =
