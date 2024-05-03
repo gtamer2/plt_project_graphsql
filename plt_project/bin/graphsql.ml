@@ -19,7 +19,7 @@ let int_of_bool b = if b then 1 else 0
 
 let rec eval env = function
   | expr -> 
-    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
+    (* Printf.printf "Evaluating expression: %s\n" (string_of_expr expr);  *)
     match expr with
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
@@ -108,7 +108,7 @@ let rec eval env = function
       end
     | GraphAsn(var, e) ->
       let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
-      Printf.printf "Graph Assignment: %s\n" str;
+      (* Printf.printf "Graph Assignment: %s\n" str; *)
       begin match e with
       | Graph graph_elements ->
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
@@ -134,7 +134,20 @@ let rec eval env = function
         let updated_graph_elements = !v_output @ !e_output @ existing_elements in
         let updated_env = { env with graphs = GraphMap.add gname updated_graph_elements env.graphs } in
         (Graph updated_graph_elements, updated_env)
-
+        | None -> failwith ("Graph not found: " ^ gname)
+        end 
+      | "delete" ->
+        begin match GraphMap.find_opt gname env.graphs with
+        | Some existing_elements ->
+          let to_delete = List.fold_left (fun acc element -> match element with
+            | Vertex vname -> (Vertex vname) :: acc
+            | Edge (source, target, weight) -> (Edge (source, target, weight)) :: acc
+            | _ -> acc
+          ) [] graph_elements in
+    
+        let updated_graph_elements = List.filter (fun el -> not (List.mem el to_delete)) existing_elements in
+        let updated_env = { env with graphs = GraphMap.add gname updated_graph_elements env.graphs } in
+        (Graph updated_graph_elements, updated_env)
         | None -> failwith ("Graph not found: " ^ gname)
         end 
       | _ -> failwith ("Unsupported operation type: " ^ optype)
@@ -142,7 +155,7 @@ let rec eval env = function
       
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
-      Printf.printf "variable Assignment: %s\n" str;
+      (* Printf.printf "variable Assignment: %s\n" str; *)
       let (value, env1) = eval env e in
       begin match value with
       | Lit x ->
