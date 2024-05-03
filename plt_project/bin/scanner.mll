@@ -62,5 +62,5 @@ rule tokenize = parse
 | "}" { RC }
 | "," { COMMA }
 | "->" { ARROW }
-| "#" { COMMENT }
+| '#' [^ '\n']* { tokenize lexbuf }
 | _ { raise (Failure "Character not allowed") }
