@@ -20,17 +20,18 @@ and graph_element_x =
 type sexpr = typ * sx
 and sx = 
     SLit of int
-  | SBoolLit of bool
   | SFloatLit of float
+  | SBoolLit of bool
   | SVar of string
-  | SVertex of svertex
-  | SEdge of sedge
-  | SGraph of sgraph_element list
+  | SAsn of string * sexpr
   | SUniop of uniop * sexpr
   | SBinop of sexpr * binop * sexpr
   | SSeq of sexpr * sexpr
-  | SAsn of string * sexpr
+  | SGraph of sgraph_element list
+  | SGraphAccess of string * string
   | SGraphAsn of string * sexpr
+  | SIf of sexpr * sexpr
+  | SIfElse of sexpr * sexpr * sexpr
 
 (* let rec string_of_sexpr (t, e) = match e
   | SLit(l[0],l[1]) -> string_of_int l *)
