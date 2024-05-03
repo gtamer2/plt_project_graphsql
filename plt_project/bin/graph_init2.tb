@@ -4,5 +4,5 @@ CREATE GRAPH ( # comments
 	EDGE ("vertex1" - "vertex3",10)
     ]
 ) AS g;
-SELECT g.vertices FROM g AS graph_vertices; # comments
+SELECT g.vertices FROM g AS graph_vertices; # comments # comments
 graph_vertices; # comments
