@@ -231,9 +231,33 @@ let rec eval_stmt_list env = function
               (BoolLit should_continue, env1)
           | _ -> failwith "While excepts a boolean expression"
         end
+    | For (init, condition, update, body) ->
+      let (_, env1) = eval_expr env init in
+      let rec for_helper rec_env condition update body =
+        let (should_continue, env2) = eval_expr rec_env condition in
+        begin match should_continue with
+          | (BoolLit should_continue) ->
+            if should_continue then
+              let (_, env3) = eval_stmt_list env2 body in
+              let (_, env4) = eval_expr env3 update in
+              for_helper env4 condition update body
+            else
+              (BoolLit should_continue, env2)
+          | _ -> failwith "For excepts a boolean expression"
+        end
+        in for_helper env1 condition update body
     | _ -> failwith "Invalid parsing of stmt" 
     end
 
+(**let rec for_loop start stop step f =
+  if start <= stop then begin
+    f start;
+    for_loop (start + step) stop step f
+  end
+
+(* Example usage *)
+let () =
+  for_loop 1 10 1 (fun i -> print_int i; print_newline())**)
 
   let _ =
   let lexbuf = Lexing.from_channel stdin in

@@ -48,6 +48,7 @@ rule tokenize = parse
 | "EDGE" { EDGE }
 | "NOT" { NOT }
 | "WHILE" { WHILE }
+| "FOR" { FOR }
 | "IF" { IF }
 | "ELSE" { ELSE }
 | "ELIF" { ELIF }
