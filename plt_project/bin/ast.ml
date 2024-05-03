@@ -37,6 +37,7 @@ type stmt =
   | If of expr * stmt list
   | IfElse of expr * stmt list * stmt list
   | While of expr * stmt list
+  | For of expr * expr * expr * stmt list
 
 type stmt_list = stmt list 
 (*empty?*)
@@ -93,6 +94,7 @@ let rec string_of_stmt = function
   | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
   | Expr(expr) -> string_of_expr expr ^ " "
   | Block(stmts) -> "TODO BLOCK " 
+  | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
 
 and  string_of_stmt_list = function
   | [] -> ""
