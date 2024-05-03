@@ -19,8 +19,8 @@ let int_of_bool b = if b then 1 else 0
 
 let rec eval env = function
   | expr -> 
-    (* Printf.printf "Evaluating expression: %s\n" (string_of_expr expr);  *)
-    match expr with
+    Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
+    begin match expr with
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
     | BoolLit(b) -> (BoolLit b, env)  
@@ -185,7 +185,19 @@ let rec eval env = function
                 let (v2, env2) = eval env1 elsebody in (v2, env2)
             | _ -> failwith "If excepts a boolean expression" 
             end
+      | While (whilecondition, whilebody)->
+          let (should_continue, env1) = eval env whilecondition in
+          begin match should_continue with
+            | (BoolLit should_continue) ->
+              if should_continue then
+                let (_, env2) = eval env1 whilebody in
+                eval env2 (While (whilecondition, whilebody))
+              else
+                (BoolLit should_continue, env1)
+            | _ -> failwith "While excepts a boolean expression"
+          end
     | _ -> failwith "not supported"
+    end
  
 
 let _ =

@@ -86,6 +86,7 @@ expr:
     | expr SEMICOLON {$1}
     | IF LP expr RP LC expr RC { print_endline "Parsing if"; If($3, $6)}
     | IF LP expr RP LC expr RC ELSE LC expr RC { print_endline "Parsing if/else"; IfElse($3, $6, $10)}
+    | WHILE LP expr RP LC expr RC { While($3, $6)}
 
 entry:
 | expr EOF { $1 }
