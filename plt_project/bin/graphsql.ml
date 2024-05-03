@@ -85,6 +85,7 @@ let rec eval env = function
           | None -> failwith ("Variable not found: " ^ var))
     | Graph (graph_elements) ->
       (Graph(graph_elements), env)
+
     | GraphAccess(graphname, fieldname) -> 
       (* Printf.printf "printing expression: %s\n" (string_of_expr expr); 
       Printf.printf "printing graph: %s\n" (graphname); 
@@ -110,9 +111,16 @@ let rec eval env = function
       let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
       (* Printf.printf "Graph Assignment: %s\n" str; *)
       begin match e with
-      | Graph graph_elements ->
+      | Graph(graph_elements) ->
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
         (Graph graph_elements, env1)
+      | GraphAccess(graphname, fieldname) -> 
+        let (graph, env1) = eval env (GraphAccess(graphname, fieldname)) in
+        begin match graph with
+        | Graph(graph_elements) ->
+          let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+          (Graph(graph_elements), env2)
+        | _ -> failwith "GraphAccess did not return a graph"
       | _ -> failwith "Graph assignment expects a graph"   
       end
 
@@ -130,7 +138,7 @@ let rec eval env = function
             | Edge _ -> e_output := element :: !e_output
             | _ -> failwith ("Not a graph element")
           ) graph_elements;
-        (*TODO: add vertices and edges to graph and update env.graphs GraphMap*)
+        (*add vertices and edges to graph and update env.graphs GraphMap*)
         let updated_graph_elements = !v_output @ !e_output @ existing_elements in
         let updated_env = { env with graphs = GraphMap.add gname updated_graph_elements env.graphs } in
         (Graph updated_graph_elements, updated_env)

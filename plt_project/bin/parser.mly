@@ -17,7 +17,6 @@
 %token DOT 
 %token VERTEX EDGE VERTICES EDGES
 %token LP RP LB RB LC RC COMMA ARROW COMMENT
-// %token LP RP LB RB LC RC COMMA ARROW QUOTES COMMENT
 %token GRAPH
 %token IF ELSE ELIF
 %token DEFINE FUNCTION
@@ -52,9 +51,11 @@ graph_elements_list:
     | LB graph_elements RB {$2}
 
 
-graph_init:
+graph_operation:
     | CREATE GRAPH LP RP { Graph([]) } //eventually can remove this 
     | CREATE GRAPH LP graph_elements_list RP { Graph($4) }
+    | SELECT VARIABLE DOT VERTICES FROM VARIABLE { GraphAccess($6, "vertices") }
+    | SELECT VARIABLE DOT EDGES FROM VARIABLE { GraphAccess($6, "edges") }
 
 expr:    
     // NON-RECURSIVE
@@ -65,7 +66,7 @@ expr:
     | VARIABLE { Var($1) } //done
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
     | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
-    | graph_init AS VARIABLE { GraphAsn($3, $1)} // DONE
+    | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE
     | INSERT INTO VARIABLE graph_elements_list {GraphOp($3, $4, "insert")}
     | DELETE graph_elements_list FROM VARIABLE {GraphOp($4, $2, "delete")}
     | expr PLUS expr {Binop($1, Add, $3) } //done
