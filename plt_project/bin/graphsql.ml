@@ -137,8 +137,8 @@ let rec eval env = function
         | _ -> failwith ("Graph not found: " ^ graphname)
       end
     | GraphAsn(var, e) ->
-      let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
-      Printf.printf "Graph Assignment: %s\n" str;
+      (* let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in *)
+      (* Printf.printf "Graph Assignment: %s\n" str; *)
       begin match e with
       | Graph(graph_elements) ->
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
@@ -148,13 +148,16 @@ let rec eval env = function
         begin match graph with
         | Graph(graph_elements) ->
           let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+          Printf.printf "GraphAcces updated in the map with variable %s\n" var;
           (Graph(graph_elements), env2)
         | _ -> failwith "GraphAccess did not return a graph"
       | GraphQuery(gname1, gname2, queryType) ->
+        Printf.printf "we're here";
         let (graph, env1) = eval env (GraphQuery(gname1, gname2, queryType)) in
         begin match graph with
         | Graph(graph_elements) ->
           let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+          Printf.printf "Union/intersect updated in the map with variable %s\n" var;
           (Graph(graph_elements), env2)
         | _ -> failwith "GraphQuery did not return a graph"
       end

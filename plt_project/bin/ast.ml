@@ -69,7 +69,9 @@ let rec string_of_expr = function
     "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
   | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
-    "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
+    (* "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements "  *)
+    "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ string_of_expr elt_list ^ "]"
+    (* "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ String.concat ", " (List.map string_of_expr elt_list) ^ "]" *)
   | GraphQuery(gname1, gname2, queryType) ->
     "\n" ^ gname1 ^ queryType ^ gname2
   | GraphOp(gname, elements, optype) -> 
