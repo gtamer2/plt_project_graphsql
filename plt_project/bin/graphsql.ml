@@ -49,7 +49,7 @@ let intersect_graphs g1 g2 =
 let rec eval env = function
   | expr -> 
     Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
-    match expr with
+    begin match expr with
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
     | BoolLit(b) -> (BoolLit b, env)  
@@ -126,9 +126,9 @@ let rec eval env = function
             
             List.iter (fun element ->
               match element with
-              | Vertex _ -> v_output := element :: !v_output
-              | Edge _ -> e_output := element :: !e_output
-              | _ -> failwith ("Not a graph element")
+                | Vertex _ -> v_output := element :: !v_output
+                | Edge _ -> e_output := element :: !e_output
+                | _ -> failwith ("Not a graph element")
             ) graph_elements;
             match fieldname with 
               | "vertices" -> (Graph !v_output, env)
@@ -136,9 +136,29 @@ let rec eval env = function
               | _ -> failwith ("Invalid field name: " ^ fieldname)
         | _ -> failwith ("Graph not found: " ^ graphname)
       end
+
+    | GraphQuery(gname1, gname2, queryType) ->
+      begin match GraphMap.find_opt gname1 env.graphs with
+      | Some graph1 -> 
+        begin match GraphMap.find_opt gname2 env.graphs with
+        | Some graph2 ->
+          begin match queryType with 
+          | "union" -> 
+            let union_result = union_graphs graph1 graph2 in
+            (Graph union_result, env)
+          | "intersect" ->
+            let intersect_result = intersect_graphs graph1 graph2 in
+            (Graph intersect_result, env)
+          | _ -> failwith ("Graph query type not supported: " ^ queryType)
+          end 
+        | None -> failwith ("Graph not found: " ^ gname2)
+        end 
+      | None -> failwith ("Graph not found: " ^ gname1)
+      end
+
     | GraphAsn(var, e) ->
-      (* let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in *)
-      (* Printf.printf "Graph Assignment: %s\n" str; *)
+      let str = "GraphAsn constructor: " ^ var ^ " = " ^ string_of_expr e in
+      Printf.printf "%s\n" str;
       begin match e with
       | Graph(graph_elements) ->
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
@@ -151,6 +171,7 @@ let rec eval env = function
           Printf.printf "GraphAcces updated in the map with variable %s\n" var;
           (Graph(graph_elements), env2)
         | _ -> failwith "GraphAccess did not return a graph"
+        end 
       | GraphQuery(gname1, gname2, queryType) ->
         Printf.printf "we're here";
         let (graph, env1) = eval env (GraphQuery(gname1, gname2, queryType)) in
@@ -160,7 +181,7 @@ let rec eval env = function
           Printf.printf "Union/intersect updated in the map with variable %s\n" var;
           (Graph(graph_elements), env2)
         | _ -> failwith "GraphQuery did not return a graph"
-      end
+        end
       | _ -> failwith "Graph assignment expects a graph"   
       end
 
@@ -200,29 +221,6 @@ let rec eval env = function
         end 
       | _ -> failwith ("Unsupported operation type: " ^ optype)
       end 
-    
-    | GraphQuery(gname1, gname2, queryType) ->
-      begin match GraphMap.find_opt gname1 env.graphs with
-      | Some graph1 -> 
-        begin match GraphMap.find_opt gname2 env.graphs with
-        | Some graph2 ->
-          begin match queryType with 
-          | "union" -> 
-            (* TODO union two graphs by taking the union of two graphs *)
-            (* If there exist an identical edge between two nodes, add the weight *)
-            let union_result = union_graphs graph1 graph2 in
-            (Graph union_result, env)
-          | "intersect" ->
-            (* TODO intersect two graphs by taking the intersection on of two graphs *)
-            (* If there exist an identical edge between two nodes, taking the smaller weight of the two *)
-            let intersect_result = intersect_graphs graph1 graph2 in
-            (Graph intersect_result, env)
-          | _ -> failwith ("Graph query type not supported: " ^ queryType)
-          end 
-        | None -> failwith ("Graph not found: " ^ gname2)
-        end 
-      | None -> failwith ("Graph not found: " ^ gname1)
-      end
       
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
@@ -244,7 +242,7 @@ let rec eval env = function
           else 
             (BoolLit v1 ,env)
         | _ -> failwith "If excepts a boolean expression" 
-        end
+      end
       | IfElse (ifcondition, ifbody, elsebody)->
           let (v1, env1) = eval env ifcondition in
           (* TODO: check that v1 is of type Bool *)
@@ -255,7 +253,7 @@ let rec eval env = function
               else 
                 let (v2, env2) = eval env1 elsebody in (v2, env2)
             | _ -> failwith "If excepts a boolean expression" 
-            end
+          end
     | _ -> failwith "constructor not supported"
     end
  

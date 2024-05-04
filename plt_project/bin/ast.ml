@@ -73,7 +73,7 @@ let rec string_of_expr = function
     "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ string_of_expr elt_list ^ "]"
     (* "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ String.concat ", " (List.map string_of_expr elt_list) ^ "]" *)
   | GraphQuery(gname1, gname2, queryType) ->
-    "\n" ^ gname1 ^ queryType ^ gname2
+    "\n GraphQuerying..." ^ gname1 ^ queryType ^ gname2
   | GraphOp(gname, elements, optype) -> 
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
