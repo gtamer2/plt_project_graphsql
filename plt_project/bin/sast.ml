@@ -26,12 +26,18 @@ and sx =
   | SAsn of string * sexpr
   | SUniop of uniop * sexpr
   | SBinop of sexpr * binop * sexpr
-  | SSeq of sexpr * sexpr
   | SGraph of sgraph_element list
   | SGraphAccess of string * string
   | SGraphAsn of string * sexpr
-  | SIf of sexpr * sexpr
-  | SIfElse of sexpr * sexpr * sexpr
+  | SGraphOp of string * sgraph_element list * string
+
+type sstmt = 
+| SBlock of sstmt list
+| SExpr of sexpr
+| SIf of sexpr * sstmt list
+| SIfElse of sexpr * sstmt list * sstmt list
+| SWhile of sexpr * sstmt list
+| SFor of sexpr * sexpr * sexpr * sstmt list
 
 (* let rec string_of_sexpr (t, e) = match e
   | SLit(l[0],l[1]) -> string_of_int l *)
@@ -52,35 +58,20 @@ let rec string_of_sexpr (t, e) =
       | SFloatLit(f) -> string_of_float f
       | SVar(s) -> s
       | SBinop(e1, op, e2) ->
-        let op_str = match op with
-          | Add -> "+"
-          | Sub -> "-"
-          | Mul -> "*"
-          | Div -> "/"
-          | Mod -> "%"
-          | Eq -> "=="
-          | Neq -> "!="
-          | Gteq -> ">="
-          | Lteq -> "<="
-          | Gt -> ">"
-          | Lt -> "<"
-          | And -> "&&"
-          | Or -> "||"
+        let op_str = string_of_op op
         in
         "(" ^ string_of_sexpr e1 ^ " " ^ op_str ^ " " ^ string_of_sexpr e2 ^ ")"
       | SAsn(p, q) -> p ^ " = " ^ string_of_sexpr q
       | SGraph(elements) ->
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
       | SGraphAsn(p, q) -> "GraphAsn: " ^ p  ^ string_of_sexpr q
-      | SSeq(e1, e2) -> string_of_sexpr e1 ^ "; " ^ string_of_sexpr e2
-        
-  )
+      ) ^ ")"
 
 and string_of_sgraph_element (t , e) =
   "(" ^ string_of_graph_element t ^ ":"  ^ ( match e with
     SVertex(svertex) -> string_of_svertex svertex
   | SEdge(sedge) -> string_of_sedge sedge
-  )
+  ) ^ ")"
 
 and string_of_svertex svertex =
   "\"" ^ svertex.sid ^ "\""
@@ -90,4 +81,12 @@ and string_of_sedge sedge =
     | None -> "None"
   in
   "Edge(\"" ^ sedge.ssource ^ "\", \"" ^ sedge.starget ^ "\", " ^ weight_str ^ ")"
+
+and string_of_sstmt = function
+    SBlock(stmt_list) ->
+      "{\n" ^ String.concat "" (List.map string_of_sstmt stmt_list) ^ "}\n"
+  | SExpr (sexpr) -> string_of_sexpr sexpr ^ ";\n"
+
+    
+
   

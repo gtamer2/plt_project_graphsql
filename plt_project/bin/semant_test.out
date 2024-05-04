@@ -1,0 +1,7 @@
+Processing all stmts
+Processing all stmts
+Processing all stmts
+SAST: 
+(Int : foo = (Int : 4));
+(Int : bar = (Int : 3));
+(Int : let = (Int : ((Int : 2) + (Int : 3))));

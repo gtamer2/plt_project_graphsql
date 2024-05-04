@@ -4,8 +4,8 @@ all : graph_init.out graph_init2.out
 # all : calc_test.out
 
 ##############################
-semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo
-	ocamlc -w A -o semant_eval ast.cmo sast.com parser.cmo scanner.cmo semant_eval.cmo semantic_checker.cmo
+semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
+	ocamlc -w A -o semant_eval ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
 
 graphsql : ast.cmo parser.cmo scanner.cmo graphsql.cmo
 	ocamlc -w A -o graphsql ast.cmo parser.cmo scanner.cmo graphsql.cmo
@@ -58,7 +58,7 @@ semantic_checker.cmx : ast.cmo sast.cmo
 # .PHONY tells make that clean is not a file name, but a command to be executed
 .PHONY : clean
 clean :
-	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql
+	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval
 
 
 ##############################
