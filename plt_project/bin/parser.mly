@@ -56,6 +56,8 @@ graph_operation:
     | CREATE GRAPH LP graph_elements_list RP { Graph($4) }
     | SELECT VARIABLE DOT VERTICES FROM VARIABLE { GraphAccess($6, "vertices") }
     | SELECT VARIABLE DOT EDGES FROM VARIABLE { GraphAccess($6, "edges") }
+    | LP VARIABLE UNION VARIABLE RP { GraphQuery($2, $4, "union") }
+    | LP VARIABLE INTERSECT VARIABLE RP { GraphQuery($2, $4, "intersect") }
 
 expr:    
     // NON-RECURSIVE

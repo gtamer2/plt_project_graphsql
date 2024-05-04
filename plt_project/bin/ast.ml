@@ -17,6 +17,8 @@ type graph_element =
   | Vertex of string
   | Edge of string * string * int
 
+(* type graph = graph_element list *)
+
 type expr =
   | Lit of int
   | FloatLit of float 
@@ -30,6 +32,7 @@ type expr =
   | GraphAsn of string * expr
   | GraphAccess of string * string (* graph_name * field_name *)
   | GraphOp of string * graph_element list * string
+  | GraphQuery of string * string * string
   | If of expr * expr
   | IfElse of expr * expr * expr
 
@@ -67,6 +70,8 @@ let rec string_of_expr = function
   | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
     "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
+  | GraphQuery(gname1, gname2, queryType) ->
+    "\n" ^ gname1 ^ queryType ^ gname2
   | GraphOp(gname, elements, optype) -> 
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
   | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2

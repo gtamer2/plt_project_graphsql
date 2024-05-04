@@ -17,6 +17,35 @@ let empty_env = {
 
 let int_of_bool b = if b then 1 else 0
 
+let union_graphs g1 g2 =
+  let merge_edges e1 e2 =
+      let combined = e1 @ e2 in
+      List.fold_left (fun acc edge ->
+          match edge with
+          | Edge (source, target, weight) ->
+              let existing = List.filter (fun e -> match e with
+                  | Edge (s, t, _) -> (s = source && t = target) || (t = source && s = target)
+                  | _ -> false
+              ) acc in
+              if existing = [] then edge :: acc
+              else let Edge (_, _, existing_weight) = List.hd existing in
+                  let new_edge = Edge (source, target, existing_weight + weight) in
+                  new_edge :: List.filter (fun e -> e <> List.hd existing) acc
+          | _ -> edge :: acc
+      ) [] combined
+  in
+    merge_edges g1 g2
+
+let intersect_graphs g1 g2 =
+    List.filter (fun e -> match e with
+        | Edge (source, target, weight) ->
+            List.exists (fun e2 -> match e2 with
+                | Edge (s, t, w) -> ((s = source && t = target) || (t = source && s = target)) && weight = w
+                | _ -> false
+            ) g2
+        | _ -> false
+    ) g1
+
 let rec eval env = function
   | expr -> 
     Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
@@ -121,6 +150,14 @@ let rec eval env = function
           let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
           (Graph(graph_elements), env2)
         | _ -> failwith "GraphAccess did not return a graph"
+      | GraphQuery(gname1, gname2, queryType) ->
+        let (graph, env1) = eval env (GraphQuery(gname1, gname2, queryType)) in
+        begin match graph with
+        | Graph(graph_elements) ->
+          let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+          (Graph(graph_elements), env2)
+        | _ -> failwith "GraphQuery did not return a graph"
+      end
       | _ -> failwith "Graph assignment expects a graph"   
       end
 
@@ -160,6 +197,29 @@ let rec eval env = function
         end 
       | _ -> failwith ("Unsupported operation type: " ^ optype)
       end 
+    
+    | GraphQuery(gname1, gname2, queryType) ->
+      begin match GraphMap.find_opt gname1 env.graphs with
+      | Some graph1 -> 
+        begin match GraphMap.find_opt gname2 env.graphs with
+        | Some graph2 ->
+          begin match queryType with 
+          | "union" -> 
+            (* TODO union two graphs by taking the union of two graphs *)
+            (* If there exist an identical edge between two nodes, add the weight *)
+            let union_result = union_graphs graph1 graph2 in
+            (Graph union_result, env)
+          | "intersect" ->
+            (* TODO intersect two graphs by taking the intersection on of two graphs *)
+            (* If there exist an identical edge between two nodes, taking the smaller weight of the two *)
+            let intersect_result = intersect_graphs graph1 graph2 in
+            (Graph intersect_result, env)
+          | _ -> failwith ("Graph query type not supported: " ^ queryType)
+          end 
+        | None -> failwith ("Graph not found: " ^ gname2)
+        end 
+      | None -> failwith ("Graph not found: " ^ gname1)
+      end
       
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
