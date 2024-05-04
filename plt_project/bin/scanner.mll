@@ -28,8 +28,6 @@ rule tokenize = parse
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
 | '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
-(* | '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) } *)
-(* | quote[ -~]quote as str { STRINGLIT(str) } *)
 | "AND" { AND }
 | "OR" { OR }
 | "DEFINE" { DEFINE }
@@ -40,6 +38,8 @@ rule tokenize = parse
 | "AS" { AS }
 | "WHERE" { WHERE }
 | "INSERT" { INSERT }
+| "INTO" { INTO }
+| "DELETE" { DELETE }
 | "UNION" { UNION }
 | "INTERSECT" { INTERSECT }
 | "APPLY" { APPLY }
@@ -48,6 +48,7 @@ rule tokenize = parse
 | "EDGE" { EDGE }
 | "NOT" { NOT }
 | "WHILE" { WHILE }
+| "FOR" { FOR }
 | "IF" { IF }
 | "ELSE" { ELSE }
 | "ELIF" { ELIF }

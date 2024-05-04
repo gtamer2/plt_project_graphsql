@@ -1,7 +1,8 @@
 CREATE GRAPH (
-	[VERTEX (vertexone),
-	VERTEX (VERTEX_two9876),
-	EDGE (vertexone - vertextwo,10)
+	[VERTEX ("vertex1"),
+	VERTEX ("vertex2"),
+	EDGE ("vertex1" - "vertex2",10)
     ]
 ) AS g;
-g.edges
+SELECT g.vertices FROM g AS graph_vertices;
+graph_vertices;

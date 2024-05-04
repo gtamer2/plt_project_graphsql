@@ -31,13 +31,23 @@ type expr =
   | Asn of string * expr 
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
-  | Seq of expr * expr
+  (* | Seq of expr * expr *)
   | Graph of graph_element list
-  | GraphAccess of string * string (* graph_name * field_name *)
   | GraphAsn of string * expr
-  | If of expr * expr
-  | IfElse of expr * expr * expr
-  (* | AccessResult of graph_element list *)
+  | GraphAccess of string * string (* graph_name * field_name *)
+  | GraphOp of string * graph_element list * string
+
+type stmt = 
+  | Block of stmt list
+  | Expr of expr
+  | If of expr * stmt list
+  | IfElse of expr * stmt list * stmt list
+  | While of expr * stmt list
+  | For of expr * expr * expr * stmt list
+
+type stmt_list = stmt list 
+(*empty?*)
+
 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
@@ -45,7 +55,6 @@ let rec string_of_expr = function
   | BoolLit(b) -> string_of_bool b
   | Var(v) -> v
   | Asn(v, e) -> v ^ " = " ^ string_of_expr e
-  (* | Asn(v, e) -> v ^ " = " ^ string_of_expr e *)
   | Binop(e1, op, e2) ->
     let op_str = string_of_op op
     in
@@ -57,20 +66,17 @@ let rec string_of_expr = function
     in
     op_str ^ string_of_expr e
   | Graph(elements) ->
-    "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
-  | GraphAccess(graphname, fieldname) -> "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
+    "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
+  | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
-     "GraphAsn: " ^ v  ^ "TODO print all elements "
-    (* let elements_str = List.map string_of_expr elt_list |> String.concat ", " in *)
-    (* "GraphAsn " ^ v ^ (List.map string_of_graph_element elt_list) ^ "])" *)
-  | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
-  | If(condition, body) -> "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr body
-  | IfElse(condition, truebody, elsebody) -> "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr truebody ^ " ELSE " ^ string_of_expr elsebody
+    "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
+  | GraphOp(gname, elements, optype) -> 
+    "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
 
 and string_of_graph_element = function
-  | Vertex(vertex) -> "vertex:" ^ vertex
-  | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
-  
+| Vertex(vertex) -> "vertex:" ^ vertex
+| Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
+
 and string_of_vertex vertex =
   "\"" ^ vertex ^ "\""
 
@@ -90,3 +96,16 @@ and string_of_op op = match op with
   | And -> "&&"
   | Or -> "||"
 
+
+
+let rec string_of_stmt = function
+  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list body
+  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ " ELSE " ^ string_of_stmt_list elsebody
+  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
+  | Expr(expr) -> string_of_expr expr ^ " "
+  | Block(stmts) -> "TODO BLOCK " 
+  | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
+
+and  string_of_stmt_list = function
+  | [] -> ""
+  | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest

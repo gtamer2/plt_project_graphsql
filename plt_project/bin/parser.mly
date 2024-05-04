@@ -11,11 +11,12 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT UNION INTERSECT APPLY WHILE
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT APPLY WHILE FOR
 
+%token QUOTES
 %token DOT 
 %token VERTEX EDGE VERTICES EDGES
-%token LP RP LB RB LC RC COMMA ARROW QUOTES COMMENT
+%token LP RP LB RB LC RC COMMA ARROW COMMENT
 %token GRAPH
 %token IF ELSE ELIF
 %token DEFINE FUNCTION
@@ -29,16 +30,14 @@
 %left EQL NOTEQL
 %left GT LT GTEQ LTEQ
 
-
-
-%start expr
-%type <Ast.expr> expr
+%start stmt_list
+%type <Ast.stmt_list> stmt_list
 
 %%
 
 graph_element:
-    | VERTEX LP VARIABLE RP { Vertex($3) }
-    | EDGE LP VARIABLE MINUS VARIABLE COMMA LITERAL RP { Edge($3, $5, $7) }
+    | VERTEX LP QUOTES VARIABLE QUOTES RP { Vertex($4) }
+    | EDGE LP QUOTES VARIABLE QUOTES MINUS QUOTES VARIABLE QUOTES COMMA LITERAL RP { Edge($4, $8, $11) }
 
 graph_elements:
     | graph_element COMMA graph_elements { $1::$3 }
@@ -50,12 +49,25 @@ graph_elements_list:
     | LB graph_elements RB {$2}
 
 
-graph_init:
+graph_operation:
     | CREATE GRAPH LP RP { Graph([]) } //eventually can remove this 
     | CREATE GRAPH LP graph_elements_list RP { Graph($4) }
+    | SELECT VARIABLE DOT VERTICES FROM VARIABLE { GraphAccess($6, "vertices") }
+    | SELECT VARIABLE DOT EDGES FROM VARIABLE { GraphAccess($6, "edges") }
+
+stmt_list: 
+    /* nothing */ { [] }
+    | stmt stmt_list {print_endline("Processing all stmts"); $1::$2 }
+
+stmt:
+    | expr SEMICOLON { Expr($1) }
+    | LC stmt_list RC { Block($2) }
+    | IF LP expr RP LC stmt_list RC { print_endline("Parser If"); If($3, $6) }
+    | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
+    | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
+    | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
 
 expr:    
-    // NON-RECURSIVE
     | LITERAL    { Lit($1) } //done
     | FLOATLIT { FloatLit($1) } //done
     | BLIT     { BoolLit($1) }
@@ -63,7 +75,9 @@ expr:
     | VARIABLE { Var($1) } //done
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
     | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
-    | graph_init AS VARIABLE { GraphAsn($3, $1)} // DONE
+    | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE
+    | INSERT INTO VARIABLE graph_elements_list {GraphOp($3, $4, "insert")}
+    | DELETE graph_elements_list FROM VARIABLE {GraphOp($4, $2, "delete")}
     | expr PLUS expr {Binop($1, Add, $3) } //done
     | expr MINUS expr { Binop($1, Sub, $3) } //done
     | expr TIMES expr { Binop($1, Mul, $3) } //done
@@ -78,10 +92,7 @@ expr:
     | expr AND expr { Binop($1, And, $3) }
     | expr OR expr { Binop($1, Or, $3) }
     | LP expr RP { $2 } //should this be moved
-    | expr SEMICOLON expr { Seq($1, $3) }
-    | expr SEMICOLON {$1}
-    | IF LP expr RP LC expr RC { print_endline "Parsing if"; If($3, $6)}
-    | IF LP expr RP LC expr RC ELSE LC expr RC { print_endline "Parsing if/else"; IfElse($3, $6, $10)}
+
 
 entry:
 | expr EOF { $1 }
