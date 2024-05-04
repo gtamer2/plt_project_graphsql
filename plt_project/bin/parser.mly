@@ -10,8 +10,9 @@
 %token <float> FLOATLIT
 %token <string> STRINGLIT
 
+%token UNION INTERSECT 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT APPLY WHILE FOR
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE APPLY WHILE FOR
 
 %token QUOTES
 %token DOT 
@@ -54,6 +55,8 @@ graph_operation:
     | CREATE GRAPH LP graph_elements_list RP { Graph($4) }
     | SELECT VARIABLE DOT VERTICES FROM VARIABLE { GraphAccess($6, "vertices") }
     | SELECT VARIABLE DOT EDGES FROM VARIABLE { GraphAccess($6, "edges") }
+    | LP VARIABLE UNION VARIABLE RP { GraphQuery($2, $4, "union") }
+    // | VARIABLE INTERSECT VARIABLE { GraphQuery($1, $3, "intersect") }
 
 stmt_list: 
     /* nothing */ { [] }
@@ -74,8 +77,8 @@ expr:
     | VARIABLE ASSIGN expr {Asn($1, $3)} //done
     | VARIABLE { Var($1) } //done
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
-    | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
-    | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE
+    | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done    
+    | graph_operation AS VARIABLE{GraphAsn($3, $1)} // DONE
     | INSERT INTO VARIABLE graph_elements_list {GraphOp($3, $4, "insert")}
     | DELETE graph_elements_list FROM VARIABLE {GraphOp($4, $2, "delete")}
     | expr PLUS expr {Binop($1, Add, $3) } //done

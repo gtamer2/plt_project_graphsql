@@ -35,13 +35,13 @@ rule tokenize = parse
 | "CREATE" { CREATE }
 | "SELECT" { SELECT }
 | "FROM" { FROM }
+| "UNION" { UNION }
+| "INTERSECT" { INTERSECT }
 | "AS" { AS }
 | "WHERE" { WHERE }
 | "INSERT" { INSERT }
 | "INTO" { INTO }
 | "DELETE" { DELETE }
-| "UNION" { UNION }
-| "INTERSECT" { INTERSECT }
 | "APPLY" { APPLY }
 | "GRAPH" { GRAPH }
 | "VERTEX" { VERTEX }

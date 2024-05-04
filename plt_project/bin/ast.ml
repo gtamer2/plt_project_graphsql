@@ -17,6 +17,8 @@ type graph_element =
   | Vertex of string
   | Edge of string * string * int
 
+type graph = graph_element list
+
 type expr =
   | Lit of int
   | FloatLit of float 
@@ -30,6 +32,7 @@ type expr =
   | GraphAsn of string * expr
   | GraphAccess of string * string (* graph_name * field_name *)
   | GraphOp of string * graph_element list * string
+  | GraphQuery of string * string * string
 
 type stmt = 
   | Block of stmt list
@@ -79,7 +82,9 @@ let rec string_of_expr = function
     "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
   | GraphOp(gname, elements, optype) -> 
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
-
+  | GraphQuery(gname1, gname2, queryType) ->
+    "\n" ^ gname1 ^ queryType ^ gname2
+    
 and string_of_graph_element = function
 | Vertex(vertex) -> "vertex:" ^ vertex
 | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
