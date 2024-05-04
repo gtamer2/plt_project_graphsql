@@ -1,8 +1,8 @@
-CREATE GRAPH (
+CREATE GRAPH ( # comment
 	[VERTEX ("vertex1"),
 	VERTEX ("vertex2"),
 	EDGE ("vertex1" - "vertex2",10)
     ]
 ) AS g;
-SELECT g.vertices FROM g AS graph_vertices;
-graph_vertices;
+SELECT g.vertices FROM g AS graph_vertices; # comment # comment
+graph_vertices; # comment
