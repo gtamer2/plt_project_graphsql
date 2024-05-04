@@ -10,4 +10,5 @@ SAST:
 (Int : let = (Int : ((Int : 2) + (Int : 3))));
 (Int : veve = (Int : ((Int : 23) + (Int : 3))));
 (Float : e = (Float : 3.4));
-(Float : foo = (Float : 3.11));
+(Float : foo = (Float : 333.4));
+[bar -> 3, e -> 3.4, foo -> 333.4, let -> (Int : ((Int : 2) + (Int : 3))), veve -> (Int : ((Int : 23) + (Int : 3)))]

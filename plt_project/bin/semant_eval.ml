@@ -15,6 +15,7 @@ let varmap_to_str m =
     match v with 
     | (_, SLit i) -> string_of_int i
     | (_, SFloatLit f) -> string_of_float f
+    | other -> string_of_sexpr other
   )) (VarMap.bindings m)
   in "[" ^ (String.concat ", " inners) ^ "]"
 
@@ -23,5 +24,5 @@ let _ =
   let program = Parser.stmt_list Scanner.tokenize lexbuf in
   let sprogram, new_env = Semantic_checker.check empty_env program in
   let sprogram_string = String.concat "" (List.map string_of_sstmt sprogram) in
-  (* let svarmap_string = varmap_to_str new_env.vars in *)
-  Printf.printf "SAST: \n%s" sprogram_string;
+  let svarmap_string = varmap_to_str new_env.vars in
+  Printf.printf "SAST: \n%s%s" sprogram_string svarmap_string;
