@@ -79,6 +79,8 @@ let check init_env init_program =
       let se2, env2 = check_expr env1 e2 in
       (((* what type is an seq*), SSeq (se1, se2)), env2) *)
     | Asn (var, e) ->
+      (* let str = var ^ " = " ^ string_of_expr e in
+        Printf.printf "variable Assignment: %s\n" str; *)
       let ((t, e'), env1)  = check_expr env e in
       (* let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
                 string_of_typ rt ^ " in " ^ string_of_expr exit

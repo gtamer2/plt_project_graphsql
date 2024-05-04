@@ -1,7 +1,13 @@
 Processing all stmts
 Processing all stmts
 Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
 SAST: 
 (Int : foo = (Int : 4));
 (Int : bar = (Int : 3));
 (Int : let = (Int : ((Int : 2) + (Int : 3))));
+(Int : veve = (Int : ((Int : 23) + (Int : 3))));
+(Float : e = (Float : 3.4));
+(Float : foo = (Float : 3.11));
