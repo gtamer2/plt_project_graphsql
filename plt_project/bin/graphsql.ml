@@ -18,33 +18,43 @@ let empty_env = {
 let int_of_bool b = if b then 1 else 0
 
 let union_graphs g1 g2 =
-  let merge_edges e1 e2 =
-      let combined = e1 @ e2 in
-      List.fold_left (fun acc edge ->
-          match edge with
-          | Edge (source, target, weight) ->
-              let existing = List.filter (fun e -> match e with
-                  | Edge (s, t, _) -> (s = source && t = target) || (t = source && s = target)
-                  | _ -> false
-              ) acc in
-              if existing = [] then edge :: acc
-              else let Edge (_, _, existing_weight) = List.hd existing in
-                  let new_edge = Edge (source, target, existing_weight + weight) in
-                  new_edge :: List.filter (fun e -> e <> List.hd existing) acc
-          | _ -> edge :: acc
-      ) [] combined
+  let merge_elements e1 e2 =
+    let combined = e1 @ e2 in
+    List.fold_left (fun acc elem ->
+        match elem with
+        | Vertex id ->
+            if List.exists (function Vertex id2 -> id = id2 | _ -> false) acc then acc
+            else elem :: acc
+        | Edge (source, target, weight) ->
+            let existing = List.find_opt (function 
+              | Edge (s, t, _) -> (s = source && t = target) || (t = source && s = target)
+              | _ -> false
+            ) acc in
+            match existing with
+            | Some Edge (_, _, existing_weight) ->
+                let new_edge = Edge (source, target, existing_weight + weight) in
+                new_edge :: List.filter (fun e -> e <> existing) acc
+            | None -> elem :: acc
+        | _ -> elem :: acc
+    ) [] combined
   in
     merge_edges g1 g2
 
 let intersect_graphs g1 g2 =
-    List.filter (fun e -> match e with
-        | Edge (source, target, weight) ->
-            List.exists (fun e2 -> match e2 with
-                | Edge (s, t, w) -> ((s = source && t = target) || (t = source && s = target)) && weight = w
-                | _ -> false
-            ) g2
-        | _ -> false
-    ) g1
+  List.filter (fun e1 -> match e1 with
+    | Vertex id1 -> 
+        List.exists (fun e2 -> match e2 with
+            | Vertex id2 -> id1 = id2
+            | _ -> false
+        ) g2
+    | Edge (source1, target1, weight1) ->
+        List.exists (fun e2 -> match e2 with
+            | Edge (source2, target2, weight2) -> 
+                ((source1 = source2 && target1 = target2) || (source1 = target2 && target1 = source2)) && weight1 = weight2
+            | _ -> false
+        ) g2
+    | _ -> false
+  ) g1
 
 let rec eval env = function
   | expr -> 
