@@ -62,10 +62,15 @@ stmt_list:
 stmt:
     | expr SEMICOLON { Expr($1) }
     | LC stmt_list RC { Block($2) }
-    | IF LP expr RP LC stmt_list RC { print_endline("Parser If"); If($3, $6) }
+    | IF LP expr RP LC stmt_list RC { If($3, $6) }
+    | IF LP expr RP LC stmt_list RC elif_stmt_list ELSE LC stmt_list RC{ IfElif($3, $6, $8, $11)}
     | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
     | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
+
+elif_stmt_list:
+    | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}
+    | ELIF LP expr RP LC stmt_list RC elif_stmt_list {($3, $6)::$8}
 
 expr:    
     | LITERAL    { Lit($1) } //done
