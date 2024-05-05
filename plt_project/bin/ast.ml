@@ -1,7 +1,8 @@
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
-(* type primitive = Int | Bool | Float | String | Void 
-type object = Graph *)
+type typ = Int | Bool | Float | String (* | Void *)
+(* type object = Graph *)
+
 
 type vertex = {
   id: string;
@@ -17,6 +18,12 @@ type graph_element =
   | Vertex of string
   | Edge of string * string * int
 
+
+type unified_type = 
+  | Typ of typ
+  | GraphElement of graph_element
+  | Graph of graph_element list
+
 type expr =
   | Lit of int
   | FloatLit of float 
@@ -30,6 +37,10 @@ type expr =
   | GraphAsn of string * expr
   | GraphAccess of string * string (* graph_name * field_name *)
   | GraphOp of string * graph_element list * string
+  | GraphQuery of string * string * string
+  | GraphUpdate of string * graph_element
+  | If of expr * expr
+  | IfElse of expr * expr * expr
 
 type stmt = 
   | Block of stmt list
@@ -54,20 +65,7 @@ let rec string_of_expr = function
   | Var(v) -> v
   | Asn(v, e) -> v ^ " = " ^ string_of_expr e
   | Binop(e1, op, e2) ->
-    let op_str = match op with
-      | Add -> "+"
-      | Sub -> "-"
-      | Mul -> "*"
-      | Div -> "/"
-      | Mod -> "%"
-      | Eq -> "=="
-      | Neq -> "!="
-      | Gteq -> ">="
-      | Lteq -> "<="
-      | Gt -> ">"
-      | Lt -> "<"
-      | And -> "&&"
-      | Or -> "||"
+    let op_str = string_of_op op
     in
     "(" ^ string_of_expr e1 ^ " " ^ op_str ^ " " ^ string_of_expr e2 ^ ")"
   | Uniop(op, e) ->
@@ -80,16 +78,39 @@ let rec string_of_expr = function
     "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
   | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
-    "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
+    (* "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements "  *)
+    "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ string_of_expr elt_list ^ "]"
+    (* "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ String.concat ", " (List.map string_of_expr elt_list) ^ "]" *)
+  | GraphQuery(gname1, gname2, queryType) ->
+    "\n GraphQuerying..." ^ gname1 ^ queryType ^ gname2
   | GraphOp(gname, elements, optype) -> 
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
+  | GraphUpdate(gname, element) ->
+    "\n Updating graph element" ^ string_of_graph_element element ^ "in graph: " ^ gname  
 
 and string_of_graph_element = function
 | Vertex(vertex) -> "vertex:" ^ vertex
 | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
 
 and string_of_vertex vertex =
-"\"" ^ vertex ^ "\""
+  "\"" ^ vertex ^ "\""
+
+(* convert op to string separated out as a separate function *)
+and string_of_op op = match op with
+  | Add -> "+"
+  | Sub -> "-"
+  | Mul -> "*"
+  | Div -> "/"
+  | Mod -> "%"
+  | Eq -> "=="
+  | Neq -> "!="
+  | Gteq -> ">="
+  | Lteq -> "<="
+  | Gt -> ">"
+  | Lt -> "<"
+  | And -> "&&"
+  | Or -> "||"
+
 
 
 let rec string_of_stmt = function

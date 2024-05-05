@@ -14,8 +14,4 @@ src/.DS_store
 */graphsql
 */parser.ml
 
-plt_project/bin/parser.ml
-plt_project/bin/graphsql
-plt_project/plt_project.opam
-
 _opam
