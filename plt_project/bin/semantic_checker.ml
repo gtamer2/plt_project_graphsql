@@ -96,6 +96,7 @@ let check init_env init_program =
       (* | graph_element -> let env2 = { env1 with vars = GraphMap.add graph x env1.graphs } in
       | graph_element list ->
       | _,  *)
+    | _ -> failwith "not supported"
       in
   let rec check_stmt_list env = function
         [] -> ([], env)
@@ -115,6 +116,7 @@ let check init_env init_program =
       | IfElse ->
       | While ->
       | For -> *)
+      | _ -> failwith "not supported"
   
   in
   check_stmt_list init_env init_program
