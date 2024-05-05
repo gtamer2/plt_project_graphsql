@@ -1,4 +1,6 @@
-Initial Expression: GraphAsn: gGraph([])
-Evaluating expression: GraphAsn: gGraph([])
-Graph Assignment: GraphAsn g = Graph([])
-Result: Graph([])
+Processing all stmts
+Initial Expression: 
+GraphAsn: gTODO print all elements  
+Evaluating expression: 
+GraphAsn: gTODO print all elements 
+Result: true

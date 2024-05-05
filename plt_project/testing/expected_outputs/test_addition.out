@@ -1,5 +1,6 @@
-Initial Expression: (5 + 6)
+Processing all stmts
+Initial Expression: (5 + 6) 
 Evaluating expression: (5 + 6)
 Evaluating expression: 5
 Evaluating expression: 6
-Result: 11
+Result: true

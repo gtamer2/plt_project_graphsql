@@ -1,12 +1,12 @@
 (executable
  (name graphsql)
  (modules ast parser scanner graphsql)
- (flags (:standard -w +A-8-42-4-11-33-27)))
+ (flags (:standard -w +A-8-42-4-11-33-27-32-26))) ; add the warnings u want to surpress
 
 (rule
  (targets ast.cmo)
  (deps ast.ml)
- (action (run ocamlc -w +A -c %{deps}))) ; Generate .mli file
+ (action (run ocamlc -w +A-8-42-4-11-33-27-32-26 -c %{deps}))) ; Generate .mli file
 
 (rule
  (targets scanner.ml)
