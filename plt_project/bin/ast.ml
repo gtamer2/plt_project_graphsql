@@ -27,7 +27,7 @@ type expr =
   | Asn of string * expr 
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
-  | Seq of expr * expr
+  (* | Seq of expr * expr *)
   | Graph of graph_element list
   | GraphAsn of string * expr
   | GraphAccess of string * string (* graph_name * field_name *)
@@ -36,6 +36,22 @@ type expr =
   | GraphUpdate of string * graph_element
   | If of expr * expr
   | IfElse of expr * expr * expr
+
+type stmt = 
+  | Block of stmt list
+  | Expr of expr
+  | If of expr * stmt list
+  | IfElse of expr * stmt list * stmt list
+  | IfElif of expr * stmt list * elif_stmt list * stmt list
+  | While of expr * stmt list
+  | For of expr * expr * expr * stmt list
+  and
+ elif_stmt = expr * stmt list
+
+
+type stmt_list = stmt list 
+
+
 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
@@ -79,13 +95,26 @@ let rec string_of_expr = function
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
   | GraphUpdate(gname, element) ->
     "\n Updating graph element" ^ string_of_graph_element element ^ "in graph: " ^ gname  
-  | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
-  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr body
-  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_expr truebody ^ " ELSE " ^ string_of_expr elsebody
 
 and string_of_graph_element = function
-  | Vertex(vertex) -> "vertex:" ^ vertex
-  | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
-  
+| Vertex(vertex) -> "vertex:" ^ vertex
+| Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
+
 and string_of_vertex vertex =
-  "\"" ^ vertex ^ "\""
+"\"" ^ vertex ^ "\""
+
+
+let rec string_of_stmt = function
+  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list body
+  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ " ELSE " ^ string_of_stmt_list elsebody
+  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
+  | Expr(expr) -> string_of_expr expr ^ " "
+  | Block(stmts) -> "TODO BLOCK " 
+  | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
+  | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
+ and string_of_elif_stmt = function
+| [] -> ""
+| (condition, body) :: rest -> " ELIF " ^ string_of_expr condition ^ " " ^ string_of_stmt_list body ^ string_of_elif_stmt rest 
+and  string_of_stmt_list = function
+  | [] -> ""
+  | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest

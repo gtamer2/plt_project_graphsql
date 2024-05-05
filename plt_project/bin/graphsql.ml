@@ -60,16 +60,17 @@ let intersect_graphs g1 g2 =
     | _ -> false
   ) g1
 
-let rec eval env = function
+let rec eval_expr env = function
   | expr -> 
     Printf.printf "Evaluating expression: %s\n" (string_of_expr expr); 
     begin match expr with
+    
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
     | BoolLit(b) -> (BoolLit b, env)  
     | Binop(e1, op, e2) ->
-      let (v1, env1) = eval env e1 in
-      let (v2, env2) = eval env1 e2 in
+      let (v1, env1) = eval_expr env e1 in
+      let (v2, env2) = eval_expr env1 e2 in
       let eval_float_op v1 op v2 =
         begin match op with 
             | Add -> FloatLit (v1 +. v2)
@@ -116,9 +117,6 @@ let rec eval env = function
         | _ -> failwith "Invalid operands for binary operation"
         end in
       (result, env2)
-    | Seq(e1, e2) ->
-        let (_, env1) = eval env e1 in
-        eval env1 e2
     | Var(var) ->
         (match VarMap.find_opt var env.vars with
         | Some value -> (Lit value, env)
@@ -130,9 +128,9 @@ let rec eval env = function
       (Graph(graph_elements), env)
 
     | GraphAccess(graphname, fieldname) -> 
-      Printf.printf "printing expression for GraphAccess: %s\n" (string_of_expr expr); 
+      (* Printf.printf "printing expression for GraphAccess: %s\n" (string_of_expr expr); 
       Printf.printf "printing graph: %s\n" (graphname); 
-      Printf.printf "printing field: %s\n" (fieldname); 
+      Printf.printf "printing field: %s\n" (fieldname);  *)
       begin match GraphMap.find_opt graphname env.graphs with
         | Some graph_elements ->
             let v_output : graph_element list ref = ref [] in
@@ -178,7 +176,7 @@ let rec eval env = function
         let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
         (Graph graph_elements, env1)
       | GraphAccess(graphname, fieldname) -> 
-        let (graph, env1) = eval env (GraphAccess(graphname, fieldname)) in
+        let (graph, env1) = eval_expr env (GraphAccess(graphname, fieldname)) in
         begin match graph with
         | Graph(graph_elements) ->
           let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
@@ -188,7 +186,7 @@ let rec eval env = function
         end 
       | GraphQuery(gname1, gname2, queryType) ->
         Printf.printf "we're here";
-        let (graph, env1) = eval env (GraphQuery(gname1, gname2, queryType)) in
+        let (graph, env1) = eval_expr env (GraphQuery(gname1, gname2, queryType)) in
         begin match graph with
         | Graph(graph_elements) ->
           let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
@@ -256,42 +254,107 @@ let rec eval env = function
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in
       (* Printf.printf "variable Assignment: %s\n" str; *)
-      let (value, env1) = eval env e in
+      let (value, env1) = eval_expr env e in
       begin match value with
       | Lit x ->
         let env2 = { env1 with vars = VarMap.add var x env1.vars } in
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer" 
       end
-    | If (ifcondition, ifbody)->
-      let (v1, env1) = eval env ifcondition in
+    end
+ 
+
+let rec eval_stmt_list env = function 
+  | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
+  | stmt :: rest ->
+      let (result, new_env) = eval_stmt env stmt in eval_stmt_list new_env rest
+    (* for each stmt eval_stmt *)
+    
+  and 
+  eval_stmt env = function
+  | stmt -> 
+    begin match stmt with
+    (* | Block (stmt_list) ->  *)
+      (* Printf.printf "Evaluating block\n"; *)
+      (* begin match stmt_list with
+        | [] -> (true, env)
+        | stmts -> List.fold_left (fun (_, new_env) statement -> eval_stmt new_env statement) _ env stmts
+        | _ -> failwith "Invalid parsing of stmt_list"
+      end *)
+    | Expr (expr) -> eval_expr env expr
+    | If (ifcondition, ifbody) ->
+      let (v1, env1) = eval_expr env ifcondition in
       (* TODO: check that v1 is of type Bool *)
       begin match v1 with
         | (BoolLit v1) ->
           if v1 then
-            let (v2, env2) = eval env1 ifbody in (v2, env2)
+            let (v2, env2) = eval_stmt_list env1 ifbody in (v2, env2)
           else 
             (BoolLit v1 ,env)
         | _ -> failwith "If excepts a boolean expression" 
-      end
-      | IfElse (ifcondition, ifbody, elsebody)->
-          let (v1, env1) = eval env ifcondition in
-          (* TODO: check that v1 is of type Bool *)
-          begin match v1 with
-            | (BoolLit v1) ->
-              if v1 then
-                let (v2, env2) = eval env1 ifbody in (v2, env2)
-              else 
-                let (v2, env2) = eval env1 elsebody in (v2, env2)
-            | _ -> failwith "If excepts a boolean expression" 
+        end
+        
+    | IfElif (ifcondition, ifbody, eliflist, elsebody)->
+      let rec elif_helper if_body_list =
+        match if_body_list with
+        | [] ->
+            (* Evaluate elsebody *)
+            let (v_else, env_else) = eval_stmt_list env elsebody in (v_else, env_else)
+        | (condition, body) :: rest_list ->
+            let (is_true, env1) = eval_expr env condition in
+            match is_true with
+            | BoolLit true ->
+                (* Evaluate the body of the elif condition *)
+                eval_stmt_list env1 body
+            | BoolLit false ->
+                (* Recur with the rest of the elif conditions *)
+                elif_helper rest_list
+            | _ -> failwith "If expects a boolean expression"
+      in elif_helper ((ifcondition, ifbody) :: eliflist)
+        
+    | IfElse (ifcondition, ifbody, elsebody)->
+        let (is_true, env1) = eval_expr env ifcondition in
+        (* TODO: check that v1 is of type Bool *)
+        begin match is_true with
+          | (BoolLit is_true) ->
+            if is_true then
+              let (v2, env2) = eval_stmt_list env1 ifbody in (v2, env2)
+            else 
+              let (v2, env2) = eval_stmt_list env1 elsebody in (v2, env2)
+          | _ -> failwith "If excepts a boolean expression" 
           end
-    | _ -> failwith "constructor not supported"
+    | While (whilecondition, whilebody)->
+        let (should_continue, env1) = eval_expr env whilecondition in
+        begin match should_continue with
+          | (BoolLit should_continue) ->
+            if should_continue then
+              let (_, env2) = eval_stmt_list env1 whilebody in
+              eval_stmt env2 (While (whilecondition, whilebody))
+            else
+              (BoolLit should_continue, env1)
+          | _ -> failwith "While excepts a boolean expression"
+        end
+    | For (init, condition, update, body) ->
+      let (_, env1) = eval_expr env init in
+      let rec for_helper rec_env condition update body =
+        let (should_continue, env2) = eval_expr rec_env condition in
+        begin match should_continue with
+          | (BoolLit should_continue) ->
+            if should_continue then
+              let (_, env3) = eval_stmt_list env2 body in
+              let (_, env4) = eval_expr env3 update in
+              for_helper env4 condition update body
+            else
+              (BoolLit should_continue, env2)
+          | _ -> failwith "For excepts a boolean expression"
+        end
+        in for_helper env1 condition update body
+    | _ -> failwith "Invalid parsing of stmt" 
     end
- 
 
-let _ =
+  let _ =
   let lexbuf = Lexing.from_channel stdin in
-  let expr = Parser.expr Scanner.tokenize lexbuf in
-  Printf.printf "Initial Expression: %s\n" (string_of_expr expr);
-  let result, _ = eval empty_env expr in
+  let stmt_list = Parser.stmt_list Scanner.tokenize lexbuf in
+  Printf.printf "Initial Expression: %s\n" (string_of_stmt_list stmt_list);
+  let result, _ = eval_stmt_list empty_env stmt_list in
   Printf.printf "Result: %s\n" (string_of_expr result); 

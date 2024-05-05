@@ -1,9 +1,14 @@
-Initial Expression: GraphAsn: gTODO print all elements ; GraphAccessing... graphname:g, fieldname:edges
-Evaluating expression: GraphAsn: gTODO print all elements ; GraphAccessing... graphname:g, fieldname:edges
-Evaluating expression: GraphAsn: gTODO print all elements 
-Graph Assignment: GraphAsn g = Graph([vertex:vertexone, vertex:VERTEX_two9876, source:vertexone, dest: vertextwo, weight:10])
-Evaluating expression: GraphAccessing... graphname:g, fieldname:edges
-printing expression: GraphAccessing... graphname:g, fieldname:edges
-printing graph: g
-printing field: edges
-Result: Graph([source:vertexone, dest: vertextwo, weight:10])
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Initial Expression: 
+GraphAsn: gTODO print all elements  
+GraphAsn: graph_verticesTODO print all elements  graph_vertices 
+Evaluating expression: 
+GraphAsn: gTODO print all elements 
+Evaluating expression: 
+GraphAsn: graph_verticesTODO print all elements 
+Evaluating expression: 
+GraphAccessing... graphname:g, fieldname:vertices
+Evaluating expression: graph_vertices
+Result: true

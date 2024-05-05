@@ -49,7 +49,7 @@ rule tokenize = parse
 | "EDGE" { EDGE }
 | "NOT" { NOT }
 | "WHILE" { WHILE }
-(* | "FOR" { FOR } *)
+| "FOR" { FOR }
 | "IF" { IF }
 | "ELSE" { ELSE }
 | "ELIF" { ELIF }
@@ -64,5 +64,5 @@ rule tokenize = parse
 | "}" { RC }
 | "," { COMMA }
 | "->" { ARROW }
-| "#" { COMMENT }
+| '#' [^ '\n']* { tokenize lexbuf }
 | _ { raise (Failure "Character not allowed") }

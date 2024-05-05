@@ -11,7 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE FOR
 
 %token QUOTES
 %token DOT 
@@ -30,10 +30,8 @@
 %left EQL NOTEQL
 %left GT LT GTEQ LTEQ
 
-
-
-%start expr
-%type <Ast.expr> expr
+%start stmt_list
+%type <Ast.stmt_list> stmt_list
 
 %%
 
@@ -59,8 +57,24 @@ graph_operation:
     | LP VARIABLE UNION VARIABLE RP { GraphQuery($2, $4, "union") }
     | LP VARIABLE INTERSECT VARIABLE RP { GraphQuery($2, $4, "intersect") }
 
+stmt_list: 
+    /* nothing */ { [] }
+    | stmt stmt_list {print_endline("Processing all stmts"); $1::$2 }
+
+stmt:
+    | expr SEMICOLON { Expr($1) }
+    | LC stmt_list RC { Block($2) }
+    | IF LP expr RP LC stmt_list RC { If($3, $6) }
+    | IF LP expr RP LC stmt_list RC elif_stmt_list ELSE LC stmt_list RC{ IfElif($3, $6, $8, $11)}
+    | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
+    | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
+    | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
+
+elif_stmt_list:
+    | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}
+    | ELIF LP expr RP LC stmt_list RC elif_stmt_list {($3, $6)::$8}
+
 expr:    
-    // NON-RECURSIVE
     | LITERAL    { Lit($1) } //done
     | FLOATLIT { FloatLit($1) } //done
     | BLIT     { BoolLit($1) }
@@ -86,10 +100,7 @@ expr:
     | expr AND expr { Binop($1, And, $3) }
     | expr OR expr { Binop($1, Or, $3) }
     | LP expr RP { $2 } //should this be moved
-    | expr SEMICOLON expr { Seq($1, $3) }
-    | expr SEMICOLON {$1}
-    | IF LP expr RP LC expr RC { print_endline "Parsing if"; If($3, $6)}
-    | IF LP expr RP LC expr RC ELSE LC expr RC { print_endline "Parsing if/else"; IfElse($3, $6, $10)}
+
 
 entry:
 | expr EOF { $1 }

@@ -9,3 +9,4 @@ CREATE GRAPH (
 ) AS g2;
 
 (g1 UNION g2) AS g3;
+g3;
