@@ -37,6 +37,7 @@ rule tokenize = parse
 | "FROM" { FROM }
 | "UNION" { UNION }
 | "INTERSECT" { INTERSECT }
+| "UPDATE" {UPDATE}
 | "AS" { AS }
 | "WHERE" { WHERE }
 | "INSERT" { INSERT }

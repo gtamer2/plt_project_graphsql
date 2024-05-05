@@ -19,26 +19,30 @@ let int_of_bool b = if b then 1 else 0
 
 let union_graphs g1 g2 =
   let merge_elements e1 e2 =
-    let combined = e1 @ e2 in
-    List.fold_left (fun acc elem ->
-        match elem with
-        | Vertex id ->
-            if List.exists (function Vertex id2 -> id = id2 | _ -> false) acc then acc
-            else elem :: acc
-        | Edge (source, target, weight) ->
-            let existing = List.find_opt (function 
-              | Edge (s, t, _) -> (s = source && t = target) || (t = source && s = target)
-              | _ -> false
-            ) acc in
-            match existing with
-            | Some Edge (_, _, existing_weight) ->
-                let new_edge = Edge (source, target, existing_weight + weight) in
-                new_edge :: List.filter (fun e -> e <> existing) acc
-            | None -> elem :: acc
-        | _ -> elem :: acc
-    ) [] combined
+      let combined = e1 @ e2 in
+      List.fold_left (fun acc elem ->
+          match elem with
+          | Vertex id ->
+              if List.exists (function Vertex id2 -> id = id2 | _ -> false) acc then acc
+              else elem :: acc
+          | Edge (source, target, weight) ->
+              let existing = List.find_opt (function 
+                | Edge (s, t, _) -> (s = source && t = target) || (t = source && s = target)
+                | _ -> false
+              ) acc in
+              match existing with
+              | Some (Edge (_, _, existing_weight)) ->
+                  let new_edge = Edge (source, target, existing_weight + weight) in
+                  new_edge :: List.filter (fun e -> match e with
+                    | Edge (s, t, _) -> not ((s = source && t = target) || (t = source && s = target))
+                    | _ -> true
+                  ) acc
+              | None -> elem :: acc
+          | _ -> elem :: acc
+      ) [] combined
   in
-    merge_edges g1 g2
+    merge_elements g1 g2
+
 
 let intersect_graphs g1 g2 =
   List.filter (fun e1 -> match e1 with
@@ -231,6 +235,23 @@ let rec eval env = function
         end 
       | _ -> failwith ("Unsupported operation type: " ^ optype)
       end 
+    
+    | GraphUpdate(gname, element) ->
+      begin match GraphMap.find_opt gname env.graphs with
+      | Some graph ->
+        let updated_graph = match element with
+        | Edge (src, tgt, new_weight) ->
+          List.map (function
+            | Edge (source, target, weight) when source = src && target = tgt ->
+              Edge (source, target, new_weight)  
+            | other -> other 
+          ) graph
+        | Vertex _ -> graph 
+        in
+        let env1 = { env with graphs = GraphMap.add gname updated_graph env.graphs } in
+        (Graph(updated_graph), env1)  
+      | None -> failwith ("Graph not found in GraphUpdate: " ^ gname) 
+      end
       
     | Asn(var, e) ->
       let str = var ^ " = " ^ string_of_expr e in

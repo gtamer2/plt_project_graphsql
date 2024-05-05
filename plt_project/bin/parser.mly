@@ -11,7 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT APPLY WHILE
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE
 
 %token QUOTES
 %token DOT 
@@ -71,6 +71,7 @@ expr:
     | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE
     | INSERT INTO VARIABLE graph_elements_list {GraphOp($3, $4, "insert")}
     | DELETE graph_elements_list FROM VARIABLE {GraphOp($4, $2, "delete")}
+    | UPDATE graph_element FROM VARIABLE { GraphUpdate($4, $2) }
     | expr PLUS expr {Binop($1, Add, $3) } //done
     | expr MINUS expr { Binop($1, Sub, $3) } //done
     | expr TIMES expr { Binop($1, Mul, $3) } //done
