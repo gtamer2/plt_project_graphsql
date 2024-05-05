@@ -1,0 +1,4 @@
+Initial Expression: GraphAsn: gGraph([])
+Evaluating expression: GraphAsn: gGraph([])
+Graph Assignment: GraphAsn g = Graph([])
+Result: Graph([])

@@ -1,19 +1,30 @@
 (executable
  (name graphsql)
- (modules ast parser scanner graphsql))
+ (modules ast parser scanner graphsql)
+ (flags (:standard -w +A-8-42-4-11-33-27)))
 
 (rule
  (targets ast.cmo)
  (deps ast.ml)
- (action (run ocamlc -w A -c %{deps})))
+ (action (run ocamlc -w +A -c %{deps}))) ; Generate .mli file
 
 (rule
  (targets scanner.ml)
  (deps scanner.mll)
- (action (run ocamllex %{deps})))
+ (action (run ocamllex -q %{deps}))) ; Generate .ml and .mli files
 
 (rule
  (targets parser.ml parser.mli)
  (deps parser.mly)
  (action (run ocamlyacc %{deps})))
 
+; (rule
+;  (targets output.ml)
+;  (action
+;  (run ./_build/default/bin/graphsql.exe < test/test_plt_project.ml > output/output.ml)))
+
+; (rule
+;  (targets output/output.ml)
+;  (deps test/test_plt_project.ml)
+;  (action
+;   (run ./_build/default/bin/graphsql.exe < %{deps} > %{targets})))
