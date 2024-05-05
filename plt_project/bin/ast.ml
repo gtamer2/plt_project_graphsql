@@ -42,11 +42,15 @@ type stmt =
   | Expr of expr
   | If of expr * stmt list
   | IfElse of expr * stmt list * stmt list
+  | IfElif of expr * stmt list * elif_stmt list * stmt list
   | While of expr * stmt list
   | For of expr * expr * expr * stmt list
+  and
+ elif_stmt = expr * stmt list
+
 
 type stmt_list = stmt list 
-(*empty?*)
+
 
 
 let rec string_of_expr = function
@@ -105,7 +109,10 @@ let rec string_of_stmt = function
   | Expr(expr) -> string_of_expr expr ^ " "
   | Block(stmts) -> "TODO BLOCK " 
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
-
+  | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
+ and string_of_elif_stmt = function
+| [] -> ""
+| (condition, body) :: rest -> " ELIF " ^ string_of_expr condition ^ " " ^ string_of_stmt_list body ^ string_of_elif_stmt rest 
 and  string_of_stmt_list = function
   | [] -> ""
   | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest
