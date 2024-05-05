@@ -19,10 +19,18 @@ let varmap_to_str m =
   )) (VarMap.bindings m)
   in "[" ^ (String.concat ", " inners) ^ "]"
 
+let bindmap_to_str m = 
+  let inners = List.map (fun (k, v) -> k ^ " -> " ^ (
+    match v with 
+    | Typ typ -> string_of_typ typ
+  )) (BindMap.bindings m)
+  in "[" ^ (String.concat ", " inners) ^ "]"
+
 let _ = 
   let lexbuf = Lexing.from_channel stdin in
   let program = Parser.stmt_list Scanner.tokenize lexbuf in
   let sprogram, new_env = Semantic_checker.check empty_env program in
   let sprogram_string = String.concat "" (List.map string_of_sstmt sprogram) in
   let svarmap_string = varmap_to_str new_env.vars in
-  Printf.printf "SAST: \n%s%s" sprogram_string svarmap_string;
+  let sbindmap_string = bindmap_to_str new_env.bindings in
+  Printf.printf "SAST: \n%s\n%s\n%s" sprogram_string svarmap_string sbindmap_string;

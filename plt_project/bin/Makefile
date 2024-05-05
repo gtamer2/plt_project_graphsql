@@ -1,6 +1,6 @@
 # default target that 'make' will attempt to build if no target specified
 # all : calc_test.out graph_init.out
-all : graph_init.out graph_init2.out semant_test.out
+all : graph_init.out graph_init2.out semant_test.out semant_test2.out
 # all : calc_test.out
 
 ##############################
@@ -39,6 +39,9 @@ graph_init.out : graphsql graph_init2.tb
 
 semant_test.out : semant_eval semant_test.tb
 	./semant_eval < semant_test.tb > semant_test.out
+
+semant_test2.out : semant_eval semant_test2.tb
+	./semant_eval < semant_test2.tb > semant_test2.out
 
 # Depedencies from ocamldep
 graphsql.cmo : scanner.cmo parser.cmi ast.cmo

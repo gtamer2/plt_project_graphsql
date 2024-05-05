@@ -26,12 +26,9 @@ let check init_env init_program =
     if lvaluet = rvaluet then lvaluet else raise (Failure err)
   in *)
 
-  (* build local symbol table for this list of expressions *)
-  let symbols = init_env.bindings in
-
   (* Return a variable from our symbol table *)
-  let type_of_identifier s =
-    try BindMap.find s symbols
+  let type_of_identifier s bindings =
+    try BindMap.find s bindings
     with Not_found -> raise (Failure ("undeclared identifier " ^ s))
   in
   
@@ -40,7 +37,7 @@ let check init_env init_program =
       Lit l -> ((Int, SLit l), env)
     | BoolLit l -> ((Bool, SBoolLit l), env)
     | Var var -> 
-      let var_type = type_of_identifier var in
+      let var_type = type_of_identifier var env.bindings in
       begin match var_type with
         Typ t -> ((t, SVar var), env)
       end
@@ -73,7 +70,15 @@ let check init_env init_program =
           | _ -> raise (Failure err)
         in
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
-      else raise (Failure err)
+      else if t1 = Float && t2 = Int || t1 = Int && t2 = Float then
+        let t = match op with
+            Add | Sub | Mul | Div -> Float
+          | Eq | Neq | Gteq | Lteq | Gt | Lt -> Bool
+          | _ -> raise (Failure err)
+        in
+        ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
+      else
+        raise (Failure err)
     (* | Seq (e1, e2) -> 
       let se1, env1 = check_expr env e1 in
       let se2, env2 = check_expr env1 e2 in
