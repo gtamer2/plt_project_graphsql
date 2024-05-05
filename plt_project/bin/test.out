@@ -1,94 +1,20 @@
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Initial Expression: foo = 3 bar = 3 
-IF((foo > 7)) THEN bar = 5  ELSE zip = 0 car = 1 WHILE((car < foo)) DO car = (car + 1) 
-IF((car == 4)) THEN foo = 7  ELIF (car == 3) foo = 19 a = 0 WHILE((a < 3)) DO a = (a + 1)  ELSE foo = -1 
-car 
-IF((a == 3)) THEN b = 1000 bar 
-Evaluating expression: foo = 3
-Evaluating expression: 3
+Parsing if/else
+Initial Expression: foo = 4; bar = 3; IF((foo > 7)) THEN bar = 5ELSE bar = 0; bar
+Evaluating expression: foo = 4; bar = 3; IF((foo > 7)) THEN bar = 5ELSE bar = 0; bar
+Evaluating expression: foo = 4; bar = 3; IF((foo > 7)) THEN bar = 5ELSE bar = 0
+Evaluating expression: foo = 4; bar = 3
+Evaluating expression: foo = 4
+variable Assignment: foo = 4
+Evaluating expression: 4
 Evaluating expression: bar = 3
+variable Assignment: bar = 3
 Evaluating expression: 3
+Evaluating expression: IF((foo > 7)) THEN bar = 5ELSE bar = 0
 Evaluating expression: (foo > 7)
 Evaluating expression: foo
 Evaluating expression: 7
-Evaluating expression: zip = 0
+Evaluating expression: bar = 0
+variable Assignment: bar = 0
 Evaluating expression: 0
-Evaluating expression: car = 1
-Evaluating expression: 1
-Evaluating expression: (car < foo)
-Evaluating expression: car
-Evaluating expression: foo
-Evaluating expression: car = (car + 1)
-Evaluating expression: (car + 1)
-Evaluating expression: car
-Evaluating expression: 1
-Evaluating expression: (car < foo)
-Evaluating expression: car
-Evaluating expression: foo
-Evaluating expression: car = (car + 1)
-Evaluating expression: (car + 1)
-Evaluating expression: car
-Evaluating expression: 1
-Evaluating expression: (car < foo)
-Evaluating expression: car
-Evaluating expression: foo
-Evaluating expression: (car == 4)
-Evaluating expression: car
-Evaluating expression: 4
-Evaluating expression: (car == 3)
-Evaluating expression: car
-Evaluating expression: 3
-Evaluating expression: foo = 19
-Evaluating expression: 19
-Evaluating expression: a = 0
-Evaluating expression: 0
-Evaluating expression: (a < 3)
-Evaluating expression: a
-Evaluating expression: 3
-Evaluating expression: a = (a + 1)
-Evaluating expression: (a + 1)
-Evaluating expression: a
-Evaluating expression: 1
-Evaluating expression: (a < 3)
-Evaluating expression: a
-Evaluating expression: 3
-Evaluating expression: a = (a + 1)
-Evaluating expression: (a + 1)
-Evaluating expression: a
-Evaluating expression: 1
-Evaluating expression: (a < 3)
-Evaluating expression: a
-Evaluating expression: 3
-Evaluating expression: a = (a + 1)
-Evaluating expression: (a + 1)
-Evaluating expression: a
-Evaluating expression: 1
-Evaluating expression: (a < 3)
-Evaluating expression: a
-Evaluating expression: 3
-Evaluating expression: car
-Evaluating expression: (a == 3)
-Evaluating expression: a
-Evaluating expression: 3
-Evaluating expression: b = 1000
-Evaluating expression: 1000
 Evaluating expression: bar
-Result: true
+Result: 0

@@ -17,16 +17,48 @@ let empty_env = {
 
 let int_of_bool b = if b then 1 else 0
 
+let union_graphs g1 g2 =
+  let merge_elements e1 e2 =
+      let combined = e1 @ e2 in
+      List.fold_left (fun acc elem ->
+          match elem with
+          | Vertex id ->
+              if List.exists (function Vertex id2 -> id = id2 | _ -> false) acc then acc
+              else elem :: acc
+          | Edge (source, target, weight) ->
+              let existing = List.find_opt (function 
+                | Edge (s, t, _) -> (s = source && t = target) || (t = source && s = target)
+                | _ -> false
+              ) acc in
+              match existing with
+              | Some (Edge (_, _, existing_weight)) ->
+                  let new_edge = Edge (source, target, existing_weight + weight) in
+                  new_edge :: List.filter (fun e -> match e with
+                    | Edge (s, t, _) -> not ((s = source && t = target) || (t = source && s = target))
+                    | _ -> true
+                  ) acc
+              | None -> elem :: acc
+          | _ -> elem :: acc
+      ) [] combined
+  in
+    merge_elements g1 g2
 
-(* let rec eval_stmt_list env = function *)
-  (* | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
-  | stmt :: rest ->
-      let (result, new_env) = eval_stmt env stmt in *)
-      (* Check if there's an early termination condition *)
-      (* match result with
-      | BoolLit b when not b -> (BoolLit false, new_env) (* Propagate the early termination *)
-      | _ -> eval_stmt_list new_env rest Continue evaluating the rest of the statements *)
 
+let intersect_graphs g1 g2 =
+  List.filter (fun e1 -> match e1 with
+    | Vertex id1 -> 
+        List.exists (fun e2 -> match e2 with
+            | Vertex id2 -> id1 = id2
+            | _ -> false
+        ) g2
+    | Edge (source1, target1, weight1) ->
+        List.exists (fun e2 -> match e2 with
+            | Edge (source2, target2, weight2) -> 
+                ((source1 = source2 && target1 = target2) || (source1 = target2 && target1 = source2)) && weight1 = weight2
+            | _ -> false
+        ) g2
+    | _ -> false
+  ) g1
 
 let rec eval_expr env = function
   | expr -> 
@@ -94,7 +126,11 @@ let rec eval_expr env = function
           | None -> failwith ("Variable not found: " ^ var))
     | Graph (graph_elements) ->
       (Graph(graph_elements), env)
+
     | GraphAccess(graphname, fieldname) -> 
+      (* Printf.printf "printing expression for GraphAccess: %s\n" (string_of_expr expr); 
+      Printf.printf "printing graph: %s\n" (graphname); 
+      Printf.printf "printing field: %s\n" (fieldname);  *)
       begin match GraphMap.find_opt graphname env.graphs with
         | Some graph_elements ->
             let v_output : graph_element list ref = ref [] in
@@ -102,9 +138,9 @@ let rec eval_expr env = function
             
             List.iter (fun element ->
               match element with
-              | Vertex _ -> v_output := element :: !v_output
-              | Edge _ -> e_output := element :: !e_output
-              | _ -> failwith ("Not a graph element")
+                | Vertex _ -> v_output := element :: !v_output
+                | Edge _ -> e_output := element :: !e_output
+                | _ -> failwith ("Not a graph element")
             ) graph_elements;
             match fieldname with 
               | "vertices" -> (Graph !v_output, env)
@@ -112,23 +148,55 @@ let rec eval_expr env = function
               | _ -> failwith ("Invalid field name: " ^ fieldname)
         | _ -> failwith ("Graph not found: " ^ graphname)
       end
-    | GraphAsn(var, e) ->
-      let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
-      (* Printf.printf "Graph Assignment: %s\n" str; *)
-      begin match e with
-        | Graph(graph_elements) ->
-          let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
-          (Graph graph_elements, env1)
-        | GraphAccess(graphname, fieldname) -> 
-          let (graph, env1) = eval_expr env (GraphAccess(graphname, fieldname)) in
-          begin match graph with
-            | Graph(graph_elements) ->
-              let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
-              (Graph(graph_elements), env2)
-            | _ -> failwith "GraphAccess did not return a graph"
-          end
-        | _ -> failwith "Graph assignment expects a graph"   
+
+    | GraphQuery(gname1, gname2, queryType) ->
+      begin match GraphMap.find_opt gname1 env.graphs with
+      | Some graph1 -> 
+        begin match GraphMap.find_opt gname2 env.graphs with
+        | Some graph2 ->
+          begin match queryType with 
+          | "union" -> 
+            let union_result = union_graphs graph1 graph2 in
+            (Graph union_result, env)
+          | "intersect" ->
+            let intersect_result = intersect_graphs graph1 graph2 in
+            (Graph intersect_result, env)
+          | _ -> failwith ("Graph query type not supported: " ^ queryType)
+          end 
+        | None -> failwith ("Graph not found: " ^ gname2)
+        end 
+      | None -> failwith ("Graph not found: " ^ gname1)
       end
+
+    | GraphAsn(var, e) ->
+      let str = "GraphAsn constructor: " ^ var ^ " = " ^ string_of_expr e in
+      Printf.printf "%s\n" str;
+      begin match e with
+      | Graph(graph_elements) ->
+        let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
+        (Graph graph_elements, env1)
+      | GraphAccess(graphname, fieldname) -> 
+        let (graph, env1) = eval_expr env (GraphAccess(graphname, fieldname)) in
+        begin match graph with
+        | Graph(graph_elements) ->
+          let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+          Printf.printf "GraphAcces updated in the map with variable %s\n" var;
+          (Graph(graph_elements), env2)
+        | _ -> failwith "GraphAccess did not return a graph"
+        end 
+      | GraphQuery(gname1, gname2, queryType) ->
+        Printf.printf "we're here";
+        let (graph, env1) = eval_expr env (GraphQuery(gname1, gname2, queryType)) in
+        begin match graph with
+        | Graph(graph_elements) ->
+          let env2 = { env1 with graphs = GraphMap.add var graph_elements env1.graphs } in
+          Printf.printf "Union/intersect updated in the map with variable %s\n" var;
+          (Graph(graph_elements), env2)
+        | _ -> failwith "GraphQuery did not return a graph"
+        end
+      | _ -> failwith "Graph assignment expects a graph"   
+      end
+
     | GraphOp(gname, graph_elements, optype) ->
       begin match optype with
       | "insert" -> 
@@ -165,17 +233,34 @@ let rec eval_expr env = function
         end 
       | _ -> failwith ("Unsupported operation type: " ^ optype)
       end 
-      | Asn(var, e) ->
-        let str = var ^ " = " ^ string_of_expr e in
-        (* Printf.printf "variable Assignment: %s\n" str; *)
-        let (value, env1) = eval_expr env e in
-        begin match value with
-        | Lit x ->
-          let env2 = { env1 with vars = VarMap.add var x env1.vars } in
-          (Lit x, env2)
-        | _ -> failwith "Assignment expects a literal integer" 
-        end
-      | _ -> failwith "not supported"
+    
+    | GraphUpdate(gname, element) ->
+      begin match GraphMap.find_opt gname env.graphs with
+      | Some graph ->
+        let updated_graph = match element with
+        | Edge (src, tgt, new_weight) ->
+          List.map (function
+            | Edge (source, target, weight) when source = src && target = tgt ->
+              Edge (source, target, new_weight)  
+            | other -> other 
+          ) graph
+        | Vertex _ -> graph 
+        in
+        let env1 = { env with graphs = GraphMap.add gname updated_graph env.graphs } in
+        (Graph(updated_graph), env1)  
+      | None -> failwith ("Graph not found in GraphUpdate: " ^ gname) 
+      end
+      
+    | Asn(var, e) ->
+      let str = var ^ " = " ^ string_of_expr e in
+      (* Printf.printf "variable Assignment: %s\n" str; *)
+      let (value, env1) = eval_expr env e in
+      begin match value with
+      | Lit x ->
+        let env2 = { env1 with vars = VarMap.add var x env1.vars } in
+        (Lit x, env2)
+      | _ -> failwith "Assignment expects a literal integer" 
+      end
     end
  
 
@@ -208,6 +293,7 @@ let rec eval_stmt_list env = function
             (BoolLit v1 ,env)
         | _ -> failwith "If excepts a boolean expression" 
         end
+        
     | IfElif (ifcondition, ifbody, eliflist, elsebody)->
       let rec elif_helper if_body_list =
         match if_body_list with

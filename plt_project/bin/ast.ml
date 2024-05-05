@@ -18,6 +18,7 @@ type graph_element =
   | Vertex of string
   | Edge of string * string * int
 
+
 type unified_type = 
   | Typ of typ
   | GraphElement of graph_element
@@ -36,6 +37,10 @@ type expr =
   | GraphAsn of string * expr
   | GraphAccess of string * string (* graph_name * field_name *)
   | GraphOp of string * graph_element list * string
+  | GraphQuery of string * string * string
+  | GraphUpdate of string * graph_element
+  | If of expr * expr
+  | IfElse of expr * expr * expr
 
 type stmt = 
   | Block of stmt list
@@ -73,9 +78,15 @@ let rec string_of_expr = function
     "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
   | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
-    "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
+    (* "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements "  *)
+    "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ string_of_expr elt_list ^ "]"
+    (* "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ String.concat ", " (List.map string_of_expr elt_list) ^ "]" *)
+  | GraphQuery(gname1, gname2, queryType) ->
+    "\n GraphQuerying..." ^ gname1 ^ queryType ^ gname2
   | GraphOp(gname, elements, optype) -> 
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
+  | GraphUpdate(gname, element) ->
+    "\n Updating graph element" ^ string_of_graph_element element ^ "in graph: " ^ gname  
 
 and string_of_graph_element = function
 | Vertex(vertex) -> "vertex:" ^ vertex
