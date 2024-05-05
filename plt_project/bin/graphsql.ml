@@ -179,7 +179,6 @@ let rec eval_expr env = function
     end
  
 
-
 let rec eval_stmt_list env = function 
   | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
   | stmt :: rest ->
@@ -209,6 +208,24 @@ let rec eval_stmt_list env = function
             (BoolLit v1 ,env)
         | _ -> failwith "If excepts a boolean expression" 
         end
+    | IfElif (ifcondition, ifbody, eliflist, elsebody)->
+      let rec elif_helper if_body_list =
+        match if_body_list with
+        | [] ->
+            (* Evaluate elsebody *)
+            let (v_else, env_else) = eval_stmt_list env elsebody in (v_else, env_else)
+        | (condition, body) :: rest_list ->
+            let (is_true, env1) = eval_expr env condition in
+            match is_true with
+            | BoolLit true ->
+                (* Evaluate the body of the elif condition *)
+                eval_stmt_list env1 body
+            | BoolLit false ->
+                (* Recur with the rest of the elif conditions *)
+                elif_helper rest_list
+            | _ -> failwith "If expects a boolean expression"
+      in elif_helper ((ifcondition, ifbody) :: eliflist)
+        
     | IfElse (ifcondition, ifbody, elsebody)->
         let (is_true, env1) = eval_expr env ifcondition in
         (* TODO: check that v1 is of type Bool *)
