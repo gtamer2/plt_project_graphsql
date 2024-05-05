@@ -1,0 +1,34 @@
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+Processing all stmts
+SAST: 
+(Int : foo = (Int : 4));
+(Int : bar = (Int : 3));
+(Int : let = (Int : ((Int : -2) + (Int : 3))));
+(Int : veve = (Int : ((Int : 23) - (Int : 3))));
+(Float : e = (Float : 3.4));
+(Float : foo = (Float : 333.4));
+{
+(Int : let = (Int : ((Int : veve) + (Int : bar))));
+{
+(Float : lmao = (Float : ((Float : foo) * (Int : 3))));
+(Float : east = (Float : ((Int : let) / (Float : e))));
+(Int : west = (Int : ((Int : 10) % (Int : 4))));
+}
+}
+(Float : north = (Float : ((Float : east) / (Int : west))));
+(Float : lve = (Float : ((Int : -3) - (Float : north))));
+
+[bar -> 3, e -> 3.4, east -> (Float : ((Int : let) / (Float : e))), foo -> 333.4, let -> (Int : ((Int : veve) + (Int : bar))), lmao -> (Float : ((Float : foo) * (Int : 3))), lve -> (Float : ((Int : -3) - (Float : north))), north -> (Float : ((Float : east) / (Int : west))), veve -> (Int : ((Int : 23) - (Int : 3))), west -> (Int : ((Int : 10) % (Int : 4)))]
+[bar -> Int, e -> Float, east -> Float, foo -> Float, let -> Int, lmao -> Float, lve -> Float, north -> Float, veve -> Int, west -> Int]
