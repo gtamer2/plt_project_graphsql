@@ -10,28 +10,42 @@ type vertex = {
 type edge = {
   source: string;
   target: string;
-  weight: float option; 
+  weight: int; 
 }
 
 type graph_element =
-  | Vertex of vertex
-  | Edge of edge
+  | Vertex of string
+  | Edge of string * string * int
 
 type expr =
   | Lit of int
   | FloatLit of float 
   | BoolLit of bool
   | Var of string
-  | Vertex of vertex
-  | Edge of edge  
-  | Graph of graph_element list
+  | Asn of string * expr 
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
-  | Seq of expr * expr
-  | Asn of string * expr
+  (* | Seq of expr * expr *)
+  | Graph of graph_element list
   | GraphAsn of string * expr
-  (* | Graph of graph_element list * graph_element list   *)
-  (* | NamedGraph of string * (graph_element list) * (graph_element list) *)
+  | GraphAccess of string * string (* graph_name * field_name *)
+  | GraphOp of string * graph_element list * string
+
+type stmt = 
+  | Block of stmt list
+  | Expr of expr
+  | If of expr * stmt list
+  | IfElse of expr * stmt list * stmt list
+  | IfElif of expr * stmt list * elif_stmt list * stmt list
+  | While of expr * stmt list
+  | For of expr * expr * expr * stmt list
+  and
+ elif_stmt = expr * stmt list
+
+
+type stmt_list = stmt list 
+
+
 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
@@ -63,18 +77,32 @@ let rec string_of_expr = function
     in
     op_str ^ string_of_expr e
   | Graph(elements) ->
-    "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
-  | GraphAsn(v, e) -> "GraphAsn: " ^ v  ^ string_of_expr e
-  | Seq(e1, e2) -> string_of_expr e1 ^ "; " ^ string_of_expr e2
+    "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
+  | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
+  | GraphAsn(v, elt_list) -> 
+    "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements " 
+  | GraphOp(gname, elements, optype) -> 
+    "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
 
 and string_of_graph_element = function
-  | Vertex(vertex) -> string_of_vertex vertex
-  | Edge(edge) -> string_of_edge edge
+| Vertex(vertex) -> "vertex:" ^ vertex
+| Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
+
 and string_of_vertex vertex =
-  "\"" ^ vertex.id ^ "\""
-and string_of_edge edge =
-  let weight_str = match edge.weight with
-    | Some w -> string_of_float w
-    | None -> "None"
-  in
-  "Edge(\"" ^ edge.source ^ "\", \"" ^ edge.target ^ "\", " ^ weight_str ^ ")"
+"\"" ^ vertex ^ "\""
+
+
+let rec string_of_stmt = function
+  | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list body
+  | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ " ELSE " ^ string_of_stmt_list elsebody
+  | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
+  | Expr(expr) -> string_of_expr expr ^ " "
+  | Block(stmts) -> "TODO BLOCK " 
+  | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
+  | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
+ and string_of_elif_stmt = function
+| [] -> ""
+| (condition, body) :: rest -> " ELIF " ^ string_of_expr condition ^ " " ^ string_of_stmt_list body ^ string_of_elif_stmt rest 
+and  string_of_stmt_list = function
+  | [] -> ""
+  | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest
