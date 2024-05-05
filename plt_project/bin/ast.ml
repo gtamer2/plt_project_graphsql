@@ -1,7 +1,8 @@
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
-(* type primitive = Int | Bool | Float | String | Void 
-type object = Graph *)
+type typ = Int | Bool | Float | String (* | Void *)
+(* type object = Graph *)
+
 
 type vertex = {
   id: string;
@@ -17,7 +18,11 @@ type graph_element =
   | Vertex of string
   | Edge of string * string * int
 
-(* type graph = graph_element list *)
+
+type unified_type = 
+  | Typ of typ
+  | GraphElement of graph_element
+  | Graph of graph_element list
 
 type expr =
   | Lit of int
@@ -60,20 +65,7 @@ let rec string_of_expr = function
   | Var(v) -> v
   | Asn(v, e) -> v ^ " = " ^ string_of_expr e
   | Binop(e1, op, e2) ->
-    let op_str = match op with
-      | Add -> "+"
-      | Sub -> "-"
-      | Mul -> "*"
-      | Div -> "/"
-      | Mod -> "%"
-      | Eq -> "=="
-      | Neq -> "!="
-      | Gteq -> ">="
-      | Lteq -> "<="
-      | Gt -> ">"
-      | Lt -> "<"
-      | And -> "&&"
-      | Or -> "||"
+    let op_str = string_of_op op
     in
     "(" ^ string_of_expr e1 ^ " " ^ op_str ^ " " ^ string_of_expr e2 ^ ")"
   | Uniop(op, e) ->
@@ -101,7 +93,24 @@ and string_of_graph_element = function
 | Edge(n1, n2, weight) ->  "source:" ^ n1  ^ ", dest: " ^ n2 ^ ", weight:" ^ string_of_int(weight)
 
 and string_of_vertex vertex =
-"\"" ^ vertex ^ "\""
+  "\"" ^ vertex ^ "\""
+
+(* convert op to string separated out as a separate function *)
+and string_of_op op = match op with
+  | Add -> "+"
+  | Sub -> "-"
+  | Mul -> "*"
+  | Div -> "/"
+  | Mod -> "%"
+  | Eq -> "=="
+  | Neq -> "!="
+  | Gteq -> ">="
+  | Lteq -> "<="
+  | Gt -> ">"
+  | Lt -> "<"
+  | And -> "&&"
+  | Or -> "||"
+
 
 
 let rec string_of_stmt = function

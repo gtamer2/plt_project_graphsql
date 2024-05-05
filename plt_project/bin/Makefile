@@ -1,9 +1,12 @@
 # default target that 'make' will attempt to build if no target specified
 # all : calc_test.out graph_init.out
-all : graph_init.out graph_init2.out
+all : graph_init.out graph_init2.out semant_test.out semant_test2.out
 # all : calc_test.out
 
 ##############################
+semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
+	ocamlc -w A -o semant_eval ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
+
 graphsql : ast.cmo parser.cmo scanner.cmo graphsql.cmo
 	ocamlc -w A -o graphsql ast.cmo parser.cmo scanner.cmo graphsql.cmo
 
@@ -34,6 +37,12 @@ graph_init.out : graphsql graph_init.tb
 graph_init2.out : graphsql graph_init2.tb
 	./graphsql < graph_init2.tb > graph_init2.out
 
+semant_test.out : semant_eval semant_test.tb
+	./semant_eval < semant_test.tb > semant_test.out
+
+semant_test2.out : semant_eval semant_test2.tb
+	./semant_eval < semant_test2.tb > semant_test2.out
+
 # Depedencies from ocamldep
 graphsql.cmo : scanner.cmo parser.cmi ast.cmo
 graphsql.cmx : scanner.cmx parser.cmx ast.cmo
@@ -42,13 +51,20 @@ parser.cmx : ast.cmo parser.cmi
 scanner.cmo : parser.cmi
 scanner.cmx : parser.cmx
 
+# Dependencies for semantic_checker
+semant_eval.cmo : scanner.cmo parser.cmi ast.cmo sast.cmo semantic_checker.cmo
+semant_eval.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx
+semantic_checker.cmo : ast.cmo sast.cmo
+semantic_checker.cmx : ast.cmo sast.cmo
+
+
 
 ##############################
 
 # .PHONY tells make that clean is not a file name, but a command to be executed
 .PHONY : clean
 clean :
-	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql
+	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval
 
 
 ##############################
