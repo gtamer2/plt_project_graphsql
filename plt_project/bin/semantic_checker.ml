@@ -34,8 +34,15 @@ let vertex_exists env id =
 
 (* Function to check a single graph element *)
 let check_graph_element env elem =
+  (* RETURNS TUPLE, where first element is a tuple of (graph_elt_type, graph_elt), env *)
   begin match elem with
   | Vertex id ->
+    (GraphElementType(VertexType), SVertex { sid = id }), env
+  | Edge (source, target, weight) ->
+    (GraphElementType(EdgeType), SEdge { ssource = source; starget = target; sweight = Some weight }), env
+  | _ -> failwith("unsupported graph element")
+
+  (* | Vertex id ->
     if is_valid_vertex_id env id then
       let new_env = add_vertex_id env id in
       (GraphType(VertexType), SVertex { sid = id }), new_env
@@ -45,7 +52,7 @@ let check_graph_element env elem =
       if vertex_exists env source && vertex_exists env target then
         (GraphType(EdgeType), SEdge { ssource = source; starget = target; sweight = Some weight }), env
       else
-        raise (Failure ("Edge references undefined vertices: " ^ source ^ ", " ^ target))
+        raise (Failure ("Edge references undefined vertices: " ^ source ^ ", " ^ target)) *)
   end
 
 let ast_typ_to_sast_typ = function
@@ -102,18 +109,21 @@ let check init_env init_program =
         raise (Failure err)
     
     | Graph (graph_elements) ->
+      (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
+      (* If one of the graph_elements is not valid object Vertex or Edge, this operation will fail *)
+      (* So we want code that does the try/catch ocaml pattern *)
+      (* assuming success, or upon sanity check success, return ((GraphType, SGraph elts), final_env) *)
       let checked_graph_elements_with_envs = List.map (check_graph_element env) graph_elements in
-      let env = List.fold_left (fun acc_env (_, elem_env) -> elem_env) env checked_graph_elements_with_envs in
-      let sgraph_elements = List.map (fun (_, g_elem_x) -> g_elem_x) checked_graph_elements_with_envs in
-      let types = List.map fst (List.map snd checked_graph_elements_with_envs) in
-      let graph_type = 
-        if List.exists (fun t -> match t with GraphType VertexType -> true | _ -> false) types then
-          GraphType VertexType
-        else
-          GraphType EdgeType in
-      (graph_type, SGraph sgraph_elements), env
+
+      (* Extract stuff... note we assume valid at this point because of failwith thrown in check_graph_element *)
+      let checked_graph_elements = List.map fst checked_graph_elements_with_envs in
+      let types = List.map fst checked_graph_elements in
+      let sexprs = List.map snd checked_graph_elements in
+  
+      (* create the return tuple and return  *)
+      ((GraphType types, sexprs), env)
     
-    | GraphAccess(graphname, fieldname) -> 
+    (* | GraphAccess(graphname, fieldname) -> 
       match type_of_identifier env graphname with
       | GraphType _ ->  
         begin match GraphMap.find_opt graphname env.graphs with
@@ -135,7 +145,7 @@ let check init_env init_program =
           result, env
         | None -> raise (Failure ("Graph not found: " ^ graphname))
         end
-      | _ -> raise (Failure ("Identifier '" ^ graphname ^ "' does not refer to a graph"))
+      | _ -> raise (Failure ("Identifier '" ^ graphname ^ "' does not refer to a graph")) *)
        
     | GraphAsn(var, e) ->
       let ((t, se), env1) = check_expr env e in

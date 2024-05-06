@@ -2,39 +2,48 @@
 
 open Ast  
 
+(* TYPES - START *)
+type primitive_typ =
+  | Int
+  | Bool
+  | Float
+  | String
+
+
+type graph_element_type =
+  | VertexType
+  | EdgeType
+
+type unified_type = 
+  | Typ of primitive_typ
+  | GraphElementType of graph_element_type
+  | GraphType of graph_element_type list
+
+(* SEMANTIC AST - START *)
 type svertex = {
   sid: string;
 }
-
+  
 type sedge = {
   ssource: string;
   starget: string;
   sweight: int; 
 }
 
-type graph_type =
-  | VertexType
-  | EdgeType
-
-type typ =
-  | Int
-  | Bool
-  | Float
-  | StringType
-  | GraphType of graph_type
-
-type unified_type = 
-  | Typ of typ
-  (* | GraphType of graph_type *)
-  (* | GraphElement of graph_element
-  | Graph of graph_element list *)
-
-type sgraph_element = graph_element * graph_element_x
-and graph_element_x =
+type sgraph_element = graph_element_type * sgraph_element_x
+and sgraph_element_x =
   | SVertex of svertex
   | SEdge of sedge
 
-type sexpr = typ * sx
+(* type sgraph_type =
+ | graph_element list
+
+type sgraph = sgraph_type * sgraph_x 
+and sgraph_x = 
+ | S
+   *)
+
+type sexpr = unified_type * sx
 and sx = 
     SLit of int
   | SFloatLit of float
@@ -44,19 +53,19 @@ and sx =
   | SUniop of uniop * sexpr
   | SBinop of sexpr * binop * sexpr
   | SGraph of sgraph_element list
-  | SGraphAccess of string * string
+  (* | SGraphAccess of string * string *)
   | SGraphAsn of string * sexpr
-  | SGraphOp of string * sgraph_element list * string
+  (* | SGraphOp of string * sgraph_element list * string
   | SGraphQuery of string * string * string
-  | SGraphUpdate of string * graph_element
+  | SGraphUpdate of string * graph_element *)
 
 type sstmt = 
-| SBlock of sstmt list
-| SExpr of sexpr
-| SIf of sexpr * sstmt list
-| SIfElse of sexpr * sstmt list * sstmt list
-| SWhile of sexpr * sstmt list
-| SFor of sexpr * sexpr * sexpr * sstmt list
+  | SBlock of sstmt list
+  | SExpr of sexpr
+  | SIf of sexpr * sstmt list
+  | SIfElse of sexpr * sstmt list * sstmt list
+  | SWhile of sexpr * sstmt list
+  | SFor of sexpr * sexpr * sexpr * sstmt list
 
 (* let rec string_of_sexpr (t, e) = match e
   | SLit(l[0],l[1]) -> string_of_int l *)
@@ -66,7 +75,7 @@ let string_of_typ t =
   | Int -> "Int"
   | Bool -> "Bool"
   | Float -> "Float"
-  | StringType -> "String"
+  | String -> "String"
   | GraphType gt -> 
       match gt with
       | VertexType -> "Vertex"
