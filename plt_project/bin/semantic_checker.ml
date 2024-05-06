@@ -76,6 +76,74 @@ let check init_env init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
+
+    (* SFor *)
+
+    | For (init, condition, update, body) ->
+      let ((t1,init'),env1) = check_expr env init in
+      let ((t2,condition'),env2) = check_expr env1 condition in 
+      let ((t3,update'),env3) = check_expr env2 update in
+      let ((t4,body'),env4) = check_stmt env3 body in
+      let err = "illegal for loop " ^
+                string_of_typ t1 ^ " " ^ "in " ^ string_of_expr init ^
+                string_of_typ t2 ^ " " ^ "in " ^ string_of_expr condition ^
+                string_of_typ t3 ^ " " ^ "in " ^ string_of_expr update ^
+                string_of_typ t4 ^ " " ^ "in " ^ string_of_stmt body
+      in
+      if t2 = Bool then
+        ((t4, SFor((t1,init'), (t2,condition'), (t3,update'), (t4,body'))), env4)
+      else
+        raise (Failure err)
+    
+    (* SIf *)
+
+    | If (cond, then_stmt) ->
+      let ((t1, cond'), env1) = check_expr env cond in
+      let ((t2, then_stmt'), env2) = check_stmt env1 then_stmt in
+      let err = "illegal if statement " ^
+                string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond ^
+                string_of_typ t2 ^ " " ^ "in " ^ string_of_stmt then_stmt
+      in
+      if t1 = Bool then
+        ((t2, SIf((t1, cond'), (t2, then_stmt'))), env3)
+      else
+        raise (Failure err)
+    
+    (* SIfElse *)
+
+    | IfElse (cond, then_stmt, else_stmt) ->
+      let ((t1, cond'), env1) = check_expr env cond in
+      let ((t2, then_stmt'), env2) = check_stmt env1 then_stmt in
+      let ((t3, else_stmt'), env3) = check_stmt env2 else_stmt in
+      let err = "illegal if-else statement " ^
+                string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond ^
+                string_of_typ t2 ^ " " ^ "in " ^ string_of_stmt then_stmt ^
+                string_of_typ t3 ^ " " ^ "in " ^ string_of_stmt else_stmt
+      in
+      if t1 = Bool then
+        ((t2, SIfElse((t1, cond'), (t2, then_stmt'), (t3, else_stmt'))), env3)
+      else
+        raise (Failure err)
+    
+    (* While *)
+
+    | While (cond, body) ->
+      let ((t1, cond'), env1) = check_expr env cond in
+      let ((t2, body'), env2) = check_stmt env1 body in
+      let err = "illegal while loop " ^
+                string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond ^
+                string_of_typ t2 ^ " " ^ "in " ^ string_of_stmt body
+      in
+      if t1 = Bool then
+        ((t2, SWhile((t1, cond'), (t2, body'))), env2)
+      else
+        raise (Failure err)
+
+
+    (* | Seq (e1, e2) -> 
+      let se1, env1 = check_expr env e1 in
+      let se2, env2 = check_expr env1 e2 in
+      (((* what type is an seq*), SSeq (se1, se2)), env2) *)
     | Asn (var, e) ->
       (* let str = var ^ " = " ^ string_of_expr e in
         Printf.printf "variable Assignment: %s\n" str; *)
@@ -89,15 +157,6 @@ let check init_env init_program =
       (* | graph_element -> let env2 = { env1 with vars = GraphMap.add graph x env1.graphs } in
       | graph_element list ->
       | _,  *)
-    (* | GraphAccess (graphname, fieldname) ->
-      begin match GraphMap.find_opt graphname env.graphs with
-        | Some graph_elements ->
-          match fieldname with
-          | "vertices" -> 
-          | "edges" -> 
-          | _ -> failwith ("Invalid field name: " ^ fieldname)
-        | _ -> failwith ("Graph not found: " ^ graphname)
-      end *)
     | _ -> failwith "not supported"
       in
   let rec check_stmt_list env = function
