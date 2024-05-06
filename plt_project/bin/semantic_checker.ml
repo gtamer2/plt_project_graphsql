@@ -7,24 +7,55 @@ open Sast
 module BindMap = Map.Make(String)
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
+module StringSet = Set.Make(String)
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   bindings: unified_type BindMap.t;
   vars: sexpr VarMap.t;
   graphs: graph_element list GraphMap.t;
+  declared_vertices: StringSet.t;  
 }
 
+(* Checks if the given vertex ID is valid *)
+let is_valid_vertex_id env id =
+  not (StringSet.mem id env.declared_vertices)
+
+(* Adds a new vertex ID to the environment *)
+let add_vertex_id env id =
+  if is_valid_vertex_id env id then
+    { env with declared_vertices = StringSet.add id env.declared_vertices }
+  else
+    raise (Failure ("Vertex ID '" ^ id ^ "' is already used or invalid"))
+
+(* Checks if a vertex with the given ID exists in the environment *)
+let vertex_exists env id =
+  StringSet.mem id env.declared_vertices
+
+(* Function to check a single graph element *)
+let check_graph_element env elem =
+  begin match elem with
+  | Vertex id ->
+    if is_valid_vertex_id env id then
+      let new_env = add_vertex_id env id in
+      (GraphType(VertexType), SVertex { sid = id }), new_env
+    else
+      raise (Failure ("Invalid or duplicate vertex ID: " ^ id))
+  | Edge (source, target, weight) ->
+      if vertex_exists env source && vertex_exists env target then
+        (GraphType(EdgeType), SEdge { ssource = source; starget = target; sweight = Some weight }), env
+      else
+        raise (Failure ("Edge references undefined vertices: " ^ source ^ ", " ^ target))
+  end
+
+let ast_typ_to_sast_typ = function
+  | Ast.Int -> Sast.Int
+  | Ast.Bool -> Sast.Bool
+  | Ast.Float -> Sast.Float
+  | Ast.StringType -> Sast.StringType
+  (* | Ast.GraphType g -> Sast.GraphType g  *)
 
 let check init_env init_program = 
-  (* let check_graph (* check graphs *)
-  in  *)
-
-  (* (* Raise an exception if the given rvalue type cannot be assigned to
-      the given lvalue type *)
-  let check_assign lvaluet rvaluet err =
-    if lvaluet = rvaluet then lvaluet else raise (Failure err)
-  in *)
 
   (* Return a variable from our symbol table *)
   let type_of_identifier s bindings =
@@ -42,16 +73,6 @@ let check init_env init_program =
         Typ t -> ((t, SVar var), env)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
-    (* | Uniop (op, e1) ->
-      let (t1, e1') = check_expr e1 in
-      let err = "illegal unary operator " ^
-            string_of_op op ^ " " ^ string_of_typ t1
-      in
-      let t = match t1 with 
-          Not when t1 = Bool -> (t, SUniop(op, (t1, e1')))
-        | Dot when -> (* what to do with dot operation *)
-        | _ -> raise (Failure err) *)
-
     | Binop (e1, op, e2) as e ->
       let ((t1, e1'), env1) = check_expr env e1 in
       let ((t2, e2'), env2) = check_expr env1 e2 in
@@ -79,23 +100,62 @@ let check init_env init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
-    (* | Seq (e1, e2) -> 
-      let se1, env1 = check_expr env e1 in
-      let se2, env2 = check_expr env1 e2 in
-      (((* what type is an seq*), SSeq (se1, se2)), env2) *)
+    
+    | Graph (graph_elements) ->
+      let checked_graph_elements_with_envs = List.map (check_graph_element env) graph_elements in
+      let env = List.fold_left (fun acc_env (_, elem_env) -> elem_env) env checked_graph_elements_with_envs in
+      let sgraph_elements = List.map (fun (_, g_elem_x) -> g_elem_x) checked_graph_elements_with_envs in
+      let types = List.map fst (List.map snd checked_graph_elements_with_envs) in
+      let graph_type = 
+        if List.exists (fun t -> match t with GraphType VertexType -> true | _ -> false) types then
+          GraphType VertexType
+        else
+          GraphType EdgeType in
+      (graph_type, SGraph sgraph_elements), env
+    
+    | GraphAccess(graphname, fieldname) -> 
+      match type_of_identifier env graphname with
+      | GraphType _ ->  
+        begin match GraphMap.find_opt graphname env.graphs with
+        | Some graph_elements ->
+          let v_output : sgraph_element list ref = ref [] in
+          let e_output : sgraph_element list ref = ref [] in
+          List.iter (fun element ->
+            let (checked_element, _) = check_graph_element env element in
+            match snd checked_element with
+            | SVertex id -> v_output := checked_element :: !v_output
+            | SEdge (source, target, weight) -> e_output := checked_element :: !e_output
+            | _ -> failwith ("Not a graph element")
+          ) graph_elements;
+          let result = match fieldname with 
+            | "vertices" -> (GraphType VertexType, SGraph !v_output)  
+            | "edges" -> (GraphType EdgeType, SGraph !e_output)      
+            | _ -> raise (Failure ("Invalid field name: " ^ fieldname))
+          in
+          result, env
+        | None -> raise (Failure ("Graph not found: " ^ graphname))
+        end
+      | _ -> raise (Failure ("Identifier '" ^ graphname ^ "' does not refer to a graph"))
+       
+    | GraphAsn(var, e) ->
+      let ((t, se), env1) = check_expr env e in
+      match t with
+      | GraphType ->
+        let env2 = match BindMap.find_opt var env1.bindings with
+          | Some GraphType -> { env1 with graphs = GraphMap.add var (extract_graph_elements se) env1.graphs }
+          | None -> { env1 with bindings = BindMap.add var GraphType env1.bindings; graphs = GraphMap.add var (extract_graph_elements se) env1.graphs }
+          | Some _ -> raise (Failure ("Variable '" ^ var ^ "' is not declared as a graph"))
+        in
+        ((GraphType, SGraphAsn(var, se)), env2)
+      | _ -> raise (Failure ("Graph assignment expects a graph, got " ^ string_of_typ t))
+    
     | Asn (var, e) ->
       (* let str = var ^ " = " ^ string_of_expr e in
         Printf.printf "variable Assignment: %s\n" str; *)
       let ((t, e'), env1)  = check_expr env e in
-      (* let err = "illegal assignment " ^ string_of_typ lt ^ " = " ^
-                string_of_typ rt ^ " in " ^ string_of_expr exit
-      in *)
         let env2 = { env1 with bindings = BindMap.add var (Typ(t)) env1.bindings } in 
         let env3 = { env2 with vars = VarMap.add var (t, e') env2.vars } in
         ((t, SAsn(var, (t, e'))), env3)
-      (* | graph_element -> let env2 = { env1 with vars = GraphMap.add graph x env1.graphs } in
-      | graph_element list ->
-      | _,  *)
     | _ -> failwith "not supported"
       in
   let rec check_stmt_list env = function
@@ -112,13 +172,7 @@ let check init_env init_program =
       | Expr e -> 
         let (sexpr, env') = check_expr env e in
         (SExpr(sexpr), env')
-      (* | If ->
-      | IfElse ->
-      | While ->
-      | For -> *)
       | _ -> failwith "not supported"
   
   in
   check_stmt_list init_env init_program
-    (* | Graph g -> check_graph 
-    | GraphAsn (var, e) -> S *)

@@ -1,7 +1,6 @@
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
-type typ = Int | Bool | Float | String (* | Void *)
-(* type object = Graph *)
+(* type typ = Int | Bool | Float | StringType  *)
 
 
 type vertex = {
@@ -20,7 +19,11 @@ type graph_element =
 
 
 type unified_type = 
-  | Typ of typ
+  (* | Typ of typ *)
+  | Int
+  | Bool 
+  | Float
+  | StringType
   | GraphElement of graph_element
   | Graph of graph_element list
 

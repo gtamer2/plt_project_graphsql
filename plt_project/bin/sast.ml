@@ -9,8 +9,25 @@ type svertex = {
 type sedge = {
   ssource: string;
   starget: string;
-  sweight: float option; 
+  sweight: int; 
 }
+
+type graph_type =
+  | VertexType
+  | EdgeType
+
+type typ =
+  | Int
+  | Bool
+  | Float
+  | StringType
+  | GraphType of graph_type
+
+type unified_type = 
+  | Typ of typ
+  (* | GraphType of graph_type *)
+  (* | GraphElement of graph_element
+  | Graph of graph_element list *)
 
 type sgraph_element = graph_element * graph_element_x
 and graph_element_x =
@@ -30,6 +47,8 @@ and sx =
   | SGraphAccess of string * string
   | SGraphAsn of string * sexpr
   | SGraphOp of string * sgraph_element list * string
+  | SGraphQuery of string * string * string
+  | SGraphUpdate of string * graph_element
 
 type sstmt = 
 | SBlock of sstmt list
@@ -42,13 +61,16 @@ type sstmt =
 (* let rec string_of_sexpr (t, e) = match e
   | SLit(l[0],l[1]) -> string_of_int l *)
 
-let string_of_typ t = match t with
-  Int -> "Int"
+let string_of_typ t = 
+  match t with
+  | Int -> "Int"
   | Bool -> "Bool"
   | Float -> "Float"
-  | String -> "String"
-  (* | Vertex -> "Vertex"
-  | Edge -> "Edge" *)
+  | StringType -> "String"
+  | GraphType gt -> 
+      match gt with
+      | VertexType -> "Vertex"
+      | EdgeType -> "Edge"
 
 let rec string_of_sexpr (t, e) =
   "(" ^ string_of_typ t ^ " : " ^ (match e with
@@ -77,7 +99,7 @@ and string_of_svertex svertex =
   "\"" ^ svertex.sid ^ "\""
 and string_of_sedge sedge =
   let weight_str = match sedge.sweight with
-    | Some w -> string_of_float w
+    | Some w -> string_of_int w
     | None -> "None"
   in
   "Edge(\"" ^ sedge.ssource ^ "\", \"" ^ sedge.starget ^ "\", " ^ weight_str ^ ")"
