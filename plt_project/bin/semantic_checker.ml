@@ -39,7 +39,7 @@ let check_graph_element env elem =
   | Vertex id ->
     (GraphElementType(VertexType), SVertex { sid = id }), env
   | Edge (source, target, weight) ->
-    (GraphElementType(EdgeType), SEdge { ssource = source; starget = target; sweight = Some weight }), env
+    (GraphElementType(EdgeType), SEdge { ssource = source; starget = target; sweight = weight }), env
   | _ -> failwith("unsupported graph element")
 
   (* | Vertex id ->
@@ -59,7 +59,7 @@ let ast_typ_to_sast_typ = function
   | Ast.Int -> Sast.Int
   | Ast.Bool -> Sast.Bool
   | Ast.Float -> Sast.Float
-  | Ast.StringType -> Sast.StringType
+  | Ast.String -> Sast.String
   (* | Ast.GraphType g -> Sast.GraphType g  *)
 
 let check init_env init_program = 
@@ -84,8 +84,8 @@ let check init_env init_program =
       let ((t1, e1'), env1) = check_expr env e1 in
       let ((t2, e2'), env2) = check_expr env1 e2 in
       let err = "illegal binary operator " ^
-                string_of_typ t1 ^ " " ^ string_of_op op ^ " " ^
-                string_of_typ t2 ^ " in " ^ string_of_expr e
+                string_of_typ (Typ t1) ^ " " ^ string_of_op op ^ " " ^
+                string_of_typ (Typ t2) ^ " in " ^ string_of_expr e
       in
       (* All binary operators require operands of the same type*)
       if t1 = t2 then
@@ -97,14 +97,14 @@ let check init_env init_program =
           | And | Or when t1 = Bool -> Bool
           | _ -> raise (Failure err)
         in
-        ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
+        ((t, SBinop(((Typ t1), e1'), op, ((Typ t2), e2'))), env2)
       else if t1 = Float && t2 = Int || t1 = Int && t2 = Float then
         let t = match op with
             Add | Sub | Mul | Div -> Float
           | Eq | Neq | Gteq | Lteq | Gt | Lt -> Bool
           | _ -> raise (Failure err)
         in
-        ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
+        ((t, SBinop(((Typ t1), e1'), op, ((Typ t2), e2'))), env2)
       else
         raise (Failure err)
     

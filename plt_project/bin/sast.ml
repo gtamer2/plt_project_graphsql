@@ -9,7 +9,6 @@ type primitive_typ =
   | Float
   | String
 
-
 type graph_element_type =
   | VertexType
   | EdgeType
@@ -71,17 +70,24 @@ type sstmt =
   | SLit(l[0],l[1]) -> string_of_int l *)
 
 let string_of_typ t = 
-  match t with
-  | Int -> "Int"
-  | Bool -> "Bool"
-  | Float -> "Float"
-  | String -> "String"
-  | GraphType gt -> 
-      match gt with
+  begin match t with
+  | Typ p -> 
+      (match p with
+      | Int -> "Int"
+      | Bool -> "Bool"
+      | Float -> "Float"
+      | String -> "String")
+  | GraphElementType g -> 
+      (match g with
       | VertexType -> "Vertex"
-      | EdgeType -> "Edge"
+      | EdgeType -> "Edge")
+  | GraphType gts -> 
+      "GraphType[" ^ String.concat ", " (List.map (function
+        | VertexType -> "Vertex"
+        | EdgeType -> "Edge") gts) ^ "]"
+  end
 
-let rec string_of_sexpr (t, e) =
+(* let rec string_of_sexpr (t, e) =
   "(" ^ string_of_typ t ^ " : " ^ (match e with
         SLit(l) -> string_of_int l
       | SBoolLit(true) -> "true"
@@ -99,17 +105,50 @@ let rec string_of_sexpr (t, e) =
       ) ^ ")"
 
 and string_of_sgraph_element (t , e) =
-  "(" ^ string_of_graph_element t ^ ":"  ^ ( match e with
+  "(" ^ "string_of_graph_element" ^ ":"  ^ ( match e with
     SVertex(svertex) -> string_of_svertex svertex
   | SEdge(sedge) -> string_of_sedge sedge
+  ) ^ ")" *)
+
+let rec string_of_sexpr (t, e) =
+  "(" ^ string_of_typ t ^ " : " ^ (match e with
+    | SLit(l) -> string_of_int l
+    | SBoolLit(b) -> string_of_bool b
+    | SFloatLit(f) -> string_of_float f
+    | SVar(s) -> s
+    | SAsn(p, q) -> p ^ " = " ^ string_of_sexpr q
+    | SBinop(e1, op, e2) ->
+        let op_str = match op with
+          | Add -> "+"
+          | Sub -> "-"
+          | Mul -> "*"
+          | Div -> "/"
+          | Eq -> "=="
+          | Neq -> "!="
+          | Gteq -> ">="
+          | Lteq -> "<="
+          | Gt -> ">"
+          | Lt -> "<"
+          | And -> "&&"
+          | Or -> "||"
+        in
+        string_of_sexpr e1 ^ " " ^ op_str ^ " " ^ string_of_sexpr e2
+    | SGraph(elements) ->
+        "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
+    | SGraphAsn(p, q) -> "GraphAsn: " ^ p  ^ " = " ^ string_of_sexpr q
   ) ^ ")"
+
+and string_of_sgraph_element = function
+  | (VertexType, SVertex { sid }) -> "Vertex(" ^ sid ^ ")"
+  | (EdgeType, SEdge { ssource; starget; sweight }) ->
+      "Edge(" ^ ssource ^ ", " ^ starget ^ ", " ^ string_of_int sweight ^ ")"
 
 and string_of_svertex svertex =
   "\"" ^ svertex.sid ^ "\""
 and string_of_sedge sedge =
   let weight_str = match sedge.sweight with
-    | Some w -> string_of_int w
-    | None -> "None"
+    | w -> string_of_int w
+    | _ -> "no weight"
   in
   "Edge(\"" ^ sedge.ssource ^ "\", \"" ^ sedge.starget ^ "\", " ^ weight_str ^ ")"
 
