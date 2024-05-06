@@ -28,6 +28,7 @@
 %left MODULUS
 %left OR AND
 %left EQL NOTEQL
+%right NOT
 %left GT LT GTEQ LTEQ
 
 %start stmt_list
@@ -86,6 +87,7 @@ expr:
     | INSERT INTO VARIABLE graph_elements_list {GraphOp($3, $4, "insert")}
     | DELETE graph_elements_list FROM VARIABLE {GraphOp($4, $2, "delete")}
     | UPDATE graph_element FROM VARIABLE { GraphUpdate($4, $2) }
+    | NOT expr { Uniop(Not, $2) }
     | expr PLUS expr {Binop($1, Add, $3) } //done
     | expr MINUS expr { Binop($1, Sub, $3) } //done
     | expr TIMES expr { Binop($1, Mul, $3) } //done

@@ -1,0 +1,10 @@
+Processing all stmts
+Initial Expression: 
+GraphAsn: g[
+Graph([])] 
+Evaluating expression: 
+GraphAsn: g[
+Graph([])]
+GraphAsn constructor: g = 
+Graph([])
+Result: true
