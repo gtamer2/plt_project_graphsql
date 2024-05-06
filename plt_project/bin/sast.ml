@@ -57,6 +57,9 @@ let rec string_of_sexpr (t, e) =
       | SBoolLit(false) -> "false"
       | SFloatLit(f) -> string_of_float f
       | SVar(s) -> s
+      | SUniop(op, e1) ->
+        let op_str = "!" in
+        "(" ^ op_str ^ " " ^ string_of_sexpr e1 ^ ")"
       | SBinop(e1, op, e2) ->
         let op_str = string_of_op op
         in
