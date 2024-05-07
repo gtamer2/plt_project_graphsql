@@ -2,17 +2,24 @@ open Ast
 open Printf
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
+module FunctionMap = Map.Make(String)
+
+type argument_list = string list
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   vars: int VarMap.t;
   graphs: graph_element list GraphMap.t;
+  function_declarations: argument_list FunctionMap.t;
+  function_definitions: stmt FunctionMap.t;
 }
 
 (* Initial empty environment *)
 let empty_env = {
   vars = VarMap.empty;
   graphs = GraphMap.empty;
+  function_declarations = FunctionMap.empty;
+  function_definitions = FunctionMap.empty;
 }
 
 let int_of_bool b = if b then 1 else 0
@@ -27,6 +34,9 @@ let int_of_bool b = if b then 1 else 0
       | BoolLit b when not b -> (BoolLit false, new_env) (* Propagate the early termination *)
       | _ -> eval_stmt_list new_env rest Continue evaluating the rest of the statements *)
 
+
+(** Forward declaration of eval_stmt_list *)
+(* val eval_stmt_list : environment -> stmt list -> expr * environment *)
 
 let rec eval_expr env = function
   | expr -> 
@@ -101,20 +111,20 @@ let rec eval_expr env = function
             let e_output : graph_element list ref = ref [] in
             
             List.iter (fun element ->
-              match element with
-              | Vertex _ -> v_output := element :: !v_output
-              | Edge _ -> e_output := element :: !e_output
-              | _ -> failwith ("Not a graph element")
+              begin match element with
+                | Vertex _ -> v_output := element :: !v_output
+                | Edge _ -> e_output := element :: !e_output
+                | _ -> failwith ("Not a graph element")
+              end
             ) graph_elements;
-            match fieldname with 
+            begin match fieldname with 
               | "vertices" -> (Graph !v_output, env)
               | "edges" -> (Graph !e_output, env)
               | _ -> failwith ("Invalid field name: " ^ fieldname)
+            end
         | _ -> failwith ("Graph not found: " ^ graphname)
       end
     | GraphAsn(var, e) ->
-      let str = "GraphAsn " ^ var ^ " = " ^ string_of_expr e in
-      (* Printf.printf "Graph Assignment: %s\n" str; *)
       begin match e with
         | Graph(graph_elements) ->
           let env1 = { env with graphs = GraphMap.add var graph_elements env.graphs } in
@@ -166,16 +176,20 @@ let rec eval_expr env = function
       | _ -> failwith ("Unsupported operation type: " ^ optype)
       end 
       | Asn(var, e) ->
+      | Asn(var, e) ->
         let str = var ^ " = " ^ string_of_expr e in
         (* Printf.printf "variable Assignment: %s\n" str; *)
-        let (value, env1) = eval_expr env e in
-        begin match value with
-        | Lit x ->
-          let env2 = { env1 with vars = VarMap.add var x env1.vars } in
-          (Lit x, env2)
-        | _ -> failwith "Assignment expects a literal integer" 
-        end
-      | _ -> failwith "not supported"
+    | Asn(var, e) ->
+        let str = var ^ " = " ^ string_of_expr e in
+        (* Printf.printf "variable Assignment: %s\n" str; *)
+      let (value, env1) = eval_expr env e in
+      begin match value with
+      | Lit x ->
+        let env2 = { env1 with vars = VarMap.add var x env1.vars } in
+        (Lit x, env2)
+      | _ -> failwith "Assignment expects a literal integer" 
+      end
+    | _ -> failwith "not supported"
     end
  
 
@@ -246,6 +260,42 @@ let rec eval_stmt_list env = function
           | _ -> failwith "For excepts a boolean expression"
         end
         in for_helper env1 condition update body
+    | FunctionCreation(name, body) -> 
+      if FunctionMap.mem name env.function_definitions then
+      failwith ("Function already exists: " ^ name)
+      else
+      let env1 = { env with function_definitions = FunctionMap.add name body env.function_definitions } in
+      (BoolLit true, env1)
+      | FunctionCall(fn_name) ->
+        if FunctionMap.mem fn_name env.function_definitions then
+          let function_body = FunctionMap.find fn_name env.function_definitions in
+          eval_stmt_list env function_body
+        else
+          failwith ("Function not found: " ^ fn_name)
+    
+    (* | FunctionCreation(name, arg_list, body) -> 
+      (* if FunctionMap.mem name env.function_declarations then *)
+      let existing_args = FunctionMap.find name env.function_declarations in
+      if existing_args = arg_list then
+        failwith ("Function already exists: " ^ name)
+      else
+        let env1 = { env with function_declarations = FunctionMap.add name arg_list env.function_declarations } in
+        let env2 = { env1 with function_definitions = FunctionMap.add name body env1.function_definitions } in
+        (BoolLit true, env2)
+    | FunctionCall(name, args) ->
+      let arg_list = FunctionMap.find name env.function_declarations in
+      if List.length arg_list <> List.length args then
+        failwith ("Function " ^ name ^ " expects " ^ string_of_int (List.length arg_list) ^ " arguments")
+      else
+        let arg_values = List.map (fun arg -> fst (eval_expr env arg)) args in
+        let arg_env = List.fold_left2 (fun acc arg_name arg_value -> 
+          match arg_value with
+          | Lit x -> { acc with vars = VarMap.add arg_name x acc.vars }
+          | _ -> failwith "Function arguments must be literals"
+        ) env arg_list arg_values in
+        let function_body = FunctionMap.find name env.function_definitions in
+        eval_stmt_list arg_env function_body *)
+    | Return e -> eval_expr env e
     | _ -> failwith "Invalid parsing of stmt" 
     end
 

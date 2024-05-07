@@ -11,7 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT APPLY WHILE FOR
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT APPLY WHILE FOR RETURN
 
 %token QUOTES
 %token DOT 
@@ -59,13 +59,31 @@ stmt_list:
     /* nothing */ { [] }
     | stmt stmt_list {print_endline("Processing all stmts"); $1::$2 }
 
+// arg_list_definition:
+//     | /* nothing */ { [] }
+//     | VARIABLE COMMA arg_list_definition { $1::$3 }
+
 stmt:
     | expr SEMICOLON { Expr($1) }
+    | RETURN expr SEMICOLON { Return($2) }
     | LC stmt_list RC { Block($2) }
     | IF LP expr RP LC stmt_list RC { print_endline("Parser If"); If($3, $6) }
     | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
     | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
+    | DEFINE FUNCTION VARIABLE LP RP LC stmt_list RC { FunctionCreation($3, $7)}
+    // | DEFINE FUNCTION VARIABLE LP arg_list_definition RP LC stmt_list RC { FunctionCreation($3, $5, $8)}
+
+
+// function_arg:
+//     | VARIABLE { $1 }
+//     | LITERAL    { Lit($1) } //done
+//     | FLOATLIT { FloatLit($1) } //done
+//     | BLIT     { BoolLit($1) }
+
+// arg_list:
+//     | /*empty*/ { [] }
+//     | function_arg COMMA arg_list { $1::$3 }
 
 expr:    
     | LITERAL    { Lit($1) } //done
@@ -73,6 +91,8 @@ expr:
     | BLIT     { BoolLit($1) }
     | VARIABLE ASSIGN expr {Asn($1, $3)} //done
     | VARIABLE { Var($1) } //done
+    | VARIABLE LP RP { FunctionCall($1) }
+    // | VARIABLE LP arg_list RP { FunctionCall($1, $3) }
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
     | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
     | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE
