@@ -98,30 +98,40 @@ let check init_env init_program =
       (* create the return tuple and return  *)
       ((GraphType types, SGraph checked_graph_elements), env)
     
-    (* | GraphAccess(graphname, fieldname) -> 
-      match type_of_identifier env graphname with
-      | GraphType _ ->  
-        begin match GraphMap.find_opt graphname env.graphs with
-        | Some graph_elements ->
+    | GraphAccess(graphname, fieldname) -> 
+      let binding_type = BindMap.find graphname env.bindings in 
+      Printf.printf "binding_type: %s\n" (string_of_typ binding_type);
+      (* if (binding_type != GraphType) then
+        raise (Failure ("graphname " ^ graphname ^ "is not a graph"))
+      else *)
+        let graph_elts = GraphMap.find graphname env.graphs in
+        begin match graph_elts with
+        | graph_elements ->
           let v_output : sgraph_element list ref = ref [] in
           let e_output : sgraph_element list ref = ref [] in
           List.iter (fun element ->
+            (* we don't need the env result here *)
             let (checked_element, _) = check_graph_element env element in
-            match snd checked_element with
-            | SVertex id -> v_output := checked_element :: !v_output
-            | SEdge (source, target, weight) -> e_output := checked_element :: !e_output
-            | _ -> failwith ("Not a graph element")
+            (* second elt of checked_element is the semantically checked expr *)
+            begin match snd checked_element with
+              | SVertex svertex -> v_output := checked_element :: !v_output
+              | SEdge sedge -> e_output := checked_element :: !e_output
+              | _ -> failwith ("Not a graph element")
+            end 
           ) graph_elements;
-          let result = match fieldname with 
-            | "vertices" -> (GraphType VertexType, SGraph !v_output)  
-            | "edges" -> (GraphType EdgeType, SGraph !e_output)      
-            | _ -> raise (Failure ("Invalid field name: " ^ fieldname))
+          (* Get the type list for v_output and e_output *)
+          let v_output_types = List.map (fun x -> fst x) !v_output in
+          let e_output_types = List.map (fun x -> fst x) !e_output in 
+          let result = begin match fieldname with 
+              | "vertices" -> (GraphType v_output_types, SGraph !v_output)  
+              | "edges" -> (GraphType e_output_types, SGraph !e_output)      
+              | _ -> raise (Failure ("Invalid field name: " ^ fieldname))
+            end
           in
           result, env
-        | None -> raise (Failure ("Graph not found: " ^ graphname))
+        | _ -> raise (Failure ("Graph not found: " ^ graphname))
         end
-      | _ -> raise (Failure ("Identifier '" ^ graphname ^ "' does not refer to a graph")) *)
-       
+
     | GraphAsn(var, e) ->
       let ((t, se), env1) = check_expr env e in
       begin match t with

@@ -1,6 +1,5 @@
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
-(* type typ = Int | Bool | Float | StringType  *)
 
 type vertex = {
   id: string;
@@ -33,7 +32,6 @@ type expr =
   | Asn of string * expr 
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
-  (* | Seq of expr * expr *)
   | Graph of graph_element list
   | GraphAsn of string * expr
   | GraphAccess of string * string (* graph_name * field_name *)
