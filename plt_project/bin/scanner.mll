@@ -11,9 +11,10 @@ rule tokenize = parse
 | '*' { TIMES }
 | '/' { DIVIDE }
 | ';' { SEMICOLON }
-| '=' { ASSIGN }
-| ['0'-'9']+ as lit { LITERAL(int_of_string lit) }
-| ['a'-'z']+ as id { VARIABLE(id) }
+| "." { DOT }
+| ('-'?)['0'-'9']+ as lit { LITERAL(int_of_string lit) }
+| "vertices" { VERTICES }
+| "edges" { EDGES }
 | eof { EOF }
 | '%' { MODULUS}
 | '<' { LT }
@@ -23,12 +24,10 @@ rule tokenize = parse
 | "==" { EQL }
 | "!=" { NOTEQL }
 | ';' { SEMICOLON }
-(* | ['0'-'9']+ as lit { LITERAL(int_of_string lit) } *)
-(* | letter (letter | digit | '_')* as id { VARIABLE( id ) } *)
+| '=' { ASSIGN }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
-(* | '-'?digit+'.'digit (['e' 'E']['+' '-']? digit ) as fltlit { FLOATLIT(float_of_string fltlit) } *)
-(* | quote[ -~]quote as str { STRINGLIT(str) } *)
+| '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
 | "AND" { AND }
 | "OR" { OR }
 | "DEFINE" { DEFINE }
@@ -36,20 +35,25 @@ rule tokenize = parse
 | "CREATE" { CREATE }
 | "SELECT" { SELECT }
 | "FROM" { FROM }
+| "UNION" { UNION }
+| "INTERSECT" { INTERSECT }
+| "UPDATE" {UPDATE}
 | "AS" { AS }
 | "WHERE" { WHERE }
 | "INSERT" { INSERT }
-| "UNION" { UNION }
-| "INTERSECT" { INTERSECT }
+| "INTO" { INTO }
+| "DELETE" { DELETE }
 | "APPLY" { APPLY }
 | "GRAPH" { GRAPH }
 | "VERTEX" { VERTEX }
 | "EDGE" { EDGE }
 | "NOT" { NOT }
 | "WHILE" { WHILE }
-| "." { ACCESSOR }
-| "vertices" { VERTICES }
-| "edges" { EDGES }
+| "FOR" { FOR }
+| "IF" { IF }
+| "ELSE" { ELSE }
+| "ELIF" { ELIF }
+| letter (letter | digit | '_')* as id { VARIABLE( id ) }
 | "," {COMMA}
 | "\"" {QUOTES}
 | "(" { LP }
@@ -59,10 +63,6 @@ rule tokenize = parse
 | "{" { LC }
 | "}" { RC }
 | "," { COMMA }
-| "-" { DASH }
 | "->" { ARROW }
-| "IF" { IF }
-| "ELSE" { ELSE }
-| "ELIF" { ELIF }
+| '#' [^ '\n']* { tokenize lexbuf }
 | _ { raise (Failure "Character not allowed") }
-| "#" { COMMENT }

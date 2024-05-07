@@ -1,4 +1,4 @@
-(lang dune 3.15)
+(lang dune 3.14)
 
 (name plt_project)
 
@@ -20,6 +20,7 @@
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends ocaml dune)
+ (allow_empty)
  (tags
   (topics "to describe" your project)))
 

@@ -1,0 +1,40 @@
+foo = 3;
+bar = 3;
+IF (foo > 7)
+{
+    bar = 5;
+} 
+ELSE
+{
+    zip = 0;
+    car = 1;
+    WHILE (car < foo) {
+        car = car + 1;
+    }
+
+    IF(car == 4)
+    {
+        foo = 7;
+    }
+    ELIF (car == 3)
+    {
+        foo = 19;
+        a = 0;
+        WHILE (a < 3) 
+        {
+        a = a + 1;
+        }
+    }
+    ELSE 
+    { 
+        
+        foo = -1;
+    }
+    car;
+
+    IF(a == 3)
+    {
+        b = 1000;
+    }
+}
+bar;

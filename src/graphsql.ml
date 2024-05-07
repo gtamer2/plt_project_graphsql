@@ -67,6 +67,19 @@ let rec eval env = function
       | _ -> failwith "Assignment expects a literal integer"
     | _ -> failwith "not supported"
 
+  let rec bool_eval env = function
+  | Bool_Binop(e1, op, e2) ->
+      let v1 = bool_eval env e1 in
+      let v2 = bool_eval env e2 in
+      match op with
+      | Eq -> v1 = v2
+      | Neq -> v1 <> v2
+      | Gt -> v1 > v2
+      | Lt -> v1 < v2
+      | Gteq -> v1 >= v2
+      | Lteq -> v1 <= v2
+      | And -> v1 && v2
+      | Or -> v1 || v2
 
 
 let _ =
