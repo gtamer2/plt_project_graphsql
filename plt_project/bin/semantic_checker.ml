@@ -53,6 +53,7 @@ let check init_env init_program =
         | Bool -> ((Bool, SVar var), env)
         | Float -> ((Float, SVar var), env)
         | String -> ((String, SVar var), env)
+        | GraphType var_type -> ((GraphType var_type, SVar var), env)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
     | Binop (e1, op, e2) as e ->
@@ -100,44 +101,44 @@ let check init_env init_program =
     
     | GraphAccess(graphname, fieldname) -> 
       let binding_type = BindMap.find graphname env.bindings in 
-      Printf.printf "binding_type: %s\n" (string_of_typ binding_type);
-      (* if (binding_type != GraphType) then
-        raise (Failure ("graphname " ^ graphname ^ "is not a graph"))
-      else *)
-        let graph_elts = GraphMap.find graphname env.graphs in
-        begin match graph_elts with
-        | graph_elements ->
-          let v_output : sgraph_element list ref = ref [] in
-          let e_output : sgraph_element list ref = ref [] in
-          List.iter (fun element ->
-            (* we don't need the env result here *)
-            let (checked_element, _) = check_graph_element env element in
-            (* second elt of checked_element is the semantically checked expr *)
-            begin match snd checked_element with
-              | SVertex svertex -> v_output := checked_element :: !v_output
-              | SEdge sedge -> e_output := checked_element :: !e_output
-              | _ -> failwith ("Not a graph element")
-            end 
-          ) graph_elements;
-          (* Get the type list for v_output and e_output *)
-          let v_output_types = List.map (fun x -> fst x) !v_output in
-          let e_output_types = List.map (fun x -> fst x) !e_output in 
-          let result = begin match fieldname with 
-              | "vertices" -> (GraphType v_output_types, SGraph !v_output)  
-              | "edges" -> (GraphType e_output_types, SGraph !e_output)      
-              | _ -> raise (Failure ("Invalid field name: " ^ fieldname))
-            end
-          in
-          result, env
-        | _ -> raise (Failure ("Graph not found: " ^ graphname))
-        end
+      (* Printf.printf "binding_type: %s\n" (string_of_typ binding_type);
+      Printf.printf "graphname: %s\n" graphname; *)
+      let graph_elts = GraphMap.find graphname env.graphs in
+      (* Printf.printf "graph_elts: %s\n" (string_of_expr (Graph graph_elts)); *)
+      begin match graph_elts with
+      | graph_elements ->
+        let v_output : sgraph_element list ref = ref [] in
+        let e_output : sgraph_element list ref = ref [] in
+        List.iter (fun element ->
+          (* we don't need the env result here *)
+          let (checked_element, _) = check_graph_element env element in
+          (* second elt of checked_element is the semantically checked expr *)
+          begin match snd checked_element with
+            | SVertex svertex -> v_output := checked_element :: !v_output
+            | SEdge sedge -> e_output := checked_element :: !e_output
+            | _ -> failwith ("Not a graph element")
+          end 
+        ) graph_elements;
+        (* Get the type list for v_output and e_output *)
+        let v_output_types = List.map (fun x -> fst x) !v_output in
+        let e_output_types = List.map (fun x -> fst x) !e_output in 
+        let result = begin match fieldname with 
+            | "vertices" -> (GraphType v_output_types, SGraph !v_output)  
+            | "edges" -> (GraphType e_output_types, SGraph !e_output)      
+            | _ -> raise (Failure ("Invalid field name: " ^ fieldname))
+          end
+        in
+        result, env
+      | _ -> raise (Failure ("Graph not found: " ^ graphname))
+      end
 
     | GraphAsn(var, e) ->
+      let graph_elements = get_graph_elements e in 
       let ((t, se), env1) = check_expr env e in
       begin match t with
       | GraphType t ->
         let env2 = { env1 with bindings = BindMap.add var (GraphType t) env1.bindings } in 
-        let env3 = { env2 with vars = VarMap.add var ((GraphType t), se) env2.vars } in
+        let env3 = { env2 with graphs = GraphMap.add var graph_elements env2.graphs } in
         (((GraphType t), SGraphAsn(var, se)), env3)
       | _ -> raise (Failure ("Graph assignment expects a graph, got " ^ string_of_typ t))
       end 

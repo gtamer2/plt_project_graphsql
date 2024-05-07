@@ -52,10 +52,13 @@ type stmt =
   and
  elif_stmt = expr * stmt list
 
-
 type stmt_list = stmt list 
 
 
+let get_graph_elements expr =
+  match expr with
+  | Graph elements -> elements
+  | _ -> []
 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
@@ -109,8 +112,6 @@ and string_of_op op = match op with
   | Lt -> "<"
   | And -> "&&"
   | Or -> "||"
-
-
 
 let rec string_of_stmt = function
   | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list body
