@@ -42,15 +42,12 @@ let check init_env init_program =
         Typ t -> ((t, SVar var), env)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
-    (* | Uniop (op, e1) ->
-      let (t1, e1') = check_expr e1 in
-      let err = "illegal unary operator " ^
-            string_of_op op ^ " " ^ string_of_typ t1
-      in
-      let t = match t1 with 
-          Not when t1 = Bool -> (t, SUniop(op, (t1, e1')))
-        | Dot when -> (* what to do with dot operation *)
-        | _ -> raise (Failure err) *)
+    | Uniop (op, e1) ->
+      let ((t1, e1'), env1) = check_expr env e1 in
+      let t = match op with 
+          Not when t1 = Bool -> Bool
+        | _ -> failwith "failed uniary op"
+      in ((t, SUniop(op, (t1, e1'))), env1)
 
     | Binop (e1, op, e2) as e ->
       let ((t1, e1'), env1) = check_expr env e1 in
@@ -79,10 +76,6 @@ let check init_env init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
-    (* | Seq (e1, e2) -> 
-      let se1, env1 = check_expr env e1 in
-      let se2, env2 = check_expr env1 e2 in
-      (((* what type is an seq*), SSeq (se1, se2)), env2) *)
     | Asn (var, e) ->
       (* let str = var ^ " = " ^ string_of_expr e in
         Printf.printf "variable Assignment: %s\n" str; *)
@@ -96,6 +89,15 @@ let check init_env init_program =
       (* | graph_element -> let env2 = { env1 with vars = GraphMap.add graph x env1.graphs } in
       | graph_element list ->
       | _,  *)
+    (* | GraphAccess (graphname, fieldname) ->
+      begin match GraphMap.find_opt graphname env.graphs with
+        | Some graph_elements ->
+          match fieldname with
+          | "vertices" -> 
+          | "edges" -> 
+          | _ -> failwith ("Invalid field name: " ^ fieldname)
+        | _ -> failwith ("Graph not found: " ^ graphname)
+      end *)
     | _ -> failwith "not supported"
       in
   let rec check_stmt_list env = function
