@@ -7,7 +7,6 @@ open Sast
 module BindMap = Map.Make(String)
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
-module StringSet = Set.Make(String)
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
@@ -110,7 +109,6 @@ let check init_env init_program =
         let v_output : sgraph_element list ref = ref [] in
         let e_output : sgraph_element list ref = ref [] in
         List.iter (fun element ->
-          (* we don't need the env result here *)
           let (checked_element, _) = check_graph_element env element in
           (* second elt of checked_element is the semantically checked expr *)
           begin match snd checked_element with
@@ -142,6 +140,50 @@ let check init_env init_program =
         (((GraphType t), SGraphAsn(var, se)), env3)
       | _ -> raise (Failure ("Graph assignment expects a graph, got " ^ string_of_typ t))
       end 
+
+    | GraphOp(gname, graph_elements, optype) ->
+      begin match GraphMap.find gname env.graphs with
+      | graph_elements ->
+        let ((t, sgraph_expr), env1) = check_expr env (Graph graph_elements) in
+        begin match optype with 
+        | "insert" -> 
+          let v_output : sgraph_element list ref = ref [] in
+          let e_output : sgraph_element list ref = ref [] in
+          (* process graph_elements input *)
+          List.iter (fun element ->
+            let (checked_element, _) = check_graph_element env element in
+            (* second elt of checked_element is the semantically checked expr *)
+            begin match snd checked_element with
+              | SVertex svertex -> v_output := checked_element :: !v_output
+              | SEdge sedge -> e_output := checked_element :: !e_output
+              | _ -> failwith ("Not a graph element")
+            end 
+          ) graph_elements;
+          (* Get the type list for v_output and e_output *)
+          let v_output_types = List.map (fun x -> fst x) !v_output in
+          let e_output_types = List.map (fun x -> fst x) !e_output in
+          
+          (* Get the type list for existing graph elements*)
+          let checked_graph_elements_with_envs = List.map (check_graph_element env) graph_elements in
+          let checked_graph_elements = List.map fst checked_graph_elements_with_envs in
+          let existing_elements_types = List.map fst checked_graph_elements in
+
+          let updated_types = !v_output_types @ !e_output_types @ !existing_elements_types in
+          let updated_env = { env with graphs = GraphMap.add gname updated_graph_elements env1.graphs } in
+          (Graph updated_graph_elements, updated_env)
+
+
+
+        | "delete" -> 
+        end 
+
+      | None -> failwith ("Graph not found in semantic checker: " ^ gname)
+
+
+      end 
+
+
+
     | Asn (var, e) ->
       (* let str = var ^ " = " ^ string_of_expr e in
         Printf.printf "variable Assignment: %s\n" str; *)
