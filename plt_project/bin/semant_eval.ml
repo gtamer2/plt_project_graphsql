@@ -21,9 +21,14 @@ let varmap_to_str m =
 
 let bindmap_to_str m = 
   let inners = List.map (fun (k, v) -> k ^ " -> " ^ (
-    match v with 
-    | Typ typ -> string_of_typ typ
-  )) (BindMap.bindings m)
+    begin match v with 
+      | Int -> string_of_typ v
+      | Bool -> string_of_typ v
+      | Float -> string_of_typ v
+      | String -> string_of_typ v
+      | GraphType(v) -> string_of_typ (GraphType v)
+    end
+    )) (BindMap.bindings m)
   in "[" ^ (String.concat ", " inners) ^ "]"
 
 let _ = 

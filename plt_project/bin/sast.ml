@@ -3,19 +3,15 @@
 open Ast  
 
 (* TYPES - START *)
-type primitive_typ =
-  | Int
-  | Bool
-  | Float
-  | String
-
 type graph_element_type =
   | VertexType
   | EdgeType
 
 type unified_type = 
-  | Typ of primitive_typ
-  | GraphElementType of graph_element_type
+  | Int
+  | Bool
+  | Float
+  | String
   | GraphType of graph_element_type list
 
 (* SEMANTIC AST - START *)
@@ -34,13 +30,6 @@ and sgraph_element_x =
   | SVertex of svertex
   | SEdge of sedge
 
-(* type sgraph_type =
- | graph_element list
-
-type sgraph = sgraph_type * sgraph_x 
-and sgraph_x = 
- | S
-   *)
 
 type sexpr = unified_type * sx
 and sx = 
@@ -53,7 +42,7 @@ and sx =
   | SBinop of sexpr * binop * sexpr
   | SGraph of sgraph_element list
   (* | SGraphAccess of string * string *)
-  | SGraphAsn of string * sexpr
+  | SGraphAsn of string * sx
   (* | SGraphOp of string * sgraph_element list * string
   | SGraphQuery of string * string * string
   | SGraphUpdate of string * graph_element *)
@@ -66,57 +55,26 @@ type sstmt =
   | SWhile of sexpr * sstmt list
   | SFor of sexpr * sexpr * sexpr * sstmt list
 
-(* let rec string_of_sexpr (t, e) = match e
-  | SLit(l[0],l[1]) -> string_of_int l *)
 
 let string_of_typ t = 
   begin match t with
-  | Typ p -> 
-      (match p with
-      | Int -> "Int"
-      | Bool -> "Bool"
-      | Float -> "Float"
-      | String -> "String")
-  | GraphElementType g -> 
-      (match g with
-      | VertexType -> "Vertex"
-      | EdgeType -> "Edge")
+  | Int -> "Int"
+  | Bool -> "Bool"
+  | Float -> "Float"
+  | String -> "String"
   | GraphType gts -> 
       "GraphType[" ^ String.concat ", " (List.map (function
         | VertexType -> "Vertex"
         | EdgeType -> "Edge") gts) ^ "]"
   end
 
-(* let rec string_of_sexpr (t, e) =
-  "(" ^ string_of_typ t ^ " : " ^ (match e with
-        SLit(l) -> string_of_int l
-      | SBoolLit(true) -> "true"
-      | SBoolLit(false) -> "false"
-      | SFloatLit(f) -> string_of_float f
-      | SVar(s) -> s
-      | SBinop(e1, op, e2) ->
-        let op_str = string_of_op op
-        in
-        "(" ^ string_of_sexpr e1 ^ " " ^ op_str ^ " " ^ string_of_sexpr e2 ^ ")"
-      | SAsn(p, q) -> p ^ " = " ^ string_of_sexpr q
-      | SGraph(elements) ->
-        "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
-      | SGraphAsn(p, q) -> "GraphAsn: " ^ p  ^ string_of_sexpr q
-      ) ^ ")"
-
-and string_of_sgraph_element (t , e) =
-  "(" ^ "string_of_graph_element" ^ ":"  ^ ( match e with
-    SVertex(svertex) -> string_of_svertex svertex
-  | SEdge(sedge) -> string_of_sedge sedge
-  ) ^ ")" *)
-
 let rec string_of_sexpr (t, e) =
-  "(" ^ string_of_typ t ^ " : " ^ (match e with
+  "(" ^ string_of_typ t ^ " : " ^ (begin match e with
     | SLit(l) -> string_of_int l
     | SBoolLit(b) -> string_of_bool b
     | SFloatLit(f) -> string_of_float f
     | SVar(s) -> s
-    | SAsn(p, q) -> p ^ " = " ^ string_of_sexpr q
+    | SAsn(gname, sgraph) -> gname ^ " = " ^ string_of_sexpr sgraph
     | SBinop(e1, op, e2) ->
         let op_str = match op with
           | Add -> "+"
@@ -135,7 +93,8 @@ let rec string_of_sexpr (t, e) =
         string_of_sexpr e1 ^ " " ^ op_str ^ " " ^ string_of_sexpr e2
     | SGraph(elements) ->
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
-    | SGraphAsn(p, q) -> "GraphAsn: " ^ p  ^ " = " ^ string_of_sexpr q
+    | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname  ^ " = TODO" 
+    end
   ) ^ ")"
 
 and string_of_sgraph_element = function
