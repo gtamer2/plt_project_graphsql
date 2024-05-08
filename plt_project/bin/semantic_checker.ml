@@ -55,6 +55,12 @@ let check init_env init_program =
         | GraphType var_type -> ((GraphType var_type, SVar var), env)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
+    | Uniop (op, e1) ->
+      let ((t1, e1'), env1) = check_expr env e1 in
+      let t = match op with 
+          Not when t1 = Bool -> Bool
+        | _ -> failwith "failed uniary op"
+      in ((t, SUniop(op, (t1, e1'))), env1)
     | Binop (e1, op, e2) as e ->
       let ((t1, e1'), env1) = check_expr env e1 in
       let ((t2, e2'), env2) = check_expr env1 e2 in
@@ -82,7 +88,7 @@ let check init_env init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
-    
+        
     | Graph (graph_elements) ->
       (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
       (* If one of the graph_elements is not valid object Vertex or Edge, this operation will fail *)
@@ -218,7 +224,6 @@ let check init_env init_program =
 
       let updated_graph_element_type_list = List.map fst updated_sgraph_element_list in
       ((GraphType updated_graph_element_type_list, SGraph updated_sgraph_element_list), env)
-
     | Asn (var, e) ->
       (* let str = var ^ " = " ^ string_of_expr e in
         Printf.printf "variable Assignment: %s\n" str; *)
@@ -226,6 +231,7 @@ let check init_env init_program =
         let env2 = { env1 with bindings = BindMap.add var t env1.bindings } in 
         let env3 = { env2 with vars = VarMap.add var (t, e') env2.vars } in
         ((t, SAsn(var, (t, e'))), env3)
+
     | _ -> failwith "not supported"
       in
   let rec check_stmt_list env = function
