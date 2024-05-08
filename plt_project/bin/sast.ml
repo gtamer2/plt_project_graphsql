@@ -55,6 +55,10 @@ type sstmt =
   | SWhile of sexpr * sstmt list
   | SFor of sexpr * sexpr * sexpr * sstmt list
 
+let get_graph_sx sgraphexpr = 
+  match sgraphexpr with 
+  | SGraph sgraph_elements_list -> sgraph_elements_list
+  | _ -> []
 
 let string_of_typ t = 
   begin match t with

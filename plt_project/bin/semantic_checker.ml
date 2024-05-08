@@ -12,7 +12,7 @@ module GraphMap = Map.Make(String)
 type environment = {
   bindings: unified_type BindMap.t;
   vars: sexpr VarMap.t;
-  graphs: graph_element list GraphMap.t;
+  graphs: sexpr GraphMap.t;
   (* declared_vertices: StringSet.t;   *)
 }
 
@@ -102,22 +102,24 @@ let check init_env init_program =
       let binding_type = BindMap.find graphname env.bindings in 
       (* Printf.printf "binding_type: %s\n" (string_of_typ binding_type);
       Printf.printf "graphname: %s\n" graphname; *)
-      let graph_elts = GraphMap.find graphname env.graphs in
-      (* Printf.printf "graph_elts: %s\n" (string_of_expr (Graph graph_elts)); *)
-      begin match graph_elts with
-      | graph_elements ->
+      let schecked_graph_elts = GraphMap.find graphname env.graphs in
+      let schecked_graph_elements_types = fst schecked_graph_elts in
+      let schecked_graph_elements_exprs = snd schecked_graph_elts in
+      let sgraph_elements_list = get_graph_sx schecked_graph_elements_exprs in
+      (* let graph_elements_types = List.map fst schecked_graph_elements in *)
+      begin match sgraph_elements_list with
+      | sgraph_elem_list ->
         let v_output : sgraph_element list ref = ref [] in
         let e_output : sgraph_element list ref = ref [] in
-        List.iter (fun element ->
-          let (checked_element, _) = check_graph_element env element in
-          (* second elt of checked_element is the semantically checked expr *)
-          begin match snd checked_element with
-            | SVertex svertex -> v_output := checked_element :: !v_output
-            | SEdge sedge -> e_output := checked_element :: !e_output
-            | _ -> failwith ("Not a graph element")
+        List.iter (fun sgraph_elem ->
+          let graph_element_type = snd sgraph_elem in
+          begin match graph_element_type with
+            | SVertex svertex -> v_output := sgraph_elem :: !v_output
+            | SEdge sedge -> e_output := sgraph_elem :: !e_output
+            | _ -> failwith ("Not a graph element type")
           end 
-        ) graph_elements;
-        (* Get the type list for v_output and e_output *)
+        ) sgraph_elements_list;
+        (* Get the graph_element_type list for v_output and e_output (sgraph_element list) *)
         let v_output_types = List.map (fun x -> fst x) !v_output in
         let e_output_types = List.map (fun x -> fst x) !e_output in 
         let result = begin match fieldname with 
@@ -131,17 +133,17 @@ let check init_env init_program =
       end
 
     | GraphAsn(var, e) ->
-      let graph_elements = get_graph_elements e in 
+      (* let graph_elements = get_graph_elements e in  *)
       let ((t, se), env1) = check_expr env e in
       begin match t with
       | GraphType t ->
         let env2 = { env1 with bindings = BindMap.add var (GraphType t) env1.bindings } in 
-        let env3 = { env2 with graphs = GraphMap.add var graph_elements env2.graphs } in
+        let env3 = { env2 with graphs = GraphMap.add var (GraphType t, se) env2.graphs } in
         (((GraphType t), SGraphAsn(var, se)), env3)
       | _ -> raise (Failure ("Graph assignment expects a graph, got " ^ string_of_typ t))
       end 
 
-    | GraphOp(gname, graph_elements, optype) ->
+    (* | GraphOp(gname, graph_elements, optype) ->
       begin match GraphMap.find gname env.graphs with
       | graph_elements ->
         let ((t, sgraph_expr), env1) = check_expr env (Graph graph_elements) in
@@ -180,7 +182,7 @@ let check init_env init_program =
       | None -> failwith ("Graph not found in semantic checker: " ^ gname)
 
 
-      end 
+      end  *)
 
 
 
