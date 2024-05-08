@@ -53,6 +53,11 @@ let check init_env init_program =
         | Float -> ((Float, SVar var), env)
         | String -> ((String, SVar var), env)
         | GraphType var_type -> ((GraphType var_type, SVar var), env)
+        | Int -> ((Int, SVar var), env)
+        | Bool -> ((Bool, SVar var), env)
+        | Float -> ((Float, SVar var), env)
+        | String -> ((String, SVar var), env)
+        | GraphType var_type -> ((GraphType var_type, SVar var), env)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
     | Uniop (op, e1) ->
@@ -65,6 +70,8 @@ let check init_env init_program =
       let ((t1, e1'), env1) = check_expr env e1 in
       let ((t2, e2'), env2) = check_expr env1 e2 in
       let err = "illegal binary operator " ^
+                (* string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
+                string_of_typ (t2) ^ " in " ^ string_of_expr e *)
                 string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
                 string_of_typ (t2) ^ " in " ^ string_of_expr e
       in
@@ -88,7 +95,7 @@ let check init_env init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
-        
+    
     | Graph (graph_elements) ->
       (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
       (* If one of the graph_elements is not valid object Vertex or Edge, this operation will fail *)
@@ -224,6 +231,7 @@ let check init_env init_program =
 
       let updated_graph_element_type_list = List.map fst updated_sgraph_element_list in
       ((GraphType updated_graph_element_type_list, SGraph updated_sgraph_element_list), env)
+
     | Asn (var, e) ->
       (* let str = var ^ " = " ^ string_of_expr e in
         Printf.printf "variable Assignment: %s\n" str; *)
