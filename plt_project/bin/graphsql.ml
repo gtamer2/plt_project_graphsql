@@ -193,7 +193,7 @@ let rec eval_expr env = function
         | _ -> failwith "GraphAccess did not return a graph"
         end 
       | GraphQuery(gname1, gname2, queryType) ->
-        Printf.printf "we're here";
+        (* Printf.printf "we're here"; *)
         let (graph, env1) = eval_expr env (GraphQuery(gname1, gname2, queryType)) in
         begin match graph with
         | Graph(graph_elements) ->

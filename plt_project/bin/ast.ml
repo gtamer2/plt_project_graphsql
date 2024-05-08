@@ -1,8 +1,5 @@
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
-type typ = Int | Bool | Float | String (* | Void *)
-(* type object = Graph *)
-
 
 type vertex = {
   id: string;
@@ -20,7 +17,10 @@ type graph_element =
 
 
 type unified_type = 
-  | Typ of typ
+  | Int
+  | Bool 
+  | Float
+  | String
   | GraphElement of graph_element
   | Graph of graph_element list
 
@@ -32,7 +32,6 @@ type expr =
   | Asn of string * expr 
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
-  (* | Seq of expr * expr *)
   | Graph of graph_element list
   | GraphAsn of string * expr
   | GraphAccess of string * string (* graph_name * field_name *)
@@ -53,10 +52,13 @@ type stmt =
   and
  elif_stmt = expr * stmt list
 
-
 type stmt_list = stmt list 
 
 
+let get_graph_elements expr =
+  match expr with
+  | Graph elements -> elements
+  | _ -> []
 
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
@@ -110,8 +112,6 @@ and string_of_op op = match op with
   | Lt -> "<"
   | And -> "&&"
   | Or -> "||"
-
-
 
 let rec string_of_stmt = function
   | If(condition, body) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list body
