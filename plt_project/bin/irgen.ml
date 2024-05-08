@@ -8,7 +8,7 @@ open Sast
 
 module StringMap = Map.Make(String)
 
-let translate (* input *) =
+let translate sstmt_list sast_env =
   let context = L.global_context () in
 
   (* create llvm module to generate code *)
@@ -26,53 +26,78 @@ let translate (* input *) =
     | A.BoolLit  -> i1_t
   in
 
+  let 
+
   (* for finding values bounded to variable in string map *)
-  let lookup n = try StringMap.find n (* *)
+  let lookup n env = try StringMap.find n (* *)
 
   in
 
-  let rec build_expr builder (* sast input form of expr *) = match (* part of sast input *) with
+  let rec build_expr builder ((t, e) : sexpr) env = match e with
       SLit i -> L.const_int i32_t i
+    | SFloatLit f -> L.const_float f32_t f
     | SBoolLit b -> L.const_int i1_t (if b then 1 else 0)
-    | SVar s -> L.build_load (lookup s)
+    | SVar s -> L.build_load (lookup s env) s builder
     | SAsn (s, e) -> build_expr builder e in 
       ignore(L.build_store e' (lookup s) builder); e'
-    
-    (*  | S  *)
-    | SGraphAsn (s, e) -> build_expr builder e in 
-    ignore(L.build_store e' (lookup s) builder); e' 
-
-    (* type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or *)
-
+    | SUniop (op, e1) -> 
+      let e1' = build_expr builder e1 env in
+        match op with 
+          A.Not -> L.build_not e1 "nottmp" builder
     | SBinop (e1, op, e2) ->
       let e1' = build_expr builder e1
       and e2' = build_expr builder e2 in 
-      (match op with
-          Add   -> L.build_add e1' e2' "addtmp" builder
-        | Sub   -> L.build_sub e1' e2' "subtmp" builder
-        | Mul   -> L.build_mul e1' e2' "multmp" builder
-        | Div   -> L.build_sdiv e1' e2' "divtmp" builder (* Signed division *)
-        | Mod   -> L.build_srem e1' e2' "modtmp" builder (* Signed remainder *)
-        | Eq    -> L.build_icmp L.Icmp.Eq e1' e2' "eqtmp" builder
-        | Neq   -> L.build_icmp L.Icmp.Ne e1' e2' "neqtmp" builder
-        | Gteq  -> L.build_icmp L.Icmp.Sge e1' e2' "geqtmp" builder
-        | Lteq  -> L.build_icmp L.Icmp.Sle e1' e2' "leqtmp" builder
-        | Gt    -> L.build_icmp L.Icmp.Sgt e1' e2' "gttmp" builder
-        | Lt    -> L.build_icmp L.Icmp.Slt e1' e2' "lttmp" builder
-        | And   -> L.build_and e1' e2' "andtmp" builder
-        | Or    -> L.build_or e1' e2' "ortmp" builder
-      )
+      match t, op with
+          Int, Add   -> L.build_add e1' e2' "addtmp" builder
+        | Int, Sub   -> L.build_sub e1' e2' "subtmp" builder
+        | Int, Mul   -> L.build_mul e1' e2' "multmp" builder
+        | Int, Div   -> L.build_sdiv e1' e2' "divtmp" builder (* Signed division *)
+        | Int, Mod   -> L.build_srem e1' e2' "modtmp" builder (* Signed remainder *)
+        | Float, Add   -> L.build_fadd e1' e2' "addtmp" builder
+        | Float, Sub   -> L.build_fsub e1' e2' "subtmp" builder
+        | Float, Mul   -> L.build_fmul e1' e2' "multmp" builder
+        | Float, Div   -> L.build_fdiv e1' e2' "divtmp" builder
+        | _, Eq    -> L.build_icmp L.Icmp.Eq e1' e2' "eqtmp" builder
+        | _, Neq   -> L.build_icmp L.Icmp.Ne e1' e2' "neqtmp" builder
+        | _, Gteq  -> L.build_icmp L.Icmp.Sge e1' e2' "geqtmp" builder
+        | _, Lteq  -> L.build_icmp L.Icmp.Sle e1' e2' "leqtmp" builder
+        | _, Gt    -> L.build_icmp L.Icmp.Sgt e1' e2' "gttmp" builder
+        | _, Lt    -> L.build_icmp L.Icmp.Slt e1' e2' "lttmp" builder
+        | _, And   -> L.build_and e1' e2' "andtmp" builder
+        | _, Or    -> L.build_or e1' e2' "ortmp" builder
+      
 
       (* Scall - calling functions *)
 
     in 
 
+(* LLVM insists each basic block end with exactly one "terminator"
+    instruction that transfers control.  This function runs "instr builder"
+    if the current block does not already have a terminator.  Used,
+    e.g., to handle the "fall off the end of the function" case. *)
+    let add_terminal builder instr =
+      match L.block_terminator (L.insertion_block builder) with
+        Some _ -> ()
+      | None -> ignore (instr builder)
+    in
+
     (* let rec build_stmt builder *)
+    (* builder acts different from other things *)
+
+    let rec build_sstmt_list builder sstmt_list env = match sstmt_list with
+        [] -> builder, env
+      | sstmt :: rest_list ->
+        let (builder', env') = build_sstmt builder sstmt env in
+        let (builder'', env'') = build_sstmt_list builder' rest_list env' in
+        builder'', env''
+    in
+
+    let rec build_sstmt builder sstmt env = match sstmt with
+        SBlock sl -> build_sstmt_list builder sl env
+      | SExpr e -> ignore(build_expr builder e env); builder
 
   in
 
-  List.iter build_function_body functions;
-  the_module
 
 
 
