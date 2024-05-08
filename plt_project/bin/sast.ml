@@ -78,6 +78,9 @@ let rec string_of_sexpr (t, e) =
     | SBoolLit(b) -> string_of_bool b
     | SFloatLit(f) -> string_of_float f
     | SVar(s) -> s
+    | SUniop(op, e1) ->
+      let op_str = "!" in
+        "(" ^ op_str ^ " " ^ string_of_sexpr e1 ^ ")"
     | SAsn(gname, sgraph) -> gname ^ " = " ^ string_of_sexpr sgraph
     | SBinop(e1, op, e2) ->
         let op_str = match op with

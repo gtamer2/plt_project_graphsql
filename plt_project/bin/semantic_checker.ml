@@ -53,12 +53,25 @@ let check init_env init_program =
         | Float -> ((Float, SVar var), env)
         | String -> ((String, SVar var), env)
         | GraphType var_type -> ((GraphType var_type, SVar var), env)
+        | Int -> ((Int, SVar var), env)
+        | Bool -> ((Bool, SVar var), env)
+        | Float -> ((Float, SVar var), env)
+        | String -> ((String, SVar var), env)
+        | GraphType var_type -> ((GraphType var_type, SVar var), env)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
+    | Uniop (op, e1) ->
+      let ((t1, e1'), env1) = check_expr env e1 in
+      let t = match op with 
+          Not when t1 = Bool -> Bool
+        | _ -> failwith "failed uniary op"
+      in ((t, SUniop(op, (t1, e1'))), env1)
     | Binop (e1, op, e2) as e ->
       let ((t1, e1'), env1) = check_expr env e1 in
       let ((t2, e2'), env2) = check_expr env1 e2 in
       let err = "illegal binary operator " ^
+                (* string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
+                string_of_typ (t2) ^ " in " ^ string_of_expr e *)
                 string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
                 string_of_typ (t2) ^ " in " ^ string_of_expr e
       in
@@ -226,6 +239,7 @@ let check init_env init_program =
         let env2 = { env1 with bindings = BindMap.add var t env1.bindings } in 
         let env3 = { env2 with vars = VarMap.add var (t, e') env2.vars } in
         ((t, SAsn(var, (t, e'))), env3)
+
     | _ -> failwith "not supported"
       in
   let rec check_stmt_list env = function

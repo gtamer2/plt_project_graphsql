@@ -1,9 +1,9 @@
 terr = True;
 eeer = False;
-er = terr AND eeer;
-iffy = terr OR er;
+er = terr AND NOT eeer;
+iffy = NOT terr OR er;
 fief = 3.5 > 1;
 eeeeee = 33;
 lived = 1 <= eeeeee;
-insect = 3 == eeeeee;
+insect = NOT (3 == eeeeee);
 e = lived;
