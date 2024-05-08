@@ -143,47 +143,62 @@ let check init_env init_program =
       | _ -> raise (Failure ("Graph assignment expects a graph, got " ^ string_of_typ t))
       end 
 
-    (* | GraphOp(gname, graph_elements, optype) ->
-      begin match GraphMap.find gname env.graphs with
-      | graph_elements ->
-        let ((t, sgraph_expr), env1) = check_expr env (Graph graph_elements) in
-        begin match optype with 
-        | "insert" -> 
-          let v_output : sgraph_element list ref = ref [] in
-          let e_output : sgraph_element list ref = ref [] in
-          (* process graph_elements input *)
-          List.iter (fun element ->
-            let (checked_element, _) = check_graph_element env element in
-            (* second elt of checked_element is the semantically checked expr *)
-            begin match snd checked_element with
-              | SVertex svertex -> v_output := checked_element :: !v_output
-              | SEdge sedge -> e_output := checked_element :: !e_output
-              | _ -> failwith ("Not a graph element")
-            end 
-          ) graph_elements;
-          (* Get the type list for v_output and e_output *)
-          let v_output_types = List.map (fun x -> fst x) !v_output in
-          let e_output_types = List.map (fun x -> fst x) !e_output in
-          
-          (* Get the type list for existing graph elements*)
-          let checked_graph_elements_with_envs = List.map (check_graph_element env) graph_elements in
-          let checked_graph_elements = List.map fst checked_graph_elements_with_envs in
-          let existing_elements_types = List.map fst checked_graph_elements in
+    | GraphOp(gname, graph_elements, optype) ->
+      let schecked_graph_elts = GraphMap.find gname env.graphs in
+      let schecked_graph_elements_types = fst schecked_graph_elts in
+      let schecked_graph_elements_exprs = snd schecked_graph_elts in
+      (* Get the sgraph_element list and types list for existing graph elements*)
+      let sgraph_elements_list = get_graph_sx schecked_graph_elements_exprs in
+      let graph_element_type_list = List.map (fun x -> fst x) sgraph_elements_list in
 
-          let updated_types = !v_output_types @ !e_output_types @ !existing_elements_types in
-          let updated_env = { env with graphs = GraphMap.add gname updated_graph_elements env1.graphs } in
-          (Graph updated_graph_elements, updated_env)
+      let checked_graph_elements_with_envs = List.map (check_graph_element env) graph_elements in
+      let sgraph_element_list_input = List.map (fun x -> fst x) checked_graph_elements_with_envs in 
 
-
-
-        | "delete" -> 
+      (* iterate through sgraph_element list of graph_elements input
+         get a list of sgraph_element for vertices and one for vertices*)
+      let v_output : sgraph_element list ref = ref [] in
+      let e_output : sgraph_element list ref = ref [] in
+      List.iter (fun sgraph_element ->
+        (* second elt of checked_element is the semantically checked expr *)
+        begin match snd sgraph_element with
+          | SVertex svertex -> v_output := sgraph_element :: !v_output
+          | SEdge sedge -> e_output := sgraph_element :: !e_output
+          | _ -> failwith ("Not a graph element")
         end 
+      ) sgraph_element_list_input;
+      (* Get the type list for v_output and e_output *)
+      let v_output_types = List.map (fun x -> fst x) !v_output in
+      let e_output_types = List.map (fun x -> fst x) !e_output in
 
-      | None -> failwith ("Graph not found in semantic checker: " ^ gname)
+      begin match optype with 
+      | "insert" ->   
+        let updated_graph_element_type_list = graph_element_type_list @ v_output_types @ e_output_types in
+        let first_elem = GraphType updated_graph_element_type_list in
+        let updated_sgraph_element_list = sgraph_elements_list @ !v_output @ !e_output in
+        let second_elem = SGraph updated_sgraph_element_list in
 
+        let updated_env = { env with graphs = GraphMap.add gname (first_elem, second_elem) env.graphs } in
+        ((first_elem, second_elem), updated_env)
 
-      end  *)
+      | "delete" -> 
+        (* let to_delete_type_list = v_output_types @ e_output_types in
+        let updated_graph_element_type_list = List.filter (fun elem -> not (List.mem elem to_delete_type_list)) graph_element_type_list in
+        let first_elem = GraphType updated_graph_element_type_list in
+        Printf.printf "first_elem: %s\n" (string_of_typ first_elem); *)
+        
+        let to_delete_sgraph_element_list = !v_output @ !e_output in
+        let updated_sgraph_element_list = List.filter (fun elem -> not (List.mem elem to_delete_sgraph_element_list)) sgraph_elements_list in
+        let second_elem = SGraph updated_sgraph_element_list in
+        (* Printf.printf "second_elem: %s\n" (String.concat "" (List.map string_of_sgraph_element updated_sgraph_element_list)); *)
 
+        let updated_element_type_list = List.map (fun x -> fst x) updated_sgraph_element_list in
+        let first_elem = GraphType updated_element_type_list in
+
+        let updated_env = { env with graphs = GraphMap.add gname (first_elem, second_elem) env.graphs } in
+        ((first_elem, second_elem), updated_env)
+
+      |  _ ->  failwith ("optype not supported in semantic checker")
+      end 
 
 
     | Asn (var, e) ->
