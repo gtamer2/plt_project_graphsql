@@ -181,11 +181,6 @@ let check init_env init_program =
         ((first_elem, second_elem), updated_env)
 
       | "delete" -> 
-        (* let to_delete_type_list = v_output_types @ e_output_types in
-        let updated_graph_element_type_list = List.filter (fun elem -> not (List.mem elem to_delete_type_list)) graph_element_type_list in
-        let first_elem = GraphType updated_graph_element_type_list in
-        Printf.printf "first_elem: %s\n" (string_of_typ first_elem); *)
-        
         let to_delete_sgraph_element_list = !v_output @ !e_output in
         let updated_sgraph_element_list = List.filter (fun elem -> not (List.mem elem to_delete_sgraph_element_list)) sgraph_elements_list in
         let second_elem = SGraph updated_sgraph_element_list in
@@ -196,10 +191,33 @@ let check init_env init_program =
 
         let updated_env = { env with graphs = GraphMap.add gname (first_elem, second_elem) env.graphs } in
         ((first_elem, second_elem), updated_env)
-
       |  _ ->  failwith ("optype not supported in semantic checker")
       end 
 
+    | GraphUpdate(gname, element) ->
+      let schecked_graph_elts = GraphMap.find gname env.graphs in
+      let schecked_graph_elements_types = fst schecked_graph_elts in
+      let schecked_graph_elements_exprs = snd schecked_graph_elts in
+      (* Get the sgraph_element list and types list for existing graph elements*)
+      let sgraph_elements_list = get_graph_sx schecked_graph_elements_exprs in
+      let graph_element_type_list = List.map (fun x -> fst x) sgraph_elements_list in
+
+      let checked_element_with_env = check_graph_element env element in
+      let sgraph_element_input = fst checked_element_with_env in 
+      let element_type = fst sgraph_element_input in
+
+      (* update sgraph_elements_list based on sgraph_element_input *)
+      let updated_sgraph_element_list = 
+        List.map (fun (type_info, sgraph_elem) ->  (* Assuming tuple structure (type_info, sgraph_element_x) *)
+          match sgraph_elem, element with 
+          | SEdge {ssource; starget; sweight}, Edge(source, target, weight)
+            when ssource = source && starget = target ->
+              (type_info, SEdge { ssource = source; starget = target; sweight = weight })
+          | _ -> (type_info, sgraph_elem)  (* Return untouched if no update is needed *)
+        ) sgraph_elements_list in
+
+      let updated_graph_element_type_list = List.map fst updated_sgraph_element_list in
+      ((GraphType updated_graph_element_type_list, SGraph updated_sgraph_element_list), env)
 
     | Asn (var, e) ->
       (* let str = var ^ " = " ^ string_of_expr e in
