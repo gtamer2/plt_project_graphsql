@@ -11,7 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE FOR
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE FOR RETURN
 
 %token QUOTES
 %token DOT 
@@ -49,7 +49,6 @@ graph_elements:
 graph_elements_list:
     | LB graph_elements RB {$2}
 
-
 graph_operation:
     | CREATE GRAPH LP RP { Graph([]) } //eventually can remove this 
     | CREATE GRAPH LP graph_elements_list RP { Graph($4) }
@@ -60,16 +59,25 @@ graph_operation:
 
 stmt_list: 
     /* nothing */ { [] }
-    | stmt stmt_list {print_endline("Processing all stmts"); $1::$2 }
+    | stmt stmt_list {$1::$2 }
+
+// arg_list_definition:
+//     | /* nothing */ { [] }
+//     | VARIABLE COMMA arg_list_definition { $1::$3 }
 
 stmt:
     | expr SEMICOLON { Expr($1) }
+    | RETURN expr SEMICOLON {Return($2) }
     | LC stmt_list RC { Block($2) }
     | IF LP expr RP LC stmt_list RC { If($3, $6) }
     | IF LP expr RP LC stmt_list RC elif_stmt_list ELSE LC stmt_list RC{ IfElif($3, $6, $8, $11)}
     | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
     | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
+    | VARIABLE LP RP SEMICOLON{ print_endline("Calling func"); FunctionCall($1) }
+    | FUNCTION VARIABLE LP RP LC stmt_list RC {FunctionCreation($2, $6)}
+    // | FUNCTION VARIABLE LP RP LC stmt_list RETURN expr SEMICOLON RC { print_endline("Creating func def"); FunctionCreation($2, $6)}
+    // | DEFINE FUNCTION VARIABLE LP arg_list_definition RP LC stmt_list RC { FunctionCreation($3, $5, $8)}
 
 elif_stmt_list:
     | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}
@@ -81,6 +89,8 @@ expr:
     | BLIT     { BoolLit($1) }
     | VARIABLE ASSIGN expr {Asn($1, $3)} //done
     | VARIABLE { Var($1) } //done
+    // | VARIABLE LP RP { FunctionCall($1) } //used to call the func
+    //| VARIABLE LP arg_list RP { FunctionCall($1, $3) }
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
     | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
     | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE

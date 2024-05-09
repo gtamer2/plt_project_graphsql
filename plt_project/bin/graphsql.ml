@@ -2,17 +2,24 @@ open Ast
 open Printf
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
+module FunctionMap = Map.Make(String)
+
+type argument_list = string list
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   vars: int VarMap.t;
   graphs: graph_element list GraphMap.t;
+  function_declarations: argument_list FunctionMap.t;
+  func_body: stmt list FunctionMap.t;
 }
 
 (* Initial empty environment *)
 let empty_env = {
   vars = VarMap.empty;
   graphs = GraphMap.empty;
+  function_declarations = FunctionMap.empty;
+  func_body = FunctionMap.empty;
 }
 
 let int_of_bool b = if b then 1 else 0
@@ -145,15 +152,17 @@ let rec eval_expr env = function
             let e_output : graph_element list ref = ref [] in
             
             List.iter (fun element ->
-              match element with
+              begin match element with
                 | Vertex _ -> v_output := element :: !v_output
                 | Edge _ -> e_output := element :: !e_output
                 | _ -> failwith ("Not a graph element")
+              end
             ) graph_elements;
-            match fieldname with 
+            begin match fieldname with 
               | "vertices" -> (Graph !v_output, env)
               | "edges" -> (Graph !e_output, env)
               | _ -> failwith ("Invalid field name: " ^ fieldname)
+            end
         | _ -> failwith ("Graph not found: " ^ graphname)
       end
 
@@ -357,6 +366,19 @@ let rec eval_stmt_list env = function
           | _ -> failwith "For excepts a boolean expression"
         end
         in for_helper env1 condition update body
+    | FunctionCreation(name, body) -> 
+          if FunctionMap.mem name env.func_body then
+          failwith ("Function already exists: " ^ name)
+          else
+          let env1 = { env with func_body = FunctionMap.add name body env.func_body } in
+          (BoolLit true, env1)
+    | FunctionCall(fn_name) ->
+            if FunctionMap.mem fn_name env.func_body then
+              let function_body = FunctionMap.find fn_name env.func_body in
+              eval_stmt_list env function_body
+            else
+              failwith ("Function not found: " ^ fn_name)
+    | Return e -> eval_expr env e
     | _ -> failwith "Invalid parsing of stmt" 
     end
 
