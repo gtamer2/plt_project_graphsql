@@ -27,11 +27,62 @@ let check_graph_element env elem =
   | _ -> failwith("unsupported graph element")
   end
 
-let ast_typ_to_sast_typ = function
-  | Ast.Int -> Sast.Int
-  | Ast.Bool -> Sast.Bool
-  | Ast.Float -> Sast.Float
-  | Ast.String -> Sast.String
+let get_unique_sgraph_elements sgraph_element_list =
+  List.fold_left (fun acc elem ->
+    (* handle the case with duplicate edges *)
+    begin match elem with
+      | (EdgeType, SEdge { ssource; starget; sweight }) ->
+          let existing = List.find (fun e ->
+            begin  match e with
+              | (EdgeType, SEdge { ssource = es; starget = et; sweight = _ }) -> es = ssource && et = starget
+              | _ -> false
+            end 
+          ) acc in
+          (* add up the weights for duplicate edges *)
+          begin match existing with
+            | (EdgeType, SEdge { ssource = _; starget = _; sweight = eweight }) ->
+                (*  filters out the old existing edge from the accumulator list (acc) *)
+                let filtered_list = List.filter (fun x -> x <> existing) acc in 
+                (EdgeType, SEdge { ssource; starget; sweight = sweight + eweight }) :: filtered_list
+            | _ -> elem :: acc
+          end
+      | _ -> if List.exists ((=) elem) acc then acc else elem :: acc
+    end
+  ) [] sgraph_element_list
+
+let get_common_sgraph_elements graph1_elements graph2_elements = 
+  (* filter out all common elements from graph1 *)
+  let common_elements =     
+    List.filter (fun elem1 ->
+      List.exists (fun elem2 ->
+          match elem1, elem2 with
+          | (EdgeType, SEdge { ssource = s1; starget = t1; sweight = w1 }),
+            (EdgeType, SEdge { ssource = s2; starget = t2; sweight = w2 }) ->
+              (* do not care about the weight for now *)
+              s1 = s2 && t1 = t2 
+          | (VertexType, SVertex { sid = id1 }), (VertexType, SVertex { sid = id2 }) ->
+              id1 = id2
+          | _, _ -> false
+      ) graph2_elements
+  ) graph1_elements in
+  
+  (* when exist duplicate common edges, keep the one with lesser weight*)
+  let adjusted_elements = List.map (fun elem ->
+    match elem with
+    | (EdgeType, SEdge { ssource; starget; sweight }) ->
+        let other = List.find_opt (fun e ->
+            match e with
+            | (EdgeType, SEdge { ssource = os; starget = ot; sweight = _ }) -> os = ssource && ot = starget
+            | _ -> false
+        ) graph2_elements in
+        begin match other with
+        | Some (EdgeType, SEdge { ssource = _; starget = _; sweight = ow }) ->
+            (EdgeType, SEdge { ssource; starget; sweight = min sweight ow })
+        | _ -> elem
+        end
+    | _ -> elem
+  ) common_elements in 
+  adjusted_elements
 
 let check init_env init_program = 
 
@@ -143,6 +194,33 @@ let check init_env init_program =
         in
         result, env
       | _ -> raise (Failure ("Graph not found: " ^ graphname))
+      end
+
+    | GraphQuery(gname1, gname2, queryType) ->
+      let graph1 = GraphMap.find gname1 env.graphs in
+      let graph1_element_types = fst graph1 in
+      let graph1_element_sexpr = snd graph1 in
+      let graph1_sgraph_element_list = get_graph_sx graph1_element_sexpr in
+
+      let graph2 = GraphMap.find gname2 env.graphs in
+      let graph2_element_types = fst graph2 in
+      let graph2_element_sexpr = snd graph2 in
+      let graph2_sgraph_element_list = get_graph_sx graph2_element_sexpr in
+
+
+      begin match queryType with 
+        | "union" ->
+          (* return union result in the form of ((GraphType updated_graph_element_type_list, SGraph updated_sgraph_element_list), env) *)
+          (* get everything based on sgraph_element_list *)
+          let all_elements = graph1_sgraph_element_list @ graph2_sgraph_element_list in
+          let unique_elements = get_unique_sgraph_elements all_elements in
+          let unique_elements_types = List.map fst unique_elements in
+          ((GraphType unique_elements_types, SGraph unique_elements), env)
+        | "intersect" ->
+          let common_elements = get_common_sgraph_elements graph1_sgraph_element_list graph2_sgraph_element_list in
+          let common_elements_types = List.map fst common_elements in
+          ((GraphType common_elements_types, SGraph common_elements), env)
+        | _ -> failwith ("Graph query type not supported: " ^ queryType)
       end
 
     | GraphAsn(var, e) ->

@@ -100,7 +100,7 @@ let rec string_of_sexpr (t, e) =
         string_of_sexpr e1 ^ " " ^ op_str ^ " " ^ string_of_sexpr e2
     | SGraph(elements) ->
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
-    | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname  ^ " = TODO" 
+    | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname ^ ", Graph([" ^ String.concat ", " (List.map string_of_sgraph_element (get_graph_sx sgraph)) ^ "])"
     end
   ) ^ ")"
 
