@@ -17,13 +17,15 @@
      Arg.parse speclist (fun filename -> channel := open_in filename) usage_msg;
    
      let lexbuf = Lexing.from_channel !channel in
-   
-     let ast = Parser.expr Scanner.token lexbuf in
+
+     let stmt_list = Parser.stmt_list Scanner.tokenize lexbuf in
      match !action with
-       Ast -> print_string (Ast.string_of_program ast)
-     | _ -> let sast = Semantic_checker.check ast in
+       Ast -> print_string (Ast.string_of_stmt_list stmt_list)
+     | _ -> let sast = Semantic_checker.check stmt_list in
        match !action with
          Ast     -> ()
-       | Sast    -> print_string (Sast.string_of_sprogram sast)
+         (* Commented out bc just for debugging... don't need for now *)
+      (* | Sast -> List.map Sast.string_of_sstmt stmt_list |> List.iter print_string *)
        | LLVM_IR -> print_string (Llvm.string_of_llmodule (Irgen.translate sast))
+       | _ -> "Action not allowed"
    

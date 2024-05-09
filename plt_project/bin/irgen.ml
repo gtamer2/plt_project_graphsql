@@ -8,7 +8,7 @@ open Sast
 
 module StringMap = Map.Make(String)
 
-let translate sstmt_list sast_env =
+let translate expr sast_env =
   let context = L.global_context () in
 
   (* create llvm module to generate code *)
@@ -36,7 +36,7 @@ let translate sstmt_list sast_env =
     (* end *)
     in 
 
-  ignore (build_expr sstmt_list);
+  ignore (build_expr builder expr);
   (* ignore (build_expr expression); *)
 
   the_module

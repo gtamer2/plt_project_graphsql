@@ -33,7 +33,13 @@ let ast_typ_to_sast_typ = function
   | Ast.Float -> Sast.Float
   | Ast.String -> Sast.String
 
-let check init_env init_program = 
+let check init_program = 
+
+  let init_env = {
+    bindings = BindMap.empty;
+    vars = VarMap.empty;
+    graphs = GraphMap.empty;
+  } in
 
   (* Return a variable from our symbol table *)
   let type_of_identifier s bindings =
