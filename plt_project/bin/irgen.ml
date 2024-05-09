@@ -26,7 +26,11 @@ let translate sstmt_list sast_env =
     | A.BoolLit  -> i1_t
   in
 
-  let 
+  (* create a function to build a variable map, likely for each function *)
+  let vars_mapping : L.llvalue StringMap.t =
+
+
+  let global_builder = L.builder_at_end context (L.entry_block (* what would be the entry block at the top? *))
 
   (* for finding values bounded to variable in string map *)
   let lookup n env = try StringMap.find n (* *)
@@ -38,7 +42,7 @@ let translate sstmt_list sast_env =
     | SFloatLit f -> L.const_float f32_t f
     | SBoolLit b -> L.const_int i1_t (if b then 1 else 0)
     | SVar s -> L.build_load (lookup s env) s builder
-    | SAsn (s, e) -> build_expr builder e in 
+    | SAsn (s, e) -> build_expr builder env e in 
       ignore(L.build_store e' (lookup s) builder); e'
     | SUniop (op, e1) -> 
       let e1' = build_expr builder e1 env in
@@ -98,11 +102,5 @@ let translate sstmt_list sast_env =
 
   in
 
-
-
-
-
-  let build_stmt builder = function
-    (* need ast to include statements *)
-
+build_sstmt_list 
   
