@@ -7,7 +7,7 @@ ocamlbuild -pkgs llvm microc.native
 ### Run the MicroC compiler and generate llvm code
 
 ```
-./microc.native -l example.mc > example.out
+./graphsql.native -l graph_init2.tb > example.out
 ```
 
 ### Run the llvm code

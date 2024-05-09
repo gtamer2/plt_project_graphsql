@@ -5,7 +5,7 @@
 
 # WARN - CHATGPT
 # Define the default target
-all: microc.native
+all: graphsql_compile.native
 
 
 # WARN - CHATGPT
@@ -36,14 +36,17 @@ parser.ml parser.mli : parser.mly
 
 
 # WARNING --- CHAT GPT CODE
-	graphsql.native : ast.cmo parser.cmo scanner.cmo graphsql.cmo
-		ocamlfind ocamlopt -o graphsql.native -linkpkg -package $PACKAGES$ ast.cmo parser.cmo scanner.cmo graphsql.cmo
+# graphsql.native : ast.cmo parser.cmo scanner.cmo graphsql.cmo
+# 	ocamlfind ocamlopt -o graphsql.native -linkpkg -package $PACKAGES$ ast.cmo parser.cmo scanner.cmo graphsql.cmo
 # WARNING END --- CHAT GPT CODE
 
 
-# Define the rule for building microc.native
-microc.native:
+# Define the rule for building graphsql.native
+graphsql.native:
 	ocamlbuild -pkgs llvm graphsql.native
+
+graphsql_compile.native:
+	ocamlbuild -pkgs llvm graphsql_compile.native
 
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
@@ -74,14 +77,17 @@ semant_eval.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx
 semantic_checker.cmo : ast.cmo sast.cmo
 semantic_checker.cmx : ast.cmo sast.cmo
 
-
-
+# Dependencies for irgen
+irgen.cmo : ast.cmo sast.cmo
+irgen.cmx : ast.cmo sast.cmo
+graphsql_compile.cmo : scanner.cmo parser.cmi ast.cmo sast.cmo semantic_checker.cmo
+graphsql_compile.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx
 ##############################
 
 # .PHONY tells make that clean is not a file name, but a command to be executed
 .PHONY : clean
 clean :
-	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval
+	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval graphsql.native
 
 
 ##############################
