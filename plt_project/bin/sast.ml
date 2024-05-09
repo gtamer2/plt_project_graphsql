@@ -2,22 +2,36 @@
 
 open Ast  
 
+(* TYPES - START *)
+type graph_element_type =
+  | VertexType
+  | EdgeType
+
+type unified_type = 
+  | Int
+  | Bool
+  | Float
+  | String
+  | GraphType of graph_element_type list
+
+(* SEMANTIC AST - START *)
 type svertex = {
   sid: string;
 }
-
+  
 type sedge = {
   ssource: string;
   starget: string;
-  sweight: float option; 
+  sweight: int; 
 }
 
-type sgraph_element = graph_element * graph_element_x
-and graph_element_x =
+type sgraph_element = graph_element_type * sgraph_element_x
+and sgraph_element_x =
   | SVertex of svertex
   | SEdge of sedge
 
-type sexpr = typ * sx
+
+type sexpr = unified_type * sx
 and sx = 
     SLit of int
   | SFloatLit of float
@@ -27,61 +41,80 @@ and sx =
   | SUniop of uniop * sexpr
   | SBinop of sexpr * binop * sexpr
   | SGraph of sgraph_element list
-  | SGraphAccess of string * string
-  | SGraphAsn of string * sexpr
-  | SGraphOp of string * sgraph_element list * string
+  (* | SGraphAccess of string * string *)
+  | SGraphAsn of string * sx
+  (* | SGraphOp of string * sgraph_element list * string
+  | SGraphQuery of string * string * string
+  | SGraphUpdate of string * graph_element *)
 
 type sstmt = 
-| SBlock of sstmt list
-| SExpr of sexpr
-| SIf of sexpr * sstmt list
-| SIfElse of sexpr * sstmt list * sstmt list
-| SWhile of sexpr * sstmt list
-| SFor of sexpr * sexpr * sexpr * sstmt list
+  | SBlock of sstmt list
+  | SExpr of sexpr
+  | SIf of sexpr * sstmt list
+  | SIfElse of sexpr * sstmt list * sstmt list
+  | SWhile of sexpr * sstmt list
+  | SFor of sexpr * sexpr * sexpr * sstmt list
 
-(* let rec string_of_sexpr (t, e) = match e
-  | SLit(l[0],l[1]) -> string_of_int l *)
+let get_graph_sx sgraphexpr = 
+  match sgraphexpr with 
+  | SGraph sgraph_elements_list -> sgraph_elements_list
+  | _ -> []
 
-let string_of_typ t = match t with
-  Int -> "Int"
+let string_of_typ t = 
+  begin match t with
+  | Int -> "Int"
   | Bool -> "Bool"
   | Float -> "Float"
   | String -> "String"
-  (* | Vertex -> "Vertex"
-  | Edge -> "Edge" *)
+  | GraphType gts -> 
+      "GraphType[" ^ String.concat ", " (List.map (function
+        | VertexType -> "Vertex"
+        | EdgeType -> "Edge") gts) ^ "]"
+  end
 
 let rec string_of_sexpr (t, e) =
-  "(" ^ string_of_typ t ^ " : " ^ (match e with
-        SLit(l) -> string_of_int l
-      | SBoolLit(true) -> "true"
-      | SBoolLit(false) -> "false"
-      | SFloatLit(f) -> string_of_float f
-      | SVar(s) -> s
-      | SUniop(op, e1) ->
-        let op_str = "!" in
+  "(" ^ string_of_typ t ^ " : " ^ (begin match e with
+    | SLit(l) -> string_of_int l
+    | SBoolLit(b) -> string_of_bool b
+    | SFloatLit(f) -> string_of_float f
+    | SVar(s) -> s
+    | SUniop(op, e1) ->
+      let op_str = "!" in
         "(" ^ op_str ^ " " ^ string_of_sexpr e1 ^ ")"
-      | SBinop(e1, op, e2) ->
-        let op_str = string_of_op op
+    | SAsn(gname, sgraph) -> gname ^ " = " ^ string_of_sexpr sgraph
+    | SBinop(e1, op, e2) ->
+        let op_str = match op with
+          | Add -> "+"
+          | Sub -> "-"
+          | Mul -> "*"
+          | Div -> "/"
+          | Eq -> "=="
+          | Neq -> "!="
+          | Gteq -> ">="
+          | Lteq -> "<="
+          | Gt -> ">"
+          | Lt -> "<"
+          | And -> "&&"
+          | Or -> "||"
         in
-        "(" ^ string_of_sexpr e1 ^ " " ^ op_str ^ " " ^ string_of_sexpr e2 ^ ")"
-      | SAsn(p, q) -> p ^ " = " ^ string_of_sexpr q
-      | SGraph(elements) ->
+        string_of_sexpr e1 ^ " " ^ op_str ^ " " ^ string_of_sexpr e2
+    | SGraph(elements) ->
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
-      | SGraphAsn(p, q) -> "GraphAsn: " ^ p  ^ string_of_sexpr q
-      ) ^ ")"
-
-and string_of_sgraph_element (t , e) =
-  "(" ^ string_of_graph_element t ^ ":"  ^ ( match e with
-    SVertex(svertex) -> string_of_svertex svertex
-  | SEdge(sedge) -> string_of_sedge sedge
+    | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname  ^ " = TODO" 
+    end
   ) ^ ")"
+
+and string_of_sgraph_element = function
+  | (VertexType, SVertex { sid }) -> "Vertex(" ^ sid ^ ")"
+  | (EdgeType, SEdge { ssource; starget; sweight }) ->
+      "Edge(" ^ ssource ^ ", " ^ starget ^ ", " ^ string_of_int sweight ^ ")"
 
 and string_of_svertex svertex =
   "\"" ^ svertex.sid ^ "\""
 and string_of_sedge sedge =
   let weight_str = match sedge.sweight with
-    | Some w -> string_of_float w
-    | None -> "None"
+    | w -> string_of_int w
+    | _ -> "no weight"
   in
   "Edge(\"" ^ sedge.ssource ^ "\", \"" ^ sedge.starget ^ "\", " ^ weight_str ^ ")"
 
