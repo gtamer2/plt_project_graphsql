@@ -1,8 +1,14 @@
 # default target that 'make' will attempt to build if no target specified
 # all : calc_test.out graph_init.out
-all : graph_init.out graph_init2.out semant_test.out semant_test2.out
+# all : graph_init.out graph_init2.out semant_test.out semant_test2.out  # NOTE -- this is oour woorking version
 # all : calc_test.out
 
+# WARN - CHATGPT
+# Define the default target
+all: microc.native
+
+
+# WARN - CHATGPT
 ##############################
 semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
 	ocamlc -w A -o semant_eval ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
@@ -27,6 +33,17 @@ scanner.ml : scanner.mll
 
 parser.ml parser.mli : parser.mly
 	ocamlyacc $^
+
+
+# WARNING --- CHAT GPT CODE
+	graphsql.native : ast.cmo parser.cmo scanner.cmo graphsql.cmo
+		ocamlfind ocamlopt -o graphsql.native -linkpkg -package $PACKAGES$ ast.cmo parser.cmo scanner.cmo graphsql.cmo
+# WARNING END --- CHAT GPT CODE
+
+
+# Define the rule for building microc.native
+microc.native:
+	ocamlbuild -pkgs llvm graphsql.native
 
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
