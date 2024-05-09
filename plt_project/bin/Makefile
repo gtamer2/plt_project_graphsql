@@ -80,14 +80,14 @@ semantic_checker.cmx : ast.cmo sast.cmo
 # Dependencies for irgen
 irgen.cmo : ast.cmo sast.cmo
 irgen.cmx : ast.cmo sast.cmo
-graphsql_compile.cmo : scanner.cmo parser.cmi ast.cmo sast.cmo semantic_checker.cmo
-graphsql_compile.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx
+graphsql_compile.cmo : scanner.cmo parser.cmi ast.cmo sast.cmo semantic_checker.cmo irgen.cmo irgen.cmx
+graphsql_compile.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx irgen.cmo irgen.cmx
 ##############################
 
 # .PHONY tells make that clean is not a file name, but a command to be executed
 .PHONY : clean
 clean :
-	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval graphsql.native
+	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval *.native
 
 
 ##############################

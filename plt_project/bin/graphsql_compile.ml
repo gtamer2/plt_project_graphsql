@@ -26,6 +26,6 @@
          Ast     -> ()
          (* Commented out bc just for debugging... don't need for now *)
       (* | Sast -> List.map Sast.string_of_sstmt stmt_list |> List.iter print_string *)
-       | LLVM_IR -> print_string (Llvm.string_of_llmodule (Irgen.translate sast))
-       | _ -> "Action not allowed"
+       | LLVM_IR -> print_string (Llvm.string_of_llmodule (Irgen.translate (fst sast)))
+       | _ -> print_string (Llvm.string_of_llmodule (Irgen.translate (fst sast)))
    
