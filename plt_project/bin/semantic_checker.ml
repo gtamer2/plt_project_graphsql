@@ -33,6 +33,32 @@ let ast_typ_to_sast_typ = function
   | Ast.Float -> Sast.Float
   | Ast.String -> Sast.String
 
+
+let get_unique_sgraph_elements sgraph_element_list =
+  List.fold_left (fun acc elem ->
+    (* handle the case with duplicate edges *)
+    begin match elem with
+      | (EdgeType, SEdge { ssource; starget; sweight }) ->
+          let existing = List.find (fun e ->
+            begin  match e with
+              | (EdgeType, SEdge { ssource = es; starget = et; sweight = _ }) -> es = ssource && et = starget
+              | _ -> false
+            end 
+          ) acc in
+          (* add up the weights for duplicate edges *)
+          begin match existing with
+            | (EdgeType, SEdge { ssource = _; starget = _; sweight = eweight }) ->
+                (*  filters out the old existing edge from the accumulator list (acc) *)
+                let filtered_list = List.filter (fun x -> x <> existing) acc in 
+                (EdgeType, SEdge { ssource; starget; sweight = sweight + eweight }) :: filtered_list
+            | _ -> elem :: acc
+          end
+      | _ -> if List.exists ((=) elem) acc then acc else elem :: acc
+    end
+  ) [] sgraph_element_list
+
+
+
 let check init_env init_program = 
 
   (* Return a variable from our symbol table *)
@@ -143,6 +169,29 @@ let check init_env init_program =
         in
         result, env
       | _ -> raise (Failure ("Graph not found: " ^ graphname))
+      end
+
+    | GraphQuery(gname1, gname2, queryType) ->
+      let graph1 = GraphMap.find gname1 env.graphs in
+      let graph1_element_types = fst graph1 in
+      let graph1_element_sexpr = snd graph1 in
+      let graph1_sgraph_element_list = get_graph_sx graph1_element_sexpr in
+
+      let graph2 = GraphMap.find gname2 env.graphs in
+      let graph2_element_types = fst graph2 in
+      let graph2_element_sexpr = snd graph2 in
+      let graph2_sgraph_element_list = get_graph_sx graph2_element_sexpr in
+
+
+      begin match queryType with 
+        | "union" ->
+          (* return union result in the form of ((GraphType updated_graph_element_type_list, SGraph updated_sgraph_element_list), env) *)
+          (* get everything based on sgraph_element_list *)
+          let all_elements = graph1_sgraph_element_list @ graph2_sgraph_element_list in
+          let unique_elements = get_unique_sgraph_elements all_elements in
+          let unique_elements_types = List.map fst unique_elements in
+          ((GraphType unique_elements_types, SGraph unique_elements), env)
+        | _ -> failwith ("Graph query type not supported: " ^ queryType)
       end
 
     | GraphAsn(var, e) ->

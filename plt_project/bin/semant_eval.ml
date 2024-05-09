@@ -38,4 +38,4 @@ let _ =
   let sprogram_string = String.concat "" (List.map string_of_sstmt sprogram) in
   let svarmap_string = varmap_to_str new_env.vars in
   let sbindmap_string = bindmap_to_str new_env.bindings in
-  Printf.printf "SAST: \n%s\n%s\n%s" sprogram_string svarmap_string sbindmap_string;
+  Printf.printf "SAST: \nsprogram_string: \n%s \nsvarmap_string: \n%s\n \nsbindmap_string: \n%s" sprogram_string svarmap_string sbindmap_string;
