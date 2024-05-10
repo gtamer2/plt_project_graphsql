@@ -41,6 +41,7 @@ type expr =
   | If of expr * expr
   | IfElse of expr * expr * expr
   | FunctionCall of string 
+  | Return of expr
   
 
 type stmt = 
@@ -53,7 +54,6 @@ type stmt =
   | For of expr * expr * expr * stmt list
   | FunctionCreation of string * stmt list
   (* | FunctionCreation of string * string list * stmt list *)
-  | Return of expr
   and
  elif_stmt = expr * stmt list
 
@@ -95,6 +95,7 @@ let rec string_of_expr = function
   | GraphUpdate(gname, element) ->
     "\n Updating graph element" ^ string_of_graph_element element ^ "in graph: " ^ gname  
   | FunctionCall(name) -> "\n" ^ "FunctionCall: " ^ name
+  | Return(expr) -> "RETURN: " ^ string_of_expr expr ^ " "
 
 and string_of_graph_element = function
 | Vertex(vertex) -> "vertex:" ^ vertex
@@ -128,7 +129,6 @@ let rec string_of_stmt = function
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
   | FunctionCreation(name, body) -> "\n" ^ "FunctionCall: " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
-  | Return(expr) -> "RETURN: " ^ string_of_expr expr ^ " "
  and string_of_elif_stmt = function
 | [] -> ""
 | (condition, body) :: rest -> " ELIF " ^ string_of_expr condition ^ " " ^ string_of_stmt_list body ^ string_of_elif_stmt rest 

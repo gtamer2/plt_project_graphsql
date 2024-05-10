@@ -5,10 +5,17 @@ module GraphMap = Map.Make(String)
 module FunctionMap = Map.Make(String)
 
 type argument_list = string list
+type var_value =
+  | IntVal of int
+  | FloatVal of float
+  | BoolVal of bool
 
+(* Define a type alias for the variable map *)
+type var_map = var_value VarMap.t
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
-  vars: int VarMap.t;
+  (* vars: int VarMap.t; *)
+  vars: var_map; (*(var_value VarMap.t);*)
   graphs: graph_element list GraphMap.t;
   function_declarations: argument_list FunctionMap.t;
   func_body: stmt list FunctionMap.t;
@@ -121,6 +128,7 @@ let rec eval_expr env = function
             begin match op with
               | And -> BoolLit ( v1 && v2)
               | Or -> BoolLit (v1 || v2)
+              | Eq -> BoolLit (v1 = v2)
               | _ -> failwith ("Operator is not supported for bool op bool")
             end
         | (FloatLit v1, FloatLit v2) ->
@@ -134,7 +142,11 @@ let rec eval_expr env = function
       (result, env2)
     | Var(var) ->
         (match VarMap.find_opt var env.vars with
-        | Some value -> (Lit value, env)
+        | Some value -> (begin match value with
+          | IntVal i -> (Lit i, env)
+          | FloatVal f -> (FloatLit f, env)
+          | BoolVal b -> (BoolLit b, env)
+            end)
         | None -> 
           match GraphMap.find_opt var env.graphs with
           | Some value -> (Graph value, env)
@@ -274,16 +286,24 @@ let rec eval_expr env = function
       let (value, env1) = eval_expr env e in
       begin match value with
       | Lit x ->
-        let env2 = { env1 with vars = VarMap.add var x env1.vars } in
+        let env2 = { env1 with vars = VarMap.add var (IntVal x) env1.vars } in
         (Lit x, env2)
+      | BoolLit x ->
+          let env2 = { env1 with vars = VarMap.add var (BoolVal x) env1.vars } in
+          (BoolLit x, env2)
       | _ -> failwith "Assignment expects a literal integer" 
       end
     | FunctionCall(fn_name) ->
         if FunctionMap.mem fn_name env.func_body then
           let function_body = FunctionMap.find fn_name env.func_body in
-          eval_stmt_list env function_body
+          let (return_value, func_env) = eval_stmt_list env function_body in
+          begin
+            Printf.printf "return val is %s\n" (string_of_expr return_value);
+            (return_value, func_env)
+          end
         else
           failwith ("Function not found: " ^ fn_name)
+    | Return e -> eval_expr env e
     end
 and eval_stmt_list env = function 
   | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
@@ -376,7 +396,6 @@ and eval_stmt_list env = function
           else
           let env1 = { env with func_body = FunctionMap.add name body env.func_body } in
           (BoolLit true, env1)
-    | Return e -> eval_expr env e
     | _ -> failwith "Invalid parsing of stmt" 
     end
 

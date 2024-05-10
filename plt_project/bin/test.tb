@@ -1,10 +1,13 @@
 FUNCTION foobar()
 {
     x = 3;
-    y = 7;
+    y = x;
     RETURN y;
 }
 
-
-car = 8;
 g = foobar();
+
+IF (g == True)
+{
+    car = 5;
+}

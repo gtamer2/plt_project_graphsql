@@ -67,7 +67,7 @@ stmt_list:
 
 stmt:
     | expr SEMICOLON { Expr($1) }
-    | RETURN expr SEMICOLON {Return($2) }
+    // | RETURN expr SEMICOLON {Return($2) }
     | LC stmt_list RC { Block($2) }
     | IF LP expr RP LC stmt_list RC { If($3, $6) }
     | IF LP expr RP LC stmt_list RC elif_stmt_list ELSE LC stmt_list RC{ IfElif($3, $6, $8, $11)}
@@ -86,6 +86,7 @@ expr:
     | LITERAL    { Lit($1) } //done
     | FLOATLIT { FloatLit($1) } //done
     | BLIT     { BoolLit($1) }
+    | RETURN expr {Return($2) }
     | VARIABLE ASSIGN expr {Asn($1, $3)} //done
     | VARIABLE { Var($1) } //done
     | VARIABLE LP RP{ print_endline("Calling func"); FunctionCall($1) }
