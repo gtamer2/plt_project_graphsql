@@ -146,6 +146,12 @@ let check init_env init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
+
+
+    (* | Seq (e1, e2) -> 
+      let se1, env1 = check_expr env e1 in
+      let se2, env2 = check_expr env1 e2 in
+      (((* what type is an seq*), SSeq (se1, se2)), env2) *)
     
     | Graph (graph_elements) ->
       (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
@@ -320,6 +326,7 @@ let check init_env init_program =
 
     | _ -> failwith "not supported"
       in
+
   let rec check_stmt_list env = function
         [] -> ([], env)
       | stmt :: rest ->
@@ -334,6 +341,72 @@ let check init_env init_program =
       | Expr e -> 
         let (sexpr, env') = check_expr env e in
         (SExpr(sexpr), env')
+
+      (* SIf *)
+
+      | If (cond, then_stmt) ->
+        let ((t1, cond'), env1) = check_expr env cond in
+        let (then_stmt', env2) = check_stmt_list env1 then_stmt in
+        let err = "illegal if statement " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond
+                  ^ " " ^ "in " ^ string_of_stmt_list then_stmt
+        in
+        if t1 = Bool then
+          (SIf((t1, cond'), then_stmt'), env2)
+        else
+          raise (Failure err)
+
+      (* SFor *)
+
+      | For (init, condition, update, body) ->
+        let ((t1,init'),env1) = check_expr env init in
+        let ((t2,condition'),env2) = check_expr env1 condition in 
+        let ((t3,update'),env3) = check_expr env2 update in
+        let (body',env4) = check_stmt_list env3 body in
+        let err = "illegal for loop " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr init ^
+                  string_of_typ t2 ^ " " ^ "in " ^ string_of_expr condition ^
+                  string_of_typ t3 ^ " " ^ "in " ^ string_of_expr update ^
+                   " " ^ "in " ^ string_of_stmt_list body
+        in
+        if t2 = Bool then
+          (SFor((t1,init'), (t2,condition'), (t3,update'), body'), env4)
+        else
+          raise (Failure err)
+      
+      (* SIfElse *)
+
+      | IfElse (cond, then_stmt, else_stmt) ->
+        let ((t1, cond'), env1) = check_expr env cond in
+        let (then_stmt', env2) = check_stmt_list env1 then_stmt in
+        let (else_stmt', env3) = check_stmt_list env2 else_stmt in
+        let err = "illegal if-else statement " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond ^
+                   " " ^ "in " ^ string_of_stmt_list then_stmt ^
+                   " " ^ "in " ^ string_of_stmt_list else_stmt
+        in
+        if t1 = Bool then
+          (SIfElse( (t1, cond'), then_stmt', else_stmt' ), env3)
+        else
+          raise (Failure err)
+      
+      (* While *)
+
+      | While (cond, body) ->
+        let ((t1, cond'), env1) = check_expr env cond in
+        let (body', env2) = check_stmt_list env1 body in
+        let err = "illegal while loop " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond ^
+                   " " ^ "in " ^ string_of_stmt_list body
+        in
+        if t1 = Bool then
+          (SWhile((t1, cond'), body'), env2)
+        else
+          raise (Failure err)
+
+
+
+
       | _ -> failwith "not supported"
   
   in
