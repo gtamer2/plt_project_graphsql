@@ -278,10 +278,14 @@ let rec eval_expr env = function
         (Lit x, env2)
       | _ -> failwith "Assignment expects a literal integer" 
       end
+    | FunctionCall(fn_name) ->
+        if FunctionMap.mem fn_name env.func_body then
+          let function_body = FunctionMap.find fn_name env.func_body in
+          eval_stmt_list env function_body
+        else
+          failwith ("Function not found: " ^ fn_name)
     end
- 
-
-let rec eval_stmt_list env = function 
+and eval_stmt_list env = function 
   | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
   | stmt :: rest ->
       let (result, new_env) = eval_stmt env stmt in eval_stmt_list new_env rest
@@ -372,12 +376,6 @@ let rec eval_stmt_list env = function
           else
           let env1 = { env with func_body = FunctionMap.add name body env.func_body } in
           (BoolLit true, env1)
-    | FunctionCall(fn_name) ->
-            if FunctionMap.mem fn_name env.func_body then
-              let function_body = FunctionMap.find fn_name env.func_body in
-              eval_stmt_list env function_body
-            else
-              failwith ("Function not found: " ^ fn_name)
     | Return e -> eval_expr env e
     | _ -> failwith "Invalid parsing of stmt" 
     end

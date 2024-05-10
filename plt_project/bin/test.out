@@ -1,13 +1,16 @@
 Calling func
 Initial Expression: 
 FunctionCall: foobar() {x = 3 y = 7 RETURN: y }
-car = 8 
-FunctionCall: foobar
+car = 8 g = 
+FunctionCall: foobar 
 Evaluating expression: car = 8
 Evaluating expression: 8
+Evaluating expression: g = 
+FunctionCall: foobar
+Evaluating expression: 
+FunctionCall: foobar
 Evaluating expression: x = 3
 Evaluating expression: 3
 Evaluating expression: y = 7
 Evaluating expression: 7
 Evaluating expression: y
-Result: true

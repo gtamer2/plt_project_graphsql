@@ -7,4 +7,4 @@ FUNCTION foobar()
 
 
 car = 8;
-foobar();
+g = foobar();
