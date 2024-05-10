@@ -38,8 +38,8 @@ type expr =
   | GraphOp of string * graph_element list * string
   | GraphQuery of string * string * string
   | GraphUpdate of string * graph_element
-  | If of expr * expr
-  | IfElse of expr * expr * expr
+  (* | If of expr * expr
+  | IfElse of expr * expr * expr *)
 
 type stmt = 
   | Block of stmt list
