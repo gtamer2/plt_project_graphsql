@@ -60,7 +60,7 @@ graph_operation:
 
 stmt_list: 
     /* nothing */ { [] }
-    | stmt stmt_list {print_endline("Processing all stmts"); $1::$2 }
+    | stmt stmt_list { $1::$2 }
 
 stmt:
     | expr SEMICOLON { Expr($1) }
