@@ -1,8 +1,14 @@
 # default target that 'make' will attempt to build if no target specified
 # all : calc_test.out graph_init.out
-all : graph_init.out graph_init2.out semant_test.out semant_test2.out
+# all : graph_init.out graph_init2.out semant_test.out semant_test2.out  # NOTE -- this is oour woorking version
 # all : calc_test.out
 
+# WARN - CHATGPT
+# Define the default target
+all: graphsql_compile.native
+
+
+# WARN - CHATGPT
 ##############################
 semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
 	ocamlc -w A -o semant_eval ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
@@ -27,6 +33,20 @@ scanner.ml : scanner.mll
 
 parser.ml parser.mli : parser.mly
 	ocamlyacc $^
+
+
+# WARNING --- CHAT GPT CODE
+# graphsql.native : ast.cmo parser.cmo scanner.cmo graphsql.cmo
+# 	ocamlfind ocamlopt -o graphsql.native -linkpkg -package $PACKAGES$ ast.cmo parser.cmo scanner.cmo graphsql.cmo
+# WARNING END --- CHAT GPT CODE
+
+
+# Define the rule for building graphsql.native
+graphsql.native:
+	ocamlbuild -pkgs llvm graphsql.native
+
+graphsql_compile.native:
+	ocamlbuild -pkgs llvm graphsql_compile.native
 
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
@@ -57,14 +77,17 @@ semant_eval.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx
 semantic_checker.cmo : ast.cmo sast.cmo
 semantic_checker.cmx : ast.cmo sast.cmo
 
-
-
+# Dependencies for irgen
+irgen.cmo : ast.cmo sast.cmo
+irgen.cmx : ast.cmo sast.cmo
+graphsql_compile.cmo : scanner.cmo parser.cmi ast.cmo sast.cmo semantic_checker.cmo irgen.cmo irgen.cmx
+graphsql_compile.cmx : scanner.cmx parser.cmx ast.cmo sast.cmo semantic_checker.cmx irgen.cmo irgen.cmx
 ##############################
 
 # .PHONY tells make that clean is not a file name, but a command to be executed
 .PHONY : clean
 clean :
-	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval
+	rm -rf *.cmi *.cmo parser.ml parser.mli scanner.ml calc_test.out graphsql semant_eval *.native
 
 
 ##############################

@@ -84,7 +84,13 @@ let get_common_sgraph_elements graph1_elements graph2_elements =
   ) common_elements in 
   adjusted_elements
 
-let check init_env init_program = 
+let check init_program = 
+
+  let init_env = {
+    bindings = BindMap.empty;
+    vars = VarMap.empty;
+    graphs = GraphMap.empty;
+  } in
 
   (* Return a variable from our symbol table *)
   let type_of_identifier s bindings =
