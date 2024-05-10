@@ -1,18 +1,6 @@
-foo = 4;
-bar = 3;
-let = -2 + 3;
-veve = 23 - 3;
-e = 3.4;
-foo = 333.4;
-{
-let = veve + bar;
-{
-lmao = foo * 3;
-east = let / e;
-west = 10 % 4;
-}
-}
-north = east / west;
-lve = -3 - north;
-
-
+CREATE GRAPH (
+	[VERTEX ("vertex1"),
+	VERTEX ("vertex2"),
+	EDGE ("vertex1" - "vertex2",10)
+    ]
+) AS g;

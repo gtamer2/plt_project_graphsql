@@ -68,6 +68,14 @@ let rec eval_expr env = function
     | Lit(x) -> (Lit x, env)
     | FloatLit(f) -> (FloatLit f, env) 
     | BoolLit(b) -> (BoolLit b, env)  
+    | Uniop(op, e1) ->
+      let (v1, env1) = eval_expr env e1 in
+      let result = 
+        begin match op, v1 with 
+            Not, BoolLit(v') -> BoolLit(not v')
+          | _ -> failwith "Operator is not supported"
+        end in
+      (result, env1)
     | Binop(e1, op, e2) ->
       let (v1, env1) = eval_expr env e1 in
       let (v2, env2) = eval_expr env1 e2 in
@@ -185,7 +193,7 @@ let rec eval_expr env = function
         | _ -> failwith "GraphAccess did not return a graph"
         end 
       | GraphQuery(gname1, gname2, queryType) ->
-        Printf.printf "we're here";
+        (* Printf.printf "we're here"; *)
         let (graph, env1) = eval_expr env (GraphQuery(gname1, gname2, queryType)) in
         begin match graph with
         | Graph(graph_elements) ->
