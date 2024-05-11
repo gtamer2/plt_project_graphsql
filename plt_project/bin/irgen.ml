@@ -9,6 +9,56 @@ let is_expr = function
   | SExpr _ -> true
   | _ -> false
 
+let vertex_type context = 
+  (* pointer to an array of char is used to handle strings *)
+  L.struct_type context [| L.pointer_type (L.i8_type context) |] 
+
+let edge_type context vertex_type =
+  L.struct_type context [|
+    L.pointer_type vertex_type; 
+    L.pointer_type vertex_type; 
+    L.i32_type context          
+  |]
+
+let graph_element_type context vertex_type edge_type =
+  let max_size = 24 in
+  L.struct_type context [|
+    L.i32_type context;   (* Tag to indicate type: 0 for vertex, 1 for edge *)
+    L.array_type (L.i8_type context) max_size  
+  |]
+
+let graph_type context vertex_type edge_type =
+  let graph_element_t = graph_element_type context vertex_type edge_type in
+  L.struct_type context [|
+    L.array_type graph_element_t 5  (* fixed-size memory allocation of graph elements *)
+  |]
+
+let create_graph_element context builder graph_element_t vertex_t edge_t tag =
+  let ge = L.build_malloc graph_element_t "graph_element" builder in
+  let tag_ptr = L.build_struct_gep ge 0 "tag" builder in
+  ignore (L.build_store (L.const_int (L.i32_type context) tag_val) tag builder);
+  
+  let payload_ptr = L.build_struct_gep ge 1 "payload" builder in
+  ignore (L.build_bitcast element (L.pointer_type (L.i8_type context)) builder);
+  ignore (L.build_store element payload_ptr builder);
+  ge
+
+(* let create_vertex context builder vertex_id =
+  let vertex = create_vertex_with_id context builder vertex_id in
+  create_graph_element context builder vertex_type vertex 0
+
+let create_edge context builder source_vertex target_vertex weight =
+  let edge = create_edge_with_data context builder source_vertex target_vertex weight in
+  create_graph_element context builder edge_type edge 1 *)
+
+(* let build_graph builder vertex_arr edge_arr graph_type = 
+  let graph_val = L.build_malloc graph_type "new_graph" builder in
+  let vertex_ptr = L.build_struct_gep graph_val 0 "vertices" builder in
+  let edge_ptr = L.build_struct_gep graph_val 1 "edges" builder in
+  ignore(L.build_store vertex_arr vertex_ptr builder);
+  ignore(L.build_store edge_arr edge_ptr builder);
+  graph_val *)
+
 let translate stmt_list =
   let context = L.global_context () in
   let the_module = L.create_module context "GraphSQL" in 
@@ -16,7 +66,7 @@ let translate stmt_list =
   let i32_t = L.i32_type context in 
   let builder = L.builder context in
 
-    (* Return the LLVM type for a MicroC type *)
+  (* Return the LLVM type for a MicroC type *)
   let ltype_of_typ = function
     Int   -> i32_t
   in
