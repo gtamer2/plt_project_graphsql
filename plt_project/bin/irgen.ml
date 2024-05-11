@@ -216,11 +216,18 @@ in
       ignore(L.build_store e' llval builder); (e', vmap'', gmap)
     (* | SUniop of uniop * sexpr *)
     
-    (* | SGraph sgraph_elements ->
+    | SGraph sgraph_elements ->
       let graph = build_initial_graph builder in
-      List.fold_left (fun g elem -> add_element_to_graph builder g elem) graph graph_elements, vmap
+      List.fold_left (fun g elem -> add_element_to_graph context builder g elem) graph graph_elements, vmap, gmap
 
-    | SGraphAsn (gname, sexpr) -> *)
+      (* add_element_to_graph context builder graph graph_element_type element_ptr *)
+
+      (* update gmap *)
+
+      (* return graph_ptr, vmap', gmap' *)
+
+
+    (* | SGraphAsn (gname, sexpr) -> *)
 
     | _ -> raise (Invalid_argument "expression type not supported")
   in
