@@ -8,6 +8,7 @@
 # all: graphsql_compile.native graph_init.out graph_init2.out semant_test.out semant_test2.out
 all: graphsql_compile.native 
 
+
 # WARN - CHATGPT
 ##############################
 semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo

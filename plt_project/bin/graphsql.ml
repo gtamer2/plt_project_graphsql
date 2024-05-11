@@ -2,17 +2,28 @@ open Ast
 open Printf
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
+module FunctionMap = Map.Make(String)
+type argument_list = string list
+
+type var_value =
+  | IntVal of int
+  | FloatVal of float
+  | BoolVal of bool
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
-  vars: int VarMap.t;
+  vars: var_value VarMap.t;
   graphs: graph_element list GraphMap.t;
+  function_declarations: argument_list FunctionMap.t;
+  func_body: stmt list FunctionMap.t;
 }
 
 (* Initial empty environment *)
 let empty_env = {
   vars = VarMap.empty;
   graphs = GraphMap.empty;
+  function_declarations = FunctionMap.empty;
+  func_body = FunctionMap.empty;
 }
 
 let int_of_bool b = if b then 1 else 0
@@ -114,6 +125,7 @@ let rec eval_expr env = function
             begin match op with
               | And -> BoolLit ( v1 && v2)
               | Or -> BoolLit (v1 || v2)
+              | Eq -> BoolLit (v1 = v2)
               | _ -> failwith ("Operator is not supported for bool op bool")
             end
         | (FloatLit v1, FloatLit v2) ->
@@ -126,12 +138,16 @@ let rec eval_expr env = function
         end in
       (result, env2)
     | Var(var) ->
-        (match VarMap.find_opt var env.vars with
-        | Some value -> (Lit value, env)
-        | None -> 
-          match GraphMap.find_opt var env.graphs with
-          | Some value -> (Graph value, env)
-          | None -> failwith ("Variable not found: " ^ var))
+      (match VarMap.find_opt var env.vars with
+      | Some value -> (begin match value with
+        | IntVal i -> (Lit i, env)
+        | FloatVal f -> (FloatLit f, env)
+        | BoolVal b -> (BoolLit b, env)
+          end)
+      | None -> 
+        match GraphMap.find_opt var env.graphs with
+        | Some value -> (Graph value, env)
+        | None -> failwith ("Variable not found: " ^ var))
     | Graph (graph_elements) ->
       (Graph(graph_elements), env)
 
@@ -145,15 +161,17 @@ let rec eval_expr env = function
             let e_output : graph_element list ref = ref [] in
             
             List.iter (fun element ->
-              match element with
+              begin match element with
                 | Vertex _ -> v_output := element :: !v_output
                 | Edge _ -> e_output := element :: !e_output
                 | _ -> failwith ("Not a graph element")
+              end
             ) graph_elements;
-            match fieldname with 
+            begin match fieldname with 
               | "vertices" -> (Graph !v_output, env)
               | "edges" -> (Graph !e_output, env)
               | _ -> failwith ("Invalid field name: " ^ fieldname)
+            end
         | _ -> failwith ("Graph not found: " ^ graphname)
       end
 
@@ -265,30 +283,38 @@ let rec eval_expr env = function
       let (value, env1) = eval_expr env e in
       begin match value with
       | Lit x ->
-        let env2 = { env1 with vars = VarMap.add var x env1.vars } in
+        let env2 = { env1 with vars = VarMap.add var (IntVal x) env1.vars } in
         (Lit x, env2)
+      | BoolLit x ->
+          let env2 = { env1 with vars = VarMap.add var (BoolVal x) env1.vars } in
+          (BoolLit x, env2)
       | _ -> failwith "Assignment expects a literal integer" 
       end
-    end
- 
-
-let rec eval_stmt_list env = function 
-  | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
-  | stmt :: rest ->
-      let (result, new_env) = eval_stmt env stmt in eval_stmt_list new_env rest
-    (* for each stmt eval_stmt *)
-    
+      | FunctionCall(fn_name) ->
+        if FunctionMap.mem fn_name env.func_body then
+          let function_body = FunctionMap.find fn_name env.func_body in
+          let (return_value, func_env) = eval_stmt_list env function_body in
+          begin
+            Printf.printf "return val is %s\n" (string_of_expr return_value);
+            (return_value, func_env)
+          end
+        else
+          failwith ("Function not found: " ^ fn_name)
+      | Return e -> eval_expr env e
+      | LambaFunction e -> eval_expr env e
+    end	    
+  and  eval_stmt_list env stmts =  
+    let rec eval_stmt_list_helper env result = function
+    | [] -> (result, env)
+    | stmt :: rest ->
+        let (stmt_result, new_env) = eval_stmt env stmt in
+        eval_stmt_list_helper new_env stmt_result rest
+  in
+  eval_stmt_list_helper env (BoolLit true) stmts
   and 
   eval_stmt env = function
   | stmt -> 
     begin match stmt with
-    (* | Block (stmt_list) ->  *)
-      (* Printf.printf "Evaluating block\n"; *)
-      (* begin match stmt_list with
-        | [] -> (true, env)
-        | stmts -> List.fold_left (fun (_, new_env) statement -> eval_stmt new_env statement) _ env stmts
-        | _ -> failwith "Invalid parsing of stmt_list"
-      end *)
     | Expr (expr) -> eval_expr env expr
     | If (ifcondition, ifbody) ->
       let (v1, env1) = eval_expr env ifcondition in
@@ -357,6 +383,12 @@ let rec eval_stmt_list env = function
           | _ -> failwith "For excepts a boolean expression"
         end
         in for_helper env1 condition update body
+    | FunctionCreation(name, body) -> 
+          if FunctionMap.mem name env.func_body then
+          failwith ("Function already exists: " ^ name)
+          else
+          let env1 = { env with func_body = FunctionMap.add name body env.func_body } in
+          (BoolLit true, env1)
     | _ -> failwith "Invalid parsing of stmt" 
     end
 
