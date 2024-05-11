@@ -47,7 +47,16 @@ let translate stmt_list =
       let e1', vmap1 = build_expr builder e1 vmap in
       let e2', vmap2 = build_expr builder e2 vmap1 in
       begin match op with
-        | A.Add -> (L.build_add e1' e2' "addtmp" builder), vmap2
+        | A.Add -> (L.build_add e1' e2' "add_tmp" builder), vmap2
+        | A.Sub -> (L.build_sub e1' e2' "sub_tmp" builder), vmap2
+        | A.Mul -> (L.build_mul e1' e2' "mult_tmp" builder), vmap2
+        | A.Div -> (L.build_sdiv e1' e2' "div_tmp" builder), vmap2
+        | A.Eq -> (L.build_icmp L.Icmp.Eq e1' e2' "eq" builder), vmap2
+        | A.Neq -> (L.build_icmp L.Icmp.Ne e1' e2' "eq" builder), vmap2
+        | A.Gt -> (L.build_icmp L.Icmp.Sgt e1' e2' "eq" builder), vmap2
+        | A.Lt -> (L.build_icmp L.Icmp.Slt e1' e2' "eq" builder), vmap2
+        | A.Gteq -> (L.build_icmp L.Icmp.Sge e1' e2' "eq" builder), vmap2
+        | A.Lteq -> (L.build_icmp L.Icmp.Sle e1' e2' "eq" builder), vmap2
         | _ -> raise (Invalid_argument "operation not supported")
       end
     | SVar var -> (L.build_load (match (lookup var vmap) with 
