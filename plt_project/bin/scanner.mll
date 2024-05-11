@@ -28,6 +28,7 @@ rule tokenize = parse
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
 | '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
+| "RETURN" { RETURN }
 | "AND" { AND }
 | "OR" { OR }
 | "DEFINE" { DEFINE }
