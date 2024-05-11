@@ -11,7 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
-%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE FOR
+%token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE FOR RETURN 
 
 %token QUOTES
 %token DOT 
@@ -60,7 +60,7 @@ graph_operation:
 
 stmt_list: 
     /* nothing */ { [] }
-    | stmt stmt_list {print_endline("Processing all stmts"); $1::$2 }
+    | stmt stmt_list { $1::$2 }
 
 stmt:
     | expr SEMICOLON { Expr($1) }
@@ -70,6 +70,7 @@ stmt:
     | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
     | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
+    | FUNCTION VARIABLE LP RP LC stmt_list RC {FunctionCreation($2, $6)}
 
 elif_stmt_list:
     | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}
@@ -81,6 +82,8 @@ expr:
     | BLIT     { BoolLit($1) }
     | VARIABLE ASSIGN expr {Asn($1, $3)} //done
     | VARIABLE { Var($1) } //done
+    | VARIABLE LP RP{FunctionCall($1) }
+    | RETURN expr {Return($2) }
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
     | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
     | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE
