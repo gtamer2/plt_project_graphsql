@@ -23,12 +23,14 @@ rule tokenize = parse
 | ">=" { GTEQ }
 | "==" { EQL }
 | "!=" { NOTEQL }
+| ":" {COLON}
 | ';' { SEMICOLON }
 | '=' { ASSIGN }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
 | '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
 | "RETURN" { RETURN }
+| "LAMBDA" {LAMBDA}
 | "AND" { AND }
 | "OR" { OR }
 | "DEFINE" { DEFINE }

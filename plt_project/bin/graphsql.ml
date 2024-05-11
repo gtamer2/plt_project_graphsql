@@ -301,6 +301,7 @@ let rec eval_expr env = function
         else
           failwith ("Function not found: " ^ fn_name)
       | Return e -> eval_expr env e
+      | LambaFunction e -> eval_expr env e
     end	    
   and  eval_stmt_list env stmts =  
     let rec eval_stmt_list_helper env result = function
