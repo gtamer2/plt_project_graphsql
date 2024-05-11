@@ -302,23 +302,18 @@ let rec eval_expr env = function
           failwith ("Function not found: " ^ fn_name)
       | Return e -> eval_expr env e
     end	    
-  and eval_stmt_list env = function 
-  | [] -> (BoolLit true, env) (* Return a default value indicating successful evaluation *)
-  | stmt :: rest ->
-      let (result, new_env) = eval_stmt env stmt in eval_stmt_list new_env rest
-    (* for each stmt eval_stmt *)
-    
+  and  eval_stmt_list env stmts =  
+    let rec eval_stmt_list_helper env result = function
+    | [] -> (result, env)
+    | stmt :: rest ->
+        let (stmt_result, new_env) = eval_stmt env stmt in
+        eval_stmt_list_helper new_env stmt_result rest
+  in
+  eval_stmt_list_helper env (BoolLit true) stmts
   and 
   eval_stmt env = function
   | stmt -> 
     begin match stmt with
-    (* | Block (stmt_list) ->  *)
-      (* Printf.printf "Evaluating block\n"; *)
-      (* begin match stmt_list with
-        | [] -> (true, env)
-        | stmts -> List.fold_left (fun (_, new_env) statement -> eval_stmt new_env statement) _ env stmts
-        | _ -> failwith "Invalid parsing of stmt_list"
-      end *)
     | Expr (expr) -> eval_expr env expr
     | If (ifcondition, ifbody) ->
       let (v1, env1) = eval_expr env ifcondition in
