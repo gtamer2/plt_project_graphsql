@@ -1,10 +1,13 @@
-
-
 module L = Llvm
 module A = Ast
 open Sast
 
 module StringMap = Map.Make(String)
+
+(* Helper function to check if a statement is an expression *)
+let is_expr = function
+  | SExpr _ -> true
+  | _ -> false
 
 let translate stmt_list =
   let context = L.global_context () in
@@ -13,15 +16,21 @@ let translate stmt_list =
   let i32_t = L.i32_type context in 
   let builder = L.builder context in
 
-  (* Return the LLVM type for a MicroC type *)
+    (* Return the LLVM type for a MicroC type *)
   let ltype_of_typ = function
-      Int   -> i32_t
+    Int   -> i32_t
   in
-  
+
   (* define the main function & program entry point *)
   let main_type = L.function_type i32_t [||] in
   let main_func = L.define_function "main" main_type the_module in
-  let entry_block = L.append_block context "entry" main_func in
+
+  (* Create the entry block if it doesn't exist *)
+  let entry_block =
+    match L.entry_block main_func with
+    | block -> block
+    | _ -> L.append_block context "entry" main_func
+  in
   L.position_at_end entry_block builder;
 
   (* for now there is a single map, will need multiple maps, likely one for each function *)
