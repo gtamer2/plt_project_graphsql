@@ -1,0 +1,16 @@
+; ModuleID = 'GraphSQL'
+source_filename = "GraphSQL"
+
+define i32 @main() {
+entry:
+
+entry1:                                           ; No predecessors!
+  %x = alloca i32, align 4
+  store i32 2, i32* %x, align 4
+  %z = alloca i32, align 4
+  store i32 2, i32* %z, align 4
+  %x2 = load i32, i32* %x, align 4
+  %y = alloca i32, align 4
+  store i32 %x2, i32* %y, align 4
+  ret i32 0
+}

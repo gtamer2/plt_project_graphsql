@@ -43,10 +43,10 @@ parser.ml parser.mli : parser.mly
 
 # Define the rule for building graphsql.native
 graphsql.native:
-	ocamlbuild -pkgs llvm graphsql.native
+	ocamlbuild -r -pkgs llvm graphsql.native
 
 graphsql_compile.native:
-	ocamlbuild -pkgs llvm graphsql_compile.native
+	ocamlbuild -r -pkgs llvm graphsql_compile.native
 
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
