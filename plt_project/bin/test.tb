@@ -7,9 +7,11 @@ FUNCTION foobar()
 
 g = foobar();
 
-IF (g == 8)
+l = LAMBDA : (6 + 4);
+
+IF (l == 10)
 {
-    far = 5;
+    far = 15;
 }
 
 foo = 3;

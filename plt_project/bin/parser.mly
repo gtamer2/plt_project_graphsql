@@ -2,7 +2,7 @@
 
 %token PLUS MINUS TIMES DIVIDE 
 %token ASSIGN 
-%token SEMICOLON MODULUS EOF
+%token SEMICOLON MODULUS COLON EOF
 
 %token <int>  LITERAL
 %token <bool> BLIT
@@ -19,7 +19,7 @@
 %token LP RP LB RB LC RC COMMA ARROW COMMENT
 %token GRAPH
 %token IF ELSE ELIF
-%token DEFINE FUNCTION
+%token DEFINE FUNCTION LAMBDA
 
 %left SEMICOLON
 %right ASSIGN
@@ -82,7 +82,8 @@ expr:
     | BLIT     { BoolLit($1) }
     | VARIABLE ASSIGN expr {Asn($1, $3)} //done
     | VARIABLE { Var($1) } //done
-    | VARIABLE LP RP{FunctionCall($1) }
+    | VARIABLE LP RP{FunctionCall($1) } 
+    | LAMBDA COLON LP expr RP {LambaFunction($4)} 
     | RETURN expr {Return($2) }
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
     | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
