@@ -1,3 +1,11 @@
 x = 1 + 1;
-z = 2;
-y = x;
+z = 2 - 1;
+f = 2 * 1;
+g = 4 / 2;
+y = x > z;
+eql = 4 == 1;
+geql = 4 >= 1;
+leql = 4 <= 1;
+neql = 4 != 1;
+andop = True AND False;
+orop = True OR False;

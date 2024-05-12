@@ -3,14 +3,30 @@ source_filename = "GraphSQL"
 
 define i32 @main() {
 entry:
-
-entry1:                                           ; No predecessors!
   %x = alloca i32, align 4
   store i32 2, i32* %x, align 4
   %z = alloca i32, align 4
-  store i32 2, i32* %z, align 4
-  %x2 = load i32, i32* %x, align 4
+  store i32 1, i32* %z, align 4
+  %f = alloca i32, align 4
+  store i32 2, i32* %f, align 4
+  %g = alloca i32, align 4
+  store i32 2, i32* %g, align 4
+  %x1 = load i32, i32* %x, align 4
+  %z2 = load i32, i32* %z, align 4
+  %eq = icmp sgt i32 %x1, %z2
   %y = alloca i32, align 4
-  store i32 %x2, i32* %y, align 4
+  store i1 %eq, i32* %y, align 1
+  %eql = alloca i32, align 4
+  store i1 false, i32* %eql, align 1
+  %geql = alloca i32, align 4
+  store i1 true, i32* %geql, align 1
+  %leql = alloca i32, align 4
+  store i1 false, i32* %leql, align 1
+  %neql = alloca i32, align 4
+  store i1 true, i32* %neql, align 1
+  %andop = alloca i32, align 4
+  store i32 0, i32* %andop, align 4
+  %orop = alloca i32, align 4
+  store i32 1, i32* %orop, align 4
   ret i32 0
 }
