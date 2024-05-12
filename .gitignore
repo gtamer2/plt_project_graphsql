@@ -15,3 +15,7 @@ src/.DS_store
 */parser.ml
 
 _opam
+
+int
+llvalue
+string
