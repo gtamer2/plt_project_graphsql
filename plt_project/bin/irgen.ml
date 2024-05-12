@@ -202,14 +202,23 @@ let translate stmt_list =
       with Not_found -> None
   in *)
 
-  let lookup n vmap gmap = 
+  let lookup_var n vmap gmap = 
+    match StringMap.find_opt n vmap with
+    | Some v -> v
+    | None -> StringMap.find n gmap (* will throw error if fails to find *)
+      (* (match StringMap.find_opt n gmap with
+      | Some v -> v
+      | None -> raise (Invalid_argument "Variable not defined -- lookup error")) *)
+  in
+
+  (* let lookup_var_asn n vmap gmap e' = 
     match StringMap.find_opt n vmap with
     | Some v -> v
     | None ->
       (match StringMap.find_opt n gmap with
       | Some v -> v
-      | None -> raise (Invalid_argument "variable not found"))
-  in
+      | None -> e') (* malloc and assign the var to it *)
+  in *)
 
   (* takes in sexpr (unified_type, sx) and generate llvm code for expr*)
   let rec build_expr builder (t, e) vmap gmap = match e with
@@ -234,16 +243,18 @@ let translate stmt_list =
         | A.Lteq -> (L.build_icmp L.Icmp.Sle e1' e2' "eq" builder), vmap2, gmap2
         | _ -> raise (Invalid_argument "operation not supported")
       end
-    | SVar var -> (L.build_load (match (lookup var vmap gmap) with 
+      (* 4 cases to consider with lookup *)
+      (* 1 - being called from Svar, and value found = PASS, NO WORK NEEDED *)
+      (* 2 - being called from Svar, and value not found = SHOULD BE ERROR *)
+      (* 3 - being called from Sasn, and value found = PASS, NO WORK NEEDED *)
+      (* 4 - being called from Sasn, and value not found = NEED TO ADD MALLOC OPERATION *)
+    | SVar var -> (L.build_load (match (lookup_var var vmap gmap) with 
           v -> v
-        | _ -> raise (Invalid_argument "variable not found")) var builder), vmap, gmap
+        | _ -> raise (Invalid_argument "variable not found - var")) var builder), vmap, gmap
     | SAsn (s, e) -> let e', vmap', gmap' = build_expr builder e vmap gmap in
-      let llval = (match (lookup s vmap' gmap') with
-          v -> v
-        | _ -> e'
-      ) in
-      let vmap'' = StringMap.add s llval vmap' in
-      ignore(L.build_store e' llval builder); (e', vmap'', gmap)
+      (* let llval = lookup_var_asn s vmap' gmap' e' in *)
+      let vmap'' = StringMap.add s e' vmap' in
+      ignore(L.build_store e' e' builder); (e', vmap'', gmap)
     (* | SUniop of uniop * sexpr *)
     
     (* | SGraph sgraph_elements ->
