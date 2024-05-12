@@ -5,7 +5,8 @@
 
 # WARN - CHATGPT
 # Define the default target
-all: graphsql_compile.native
+# all: graphsql_compile.native graph_init.out graph_init2.out semant_test.out semant_test2.out
+all: graphsql_compile.native 
 
 
 # WARN - CHATGPT
@@ -43,10 +44,11 @@ parser.ml parser.mli : parser.mly
 
 # Define the rule for building graphsql.native
 graphsql.native:
-	ocamlbuild -pkgs llvm graphsql.native
+	ocamlbuild -r -pkgs llvm graphsql.native
 
 graphsql_compile.native:
-	ocamlbuild -pkgs llvm graphsql_compile.native
+	ocamlbuild -r -pkgs llvm graphsql_compile.native
+	ocamlbuild -pkgs llvm graphsql.native
 
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
