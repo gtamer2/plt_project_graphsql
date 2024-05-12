@@ -8,6 +8,7 @@
 # all: graphsql_compile.native graph_init.out graph_init2.out semant_test.out semant_test2.out
 all: graphsql_compile.native 
 
+
 # WARN - CHATGPT
 ##############################
 semant_eval : ast.cmo sast.cmo parser.cmo scanner.cmo semantic_checker.cmo semant_eval.cmo
@@ -47,6 +48,7 @@ graphsql.native:
 
 graphsql_compile.native:
 	ocamlbuild -r -pkgs llvm graphsql_compile.native
+	ocamlbuild -pkgs llvm graphsql.native
 
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out

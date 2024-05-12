@@ -38,8 +38,9 @@ type expr =
   | GraphOp of string * graph_element list * string
   | GraphQuery of string * string * string
   | GraphUpdate of string * graph_element
-  | If of expr * expr
-  | IfElse of expr * expr * expr
+  | FunctionCall of string 
+  | Return of expr
+  | LambaFunction of expr
 
 type stmt = 
   | Block of stmt list
@@ -49,6 +50,8 @@ type stmt =
   | IfElif of expr * stmt list * elif_stmt list * stmt list
   | While of expr * stmt list
   | For of expr * expr * expr * stmt list
+  | FunctionCreation of string * stmt list
+  
   and
  elif_stmt = expr * stmt list
 
@@ -89,6 +92,9 @@ let rec string_of_expr = function
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
   | GraphUpdate(gname, element) ->
     "\n Updating graph element" ^ string_of_graph_element element ^ "in graph: " ^ gname  
+  | FunctionCall(name) -> "\n" ^ "FunctionCall: " ^ name
+  | Return(expr) -> "RETURN: " ^ string_of_expr expr ^ " "	
+  | LambaFunction(expr) -> "Lambda Function: " ^ string_of_expr expr ^ " "	
 
 and string_of_graph_element = function
 | Vertex(vertex) -> "vertex:" ^ vertex
@@ -118,9 +124,11 @@ let rec string_of_stmt = function
   | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ " ELSE " ^ string_of_stmt_list elsebody
   | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
   | Expr(expr) -> string_of_expr expr ^ " "
-  | Block(stmts) -> "TODO BLOCK " 
+  (* | Block(stmts) -> "TODO BLOCK "  *)
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
+  | FunctionCreation(name, body) -> "\n" ^ "FunctionCall: " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
+  
  and string_of_elif_stmt = function
 | [] -> ""
 | (condition, body) :: rest -> " ELIF " ^ string_of_expr condition ^ " " ^ string_of_stmt_list body ^ string_of_elif_stmt rest 

@@ -27,11 +27,62 @@ let check_graph_element env elem =
   | _ -> failwith("unsupported graph element")
   end
 
-let ast_typ_to_sast_typ = function
-  | Ast.Int -> Sast.Int
-  | Ast.Bool -> Sast.Bool
-  | Ast.Float -> Sast.Float
-  | Ast.String -> Sast.String
+let get_unique_sgraph_elements sgraph_element_list =
+  List.fold_left (fun acc elem ->
+    (* handle the case with duplicate edges *)
+    begin match elem with
+      | (EdgeType, SEdge { ssource; starget; sweight }) ->
+          let existing = List.find (fun e ->
+            begin  match e with
+              | (EdgeType, SEdge { ssource = es; starget = et; sweight = _ }) -> es = ssource && et = starget
+              | _ -> false
+            end 
+          ) acc in
+          (* add up the weights for duplicate edges *)
+          begin match existing with
+            | (EdgeType, SEdge { ssource = _; starget = _; sweight = eweight }) ->
+                (*  filters out the old existing edge from the accumulator list (acc) *)
+                let filtered_list = List.filter (fun x -> x <> existing) acc in 
+                (EdgeType, SEdge { ssource; starget; sweight = sweight + eweight }) :: filtered_list
+            | _ -> elem :: acc
+          end
+      | _ -> if List.exists ((=) elem) acc then acc else elem :: acc
+    end
+  ) [] sgraph_element_list
+
+let get_common_sgraph_elements graph1_elements graph2_elements = 
+  (* filter out all common elements from graph1 *)
+  let common_elements =     
+    List.filter (fun elem1 ->
+      List.exists (fun elem2 ->
+          match elem1, elem2 with
+          | (EdgeType, SEdge { ssource = s1; starget = t1; sweight = w1 }),
+            (EdgeType, SEdge { ssource = s2; starget = t2; sweight = w2 }) ->
+              (* do not care about the weight for now *)
+              s1 = s2 && t1 = t2 
+          | (VertexType, SVertex { sid = id1 }), (VertexType, SVertex { sid = id2 }) ->
+              id1 = id2
+          | _, _ -> false
+      ) graph2_elements
+  ) graph1_elements in
+  
+  (* when exist duplicate common edges, keep the one with lesser weight*)
+  let adjusted_elements = List.map (fun elem ->
+    match elem with
+    | (EdgeType, SEdge { ssource; starget; sweight }) ->
+        let other = List.find_opt (fun e ->
+            match e with
+            | (EdgeType, SEdge { ssource = os; starget = ot; sweight = _ }) -> os = ssource && ot = starget
+            | _ -> false
+        ) graph2_elements in
+        begin match other with
+        | Some (EdgeType, SEdge { ssource = _; starget = _; sweight = ow }) ->
+            (EdgeType, SEdge { ssource; starget; sweight = min sweight ow })
+        | _ -> elem
+        end
+    | _ -> elem
+  ) common_elements in 
+  adjusted_elements
 
 let check init_program = 
 
@@ -101,6 +152,12 @@ let check init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
+
+
+    (* | Seq (e1, e2) -> 
+      let se1, env1 = check_expr env e1 in
+      let se2, env2 = check_expr env1 e2 in
+      (((* what type is an seq*), SSeq (se1, se2)), env2) *)
     
     | Graph (graph_elements) ->
       (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
@@ -149,6 +206,33 @@ let check init_program =
         in
         result, env
       | _ -> raise (Failure ("Graph not found: " ^ graphname))
+      end
+
+    | GraphQuery(gname1, gname2, queryType) ->
+      let graph1 = GraphMap.find gname1 env.graphs in
+      let graph1_element_types = fst graph1 in
+      let graph1_element_sexpr = snd graph1 in
+      let graph1_sgraph_element_list = get_graph_sx graph1_element_sexpr in
+
+      let graph2 = GraphMap.find gname2 env.graphs in
+      let graph2_element_types = fst graph2 in
+      let graph2_element_sexpr = snd graph2 in
+      let graph2_sgraph_element_list = get_graph_sx graph2_element_sexpr in
+
+
+      begin match queryType with 
+        | "union" ->
+          (* return union result in the form of ((GraphType updated_graph_element_type_list, SGraph updated_sgraph_element_list), env) *)
+          (* get everything based on sgraph_element_list *)
+          let all_elements = graph1_sgraph_element_list @ graph2_sgraph_element_list in
+          let unique_elements = get_unique_sgraph_elements all_elements in
+          let unique_elements_types = List.map fst unique_elements in
+          ((GraphType unique_elements_types, SGraph unique_elements), env)
+        | "intersect" ->
+          let common_elements = get_common_sgraph_elements graph1_sgraph_element_list graph2_sgraph_element_list in
+          let common_elements_types = List.map fst common_elements in
+          ((GraphType common_elements_types, SGraph common_elements), env)
+        | _ -> failwith ("Graph query type not supported: " ^ queryType)
       end
 
     | GraphAsn(var, e) ->
@@ -248,6 +332,7 @@ let check init_program =
 
     | _ -> failwith "not supported"
       in
+
   let rec check_stmt_list env = function
         [] -> ([], env)
       | stmt :: rest ->
@@ -262,6 +347,72 @@ let check init_program =
       | Expr e -> 
         let (sexpr, env') = check_expr env e in
         (SExpr(sexpr), env')
+
+      (* SIf *)
+
+      | If (cond, then_stmt) ->
+        let ((t1, cond'), env1) = check_expr env cond in
+        let (then_stmt', env2) = check_stmt_list env1 then_stmt in
+        let err = "illegal if statement " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond
+                  ^ " " ^ "in " ^ string_of_stmt_list then_stmt
+        in
+        if t1 = Bool then
+          (SIf((t1, cond'), then_stmt'), env2)
+        else
+          raise (Failure err)
+
+      (* SFor *)
+
+      | For (init, condition, update, body) ->
+        let ((t1,init'),env1) = check_expr env init in
+        let ((t2,condition'),env2) = check_expr env1 condition in 
+        let ((t3,update'),env3) = check_expr env2 update in
+        let (body',env4) = check_stmt_list env3 body in
+        let err = "illegal for loop " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr init ^
+                  string_of_typ t2 ^ " " ^ "in " ^ string_of_expr condition ^
+                  string_of_typ t3 ^ " " ^ "in " ^ string_of_expr update ^
+                   " " ^ "in " ^ string_of_stmt_list body
+        in
+        if t2 = Bool then
+          (SFor((t1,init'), (t2,condition'), (t3,update'), body'), env4)
+        else
+          raise (Failure err)
+      
+      (* SIfElse *)
+
+      | IfElse (cond, then_stmt, else_stmt) ->
+        let ((t1, cond'), env1) = check_expr env cond in
+        let (then_stmt', env2) = check_stmt_list env1 then_stmt in
+        let (else_stmt', env3) = check_stmt_list env2 else_stmt in
+        let err = "illegal if-else statement " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond ^
+                   " " ^ "in " ^ string_of_stmt_list then_stmt ^
+                   " " ^ "in " ^ string_of_stmt_list else_stmt
+        in
+        if t1 = Bool then
+          (SIfElse( (t1, cond'), then_stmt', else_stmt' ), env3)
+        else
+          raise (Failure err)
+      
+      (* While *)
+
+      | While (cond, body) ->
+        let ((t1, cond'), env1) = check_expr env cond in
+        let (body', env2) = check_stmt_list env1 body in
+        let err = "illegal while loop " ^
+                  string_of_typ t1 ^ " " ^ "in " ^ string_of_expr cond ^
+                   " " ^ "in " ^ string_of_stmt_list body
+        in
+        if t1 = Bool then
+          (SWhile((t1, cond'), body'), env2)
+        else
+          raise (Failure err)
+
+
+
+
       | _ -> failwith "not supported"
   
   in
