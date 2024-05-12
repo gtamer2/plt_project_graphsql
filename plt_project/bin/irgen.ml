@@ -203,22 +203,18 @@ let translate stmt_list =
   in *)
 
   let lookup_var n vmap gmap = 
-    match StringMap.find_opt n vmap with
-    | Some v -> v
-    | None -> StringMap.find n gmap (* will throw error if fails to find *)
-      (* (match StringMap.find_opt n gmap with
-      | Some v -> v
-      | None -> raise (Invalid_argument "Variable not defined -- lookup error")) *)
+    try StringMap.find n vmap with
+    Not_found -> StringMap.find n gmap
   in
 
-  (* let lookup_var_asn n vmap gmap e' = 
+  let lookup_var_asn n vmap gmap e' = 
     match StringMap.find_opt n vmap with
     | Some v -> v
     | None ->
       (match StringMap.find_opt n gmap with
       | Some v -> v
       | None -> e') (* malloc and assign the var to it *)
-  in *)
+  in
 
   (* takes in sexpr (unified_type, sx) and generate llvm code for expr*)
   let rec build_expr builder (t, e) vmap gmap = match e with
@@ -252,9 +248,11 @@ let translate stmt_list =
           v -> v
         | _ -> raise (Invalid_argument "variable not found - var")) var builder), vmap, gmap
     | SAsn (s, e) -> let e', vmap', gmap' = build_expr builder e vmap gmap in
-      (* let llval = lookup_var_asn s vmap' gmap' e' in *)
-      let vmap'' = StringMap.add s e' vmap' in
-      ignore(L.build_store e' e' builder); (e', vmap'', gmap)
+      let llval = (match (lookup_var_asn s vmap') with
+          Some v -> v
+        | None -> L.build_alloca (ltype_of_typ t) s builder) in
+      let vmap'' = StringMap.add s llval vmap' in
+      ignore(L.build_store e' llval builder); (e', vmap'')
     (* | SUniop of uniop * sexpr *)
     
     (* | SGraph sgraph_elements ->
