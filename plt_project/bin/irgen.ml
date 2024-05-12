@@ -14,7 +14,7 @@ let translate stmt_list =
   let the_module = L.create_module context "GraphSQL" in 
 
   let i32_t = L.i32_type context in 
-  let i1_t = L.i32_type context in
+  let i1_t = L.i1_type context in
   let builder = L.builder context in
 
     (* Return the LLVM type for a MicroC type *)
@@ -46,8 +46,11 @@ let translate stmt_list =
   let rec build_expr builder (t, e) vmap = match e with
     | SLit i -> (L.const_int i32_t i), vmap
     | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0), vmap
-    (* | SUniop (op, e1) -> *)
-
+    | SUniop (op, e1) -> let e1', vmap1 = build_expr builder e1 vmap in
+      begin match op with
+        | A.Not -> (L.build_not e1' "bool_tmp" builder), vmap1
+        | _ -> raise (Invalid_argument "operation not supported")
+      end
     | SBinop (e1, op, e2) ->
       let e1', vmap1 = build_expr builder e1 vmap in
       let e2', vmap2 = build_expr builder e2 vmap1 in
