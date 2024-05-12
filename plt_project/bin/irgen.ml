@@ -79,6 +79,36 @@ let create_graph_element context builder graph_element_t element tag =
   ignore (L.build_store element payload_ptr builder);
   ge
 
+
+ (* Convert "sgraph_elements" which is a list of sgraph_elements into a list of element_ptrs *)
+let convert_sgraph_elements_to_ptrs context builder sgraph_elements vmap =
+  let vertex_type = vertex_type context in
+  let edge_type = edge_type context vertex_type in
+  let rec convert_element_to_ptr elem = match snd elem with
+    | SVertex { sid = id } -> 
+      let is_vertex_in_vmap = StringMap.mem id vmap in 
+      begin match is_vertex_in_vmap with 
+      | false -> 
+        let new_vertex_ptr = create_vertex context builder id vertex_type in 
+        StringMap.add id new_vertex_ptr vmap; (* Add the new vertex pointer with id as the key *)
+        new_vertex_ptr
+      | true ->
+        StringMap.find id vmap
+      end
+      
+    | SEdge { ssource = source; starget = target; sweight = weight } ->
+      begin
+        match StringMap.find_opt source vmap, StringMap.find_opt target vmap with
+        | Some source_ptr, Some target_ptr ->
+          create_edge context builder source_ptr target_ptr weight edge_type
+        | _ ->
+          raise (Invalid_argument "Source or target vertex not found in the map")
+      end
+    | _ -> raise (Invalid_argument "Graph element has to be a Vertex or an Edge")
+  in
+  List.map convert_element_to_ptr sgraph_elements
+
+
 let build_initial_graph context builder graph_type graph_element_type =
   let graph = L.build_malloc graph_type "graph" builder in
   let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
@@ -172,14 +202,14 @@ let translate stmt_list =
       with Not_found -> None
   in *)
 
-let lookup n vmap gmap = 
-  match StringMap.find_opt n vmap with
-  | Some v -> v
-  | None ->
-    (match StringMap.find_opt n gmap with
+  let lookup n vmap gmap = 
+    match StringMap.find_opt n vmap with
     | Some v -> v
-    | None -> raise (Invalid_argument "variable not found"))
-in
+    | None ->
+      (match StringMap.find_opt n gmap with
+      | Some v -> v
+      | None -> raise (Invalid_argument "variable not found"))
+  in
 
   (* takes in sexpr (unified_type, sx) and generate llvm code for expr*)
   let rec build_expr builder (t, e) vmap gmap = match e with
@@ -216,18 +246,42 @@ in
       ignore(L.build_store e' llval builder); (e', vmap'', gmap)
     (* | SUniop of uniop * sexpr *)
     
-    | SGraph sgraph_elements ->
+    (* | SGraph sgraph_elements ->
       let graph = build_initial_graph builder in
-      List.fold_left (fun g elem -> add_element_to_graph context builder g elem) graph graph_elements, vmap, gmap
-
-      (* add_element_to_graph context builder graph graph_element_type element_ptr *)
-
-      (* update gmap *)
-
-      (* return graph_ptr, vmap', gmap' *)
+      List.fold_left (fun g elem -> add_element_to_graph context builder g elem) graph graph_elements, vmap, gmap *)
 
 
-    (* | SGraphAsn (gname, sexpr) -> *)
+    (* add_element_to_graph context builder graph graph_element_type element_ptr *)
+    (* update gmap *)
+    (* return graph_ptr, vmap', gmap' *)
+
+    | SGraph sgraph_elements ->
+      let graph = build_initial_graph context builder (graph_type context (graph_element_type context vertex_type edge_type)) (graph_element_type context vertex_type edge_type) in
+      
+      (* convert sgraph_elements into element_ptrs, then use list.fold_left *)
+      let sgraph_elem_ptr = convert_sgraph_elements_to_ptrs context builder sgraph_elements vmap in
+
+      let graph', _, _ = List.fold_left (fun (g, vmap', gmap') elem ->
+        
+        let g' = add_element_to_graph context builder g graph_element_type elem in 
+        (g',vmap',gmap')
+
+      ) (graph, vmap, gmap) sgraph_elem_ptr in
+      graph', vmap, gmap
+
+      (* Code to check if gname is in gmap -- Ignore *)
+      (* let is_graph_in_gmap = Stringmap.mem gname gmap in
+      begin match is_graph_in_gmap with
+        | false ->
+        | true -> 
+      end *)
+
+    (* TODO - expr can give a non graph output, do not add to gmap in that case. Low Priority*)
+    | SGraphAsn (gname, sexpr) ->
+      let graph', vmap', gmap' = build_expr builder (Int,sexpr) vmap gmap in (*Not sure how to add GraphType here, just using Int as a dummy*)
+      (* Syntax would be GraphType(sgraph_element list) with a relevant "sgraph_element list" *)
+      let gmap'' = StringMap.add gname graph' gmap' in
+      graph', vmap', gmap''
 
     | _ -> raise (Invalid_argument "expression type not supported")
   in
