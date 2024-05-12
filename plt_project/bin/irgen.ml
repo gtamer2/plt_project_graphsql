@@ -300,4 +300,3 @@ let translate stmt_list =
   let _ = L.build_ret (L.const_int i32_t 0) builder in
 
   the_module
-
