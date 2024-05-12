@@ -14,11 +14,13 @@ let translate stmt_list =
   let the_module = L.create_module context "GraphSQL" in 
 
   let i32_t = L.i32_type context in 
+  let i1_t = L.i32_type context in
   let builder = L.builder context in
 
     (* Return the LLVM type for a MicroC type *)
   let ltype_of_typ = function
-    Int   -> i32_t
+      Int   -> i32_t
+    | Bool -> i1_t
   in
 
   (* define the main function & program entry point *)
@@ -43,6 +45,9 @@ let translate stmt_list =
 
   let rec build_expr builder (t, e) vmap = match e with
     | SLit i -> (L.const_int i32_t i), vmap
+    | SBoolLit b  -> L.const_int i1_t (if b then 1 else 0), vmap
+    (* | SUniop (op, e1) -> *)
+
     | SBinop (e1, op, e2) ->
       let e1', vmap1 = build_expr builder e1 vmap in
       let e2', vmap2 = build_expr builder e2 vmap1 in
@@ -57,6 +62,8 @@ let translate stmt_list =
         | A.Lt -> (L.build_icmp L.Icmp.Slt e1' e2' "eq" builder), vmap2
         | A.Gteq -> (L.build_icmp L.Icmp.Sge e1' e2' "eq" builder), vmap2
         | A.Lteq -> (L.build_icmp L.Icmp.Sle e1' e2' "eq" builder), vmap2
+        | A.And -> (L.build_and e1' e2' "bool_tmp" builder), vmap2
+        | A.Or ->  (L.build_or e1' e2' "bool_tmp" builder),  vmap2
         | _ -> raise (Invalid_argument "operation not supported")
       end
     | SVar var -> (L.build_load (match (lookup var vmap) with 
