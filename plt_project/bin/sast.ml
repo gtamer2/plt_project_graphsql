@@ -1,5 +1,3 @@
-(* Semantically-checked Abstract Syntax Tree and functions for printing it *)
-
 open Ast  
 
 (* TYPES - START *)
@@ -7,12 +5,12 @@ type graph_element_type =
   | VertexType
   | EdgeType
 
-type unified_type = 
+(* type unified_type = 
   | Int
   | Bool
   | Float
   | String
-  | GraphType of graph_element_type list
+  | GraphType of graph_element_type list *)
 
 (* SEMANTIC AST - START *)
 type svertex = {
@@ -29,9 +27,6 @@ type sgraph_element = graph_element_type * sgraph_element_x
 and sgraph_element_x =
   | SVertex of svertex
   | SEdge of sedge
-
-
-type vdecl = unified_type * string
 
 type sexpr = unified_type * sx
 and sx = 
@@ -54,7 +49,17 @@ type sstmt =
   | SIfElse of sexpr * sstmt list * sstmt list
   | SWhile of sexpr * sstmt list
   | SFor of sexpr * sexpr * sexpr * sstmt list
-  | SFunctionCreation of string * vdecl list * sstmt list * unified_type
+
+type sfunc_def = {
+  srtyp: unified_type;
+  sfname: string;
+  sformals: vdecl list;
+  sbody: sstmt list;
+}
+
+type sstmt_list = sstmt list 
+
+type sprogram = sstmt_list * sfunc_def list
 
 let get_graph_sx sgraphexpr = 
   match sgraphexpr with 
@@ -67,10 +72,11 @@ let string_of_typ t =
   | Bool -> "Bool"
   | Float -> "Float"
   | String -> "String"
-  | GraphType gts -> 
-      "GraphType[" ^ String.concat ", " (List.map (function
+  | Graph gts -> 
+      "GraphType[TODO"
+      (* "GraphType[" ^ String.concat ", " (List.map (function
         | VertexType -> "Vertex"
-        | EdgeType -> "Edge") gts) ^ "]"
+        | EdgeType -> "Edge") gts) ^ "]" *)
   end
 
 let rec string_of_sexpr (t, e) =
@@ -103,6 +109,7 @@ let rec string_of_sexpr (t, e) =
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
     | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname ^ ", Graph([" ^ String.concat ", " (List.map string_of_sgraph_element (get_graph_sx sgraph)) ^ "])"
     | SFunctionCall(fname, args) -> "FunctionCall: " ^ fname ^ "(" ^ String.concat ", " (List.map string_of_sexpr args) ^ ")"
+    | Return(e) -> "Return(" ^ string_of_sexpr e ^ ")"
     end
   ) ^ ")"
 
@@ -128,7 +135,3 @@ and string_of_sstmt = function
   | SIfElse (sexpr, sstmt_list_1, sstmt_list_2) -> string_of_sexpr sexpr ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list_2) ^ "}\n" ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list_2) ^ "}\n"
   | SWhile (sexpr, sstmt_list) -> string_of_sexpr sexpr ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
   | SFor (sexpr1, sexpr2, sexpr3, sstmt_list) -> string_of_sexpr sexpr1 ^ string_of_sexpr sexpr2 ^ string_of_sexpr sexpr3 ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
-  | SFunctionCreation (fname, fargs, sstmt_list, return_type) -> "Function " ^ fname ^ " Function args TODO"
-    
-
-  

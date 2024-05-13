@@ -101,7 +101,15 @@ stmt:
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
 
 function_declaration:
-    | DEFINE FUNCTION typ VARIABLE LP formals_opt RP LC stmt_list RC {FunctionCreation($4, $6, $9, $3)}
+    DEFINE FUNCTION typ VARIABLE LP formals_opt RP LC stmt_list RC
+    {
+        {
+            fname=$4;
+            formals=$6;
+            body=$9;
+            rtyp=$3;
+        }
+    }
 
 elif_stmt_list:
     | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}

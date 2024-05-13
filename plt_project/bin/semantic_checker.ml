@@ -7,6 +7,7 @@ open Sast
 module BindMap = Map.Make(String)
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
+module StringMap = Map.Make(String)
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
@@ -83,20 +84,48 @@ let get_common_sgraph_elements graph1_elements graph2_elements =
   ) common_elements in 
   adjusted_elements
 
-let check init_program = 
+let check (statements, functions) = 
 
   let init_env = {
     bindings = BindMap.empty;
     vars = VarMap.empty;
     graphs = GraphMap.empty;
   } in
+  let check_assign lvaluet rvaluet err =
+    if lvaluet = rvaluet then lvaluet else raise (Failure err)
+  in
 
   (* Return a variable from our symbol table *)
   let type_of_identifier s bindings =
     try BindMap.find s bindings
     with Not_found -> raise (Failure ("undeclared identifier " ^ s))
   in
+
+
+  let func_map = StringMap.empty in
+
+  let add_func map fd =
+    let built_in_err = "function " ^ fd.fname ^ " may not be defined"
+    and dup_err = "duplicate function " ^ fd.fname
+    and make_err er = raise (Failure er)
+    and n = fd.fname (* Name of the function *)
+    in match fd with (* No duplicate functions or redefinitions of built-ins *)
+      _ when StringMap.mem n func_map -> make_err built_in_err
+    | _ when StringMap.mem n map -> make_err dup_err
+    | _ ->  StringMap.add n fd map
+  in
+
+  let function_decls = List.fold_left add_func func_map functions 
+
+  in
   
+  (* Return a function from our symbol table *)
+  let find_func s =
+    try StringMap.find s function_decls
+    with Not_found -> raise (Failure ("unrecognized function " ^ s))
+  
+  in
+
   (* return a semantically checked expression, which also constructs the environment *)
   let rec check_expr env = function
       Lit l -> ((Int, SLit l), env)
@@ -108,12 +137,12 @@ let check init_program =
         | Bool -> ((Bool, SVar var), env)
         | Float -> ((Float, SVar var), env)
         | String -> ((String, SVar var), env)
-        | GraphType var_type -> ((GraphType var_type, SVar var), env)
-        | Int -> ((Int, SVar var), env)
+        | Graph var_type -> ((Graph var_type, SVar var), env)
+        (* | Int -> ((Int, SVar var), env)
         | Bool -> ((Bool, SVar var), env)
         | Float -> ((Float, SVar var), env)
         | String -> ((String, SVar var), env)
-        | GraphType var_type -> ((GraphType var_type, SVar var), env)
+        | GraphType var_type -> ((GraphType var_type, SVar var), env) *)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
     | Uniop (op, e1) ->
@@ -126,8 +155,6 @@ let check init_program =
       let ((t1, e1'), env1) = check_expr env e1 in
       let ((t2, e2'), env2) = check_expr env1 e2 in
       let err = "illegal binary operator " ^
-                (* string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
-                string_of_typ (t2) ^ " in " ^ string_of_expr e *)
                 string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
                 string_of_typ (t2) ^ " in " ^ string_of_expr e
       in
@@ -151,13 +178,6 @@ let check init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
-
-
-    (* | Seq (e1, e2) -> 
-      let se1, env1 = check_expr env e1 in
-      let se2, env2 = check_expr env1 e2 in
-      (((* what type is an seq*), SSeq (se1, se2)), env2) *)
-    
     | Graph (graph_elements) ->
       (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
       (* If one of the graph_elements is not valid object Vertex or Edge, this operation will fail *)
@@ -171,7 +191,7 @@ let check init_program =
       let sexprs = List.map snd checked_graph_elements in
   
       (* create the return tuple and return  *)
-      ((GraphType types, SGraph checked_graph_elements), env)
+      ((Graph types, SGraph checked_graph_elements), env)
     
     | GraphAccess(graphname, fieldname) -> 
       let binding_type = BindMap.find graphname env.bindings in 
@@ -322,13 +342,19 @@ let check init_program =
         let env2 = { env1 with bindings = BindMap.add var t env1.bindings } in 
         let env3 = { env2 with vars = VarMap.add var (t, e') env2.vars } in
         ((t, SAsn(var, (t, e'))), env3)
-    
-    | FunctionCall(name, args) ->
-      (* each arg in args_list is of form ((t, e'), env1) *)
-      (* so to get list of arg_types, we need to take first of first for every element *)
-      let arg_list = List.map (fun arg -> check_expr env arg) args in
-      let arg_types_list = List.map (fun arg -> fst (fst (arg))) arg_list in
-      ((arg_types_list, SFunctionCall(name, arg_list)), env)
+    | FunctionCall(fname, args) as call ->
+      let fd = find_func fname in
+      let param_length = List.length fd.formals in
+      if List.length args != param_length then
+        raise (Failure ("expecting " ^ string_of_int param_length ^
+                        " arguments in " ^ string_of_expr call))
+      else let check_call (ft, _) e =
+        let (et, e') = check_expr env e in
+        let err = "illegal argument found."
+        in (check_assign ft (fst et) err, e')
+      in
+      let args_list = List.map2 check_call fd.formals args
+      in (fd.return_type, SFunctionCall(name, args_list)), env
     | _ -> failwith "expression not supported"
       in
 
@@ -401,10 +427,6 @@ let check init_program =
           (SWhile((t1, cond'), body'), env2)
         else
           raise (Failure err)
-      | FunctionCreation(name, args, body, return_type) ->
-        let arg_list = List.map (fun arg -> check_expr env arg) args in
-        let (body', env') = check_stmt_list env body in
-        (SFunctionCreation(name, arg_list, body', return_type), env')
       | _ -> failwith "Statement not supported"
   
   in
