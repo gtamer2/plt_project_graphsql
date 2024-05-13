@@ -70,11 +70,20 @@ stmt:
     | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
     | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
-    | FUNCTION VARIABLE LP RP LC stmt_list RC {FunctionCreation($2, $6)}
+    // | FUNCTION VARIABLE LP RP LC stmt_list RC {FunctionCreation($2, $6)}
 
 elif_stmt_list:
     | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}
     | ELIF LP expr RP LC stmt_list RC elif_stmt_list {($3, $6)::$8}
+
+/* args_opt*/
+args_opt:
+  /*nothing*/ { [] }
+  | args { $1 }
+
+args:
+  expr  { [$1] }
+  | expr COMMA args { $1::$3 }
 
 expr:    
     | LITERAL    { Lit($1) } //done
@@ -82,7 +91,7 @@ expr:
     | BLIT     { BoolLit($1) }
     | VARIABLE ASSIGN expr {Asn($1, $3)} //done
     | VARIABLE { Var($1) } //done
-    | VARIABLE LP RP{FunctionCall($1) } 
+    | VARIABLE LP args_opt RP{FunctionCall($1, $3) } 
     | LAMBDA COLON LP expr RP {LambaFunction($4)} 
     | RETURN expr {Return($2) }
     | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?

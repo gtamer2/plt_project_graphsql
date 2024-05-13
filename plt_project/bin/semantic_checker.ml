@@ -329,8 +329,15 @@ let check init_program =
         let env2 = { env1 with bindings = BindMap.add var t env1.bindings } in 
         let env3 = { env2 with vars = VarMap.add var (t, e') env2.vars } in
         ((t, SAsn(var, (t, e'))), env3)
-
-    | _ -> failwith "not supported"
+    
+    | FunctionCall(name, args) ->
+      (* Short circuit to true *)
+      if name = "print" then
+        let (t, e), env1 = check_expr env (List.hd args) in
+        ((t, SFunctionCall(name, [(t, e)])), env1)
+      else
+        failwith "Function not supported"
+    | _ -> failwith "expression not supported"
       in
 
   let rec check_stmt_list env = function
@@ -410,10 +417,7 @@ let check init_program =
         else
           raise (Failure err)
 
-
-
-
-      | _ -> failwith "not supported"
+      | _ -> failwith "Statement not supported"
   
   in
   check_stmt_list init_env init_program
