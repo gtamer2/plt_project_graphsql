@@ -11,6 +11,7 @@ let translate stmt_list =
 
   (* =================== PRIMITIVE TYPE TRANSLATIONS =================== *)
   let i32_t = L.i32_type context in 
+  let i8_t = L.i8_type context in
   let i1_t = L.i1_type context in
   let builder = L.builder context in
 
@@ -21,8 +22,8 @@ let translate stmt_list =
   in
 
   (* =================== GRAPH TYPE TRANSLATIONS =================== *)
-  let vertex_type = L.pointer_type (L.i8_type context)
-  
+  let vertex_type = L.struct_type context [| L.pointer_type i8_t |] 
+
   in 
 
   (* let graph_element_type context vertex_type =
@@ -30,25 +31,24 @@ let translate stmt_list =
       L.i32_type context;   (* Tag to indicate type: 0 for vertex, 1 for edge *)
       L.pointer_type (L.i8_type context)  (* Pointer to data so the size is dynamic *)
     |]
-  
+
   in  *)
 
   let graph_type =
     L.struct_type context [|
       L.array_type vertex_type 10;  (* array of pointers to graph elements *)
-      L.i32_type context; (* counter to keep track of the number of elements *)
+      i32_t; (* counter to keep track of the number of elements *)
     |]
-  
+
   in
 
   (* =================== GRAPH CREATION FUNCTIONS =================== *)
-  (* let create_vertex context builder vertex_id vertex_type =
+  let create_vertex builder vertex_id =
     (* allocate memory for vertex *)
     let vertex_ptr = L.build_malloc vertex_type "vertex" builder in
   
     (* allocate memory for id (a string) and copy the id into it. *)
-    let id_len = String.length vertex_id + 1 in (* +1 for null terminator *)
-    let id_ptr = L.build_array_malloc (L.i8_type context) (L.const_int (L.i32_type context) id_len) "vertex_id" builder in
+    let id_ptr = L.build_malloc i8_t "vertex_id" builder in
     ignore (L.build_store (L.build_global_stringptr vertex_id "tmp_id" builder) id_ptr builder);
   
     (* Set the vertex's ID field to point to the allocated string. *)
@@ -57,20 +57,14 @@ let translate stmt_list =
   
     vertex_ptr
 
-  in  *)
+  in 
 
   let build_empty_graph builder =
+    (* Create an empty struct *)
     let graph = L.build_malloc graph_type "graph" builder in
-    let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
-    let zero = L.const_int (L.i32_type context) 0 in
-  
-    (* Initialize array of element pointers to null *)
-    (* for i = 0 to 9 do
-      let elem_ptr_ptr = L.build_gep elements_ptr [| L.const_int (L.i32_type context) i |] "elem_ptr" builder in
-      ignore (L.build_store (L.const_null vertex_type) elem_ptr_ptr builder);
-    done; *)
-  
+    
     (* Initialize the element count to 0 *)
+    let zero = L.const_int (L.i32_type context) 0 in
     let count_ptr = L.build_struct_gep graph 1 "count" builder in
     ignore (L.build_store zero count_ptr builder);
   
@@ -97,21 +91,30 @@ let translate stmt_list =
 
   in *)
 
-  (* let add_element_to_graph context builder graph graph_element_type element_ptr =
+  let add_vertex_to_graph builder graph vertex_id =
+    (* 0. Check if the graph is full *)
+    (* TODO LATER *)
+
+    (* 1. Create a new vertex *)
+    let new_vertex_ptr = create_vertex builder vertex_id in
+  
+    (* 2. Add ptr to new vertex to graph *)
     let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
     let count_ptr = L.build_struct_gep graph 1 "count" builder in
     let count = L.build_load count_ptr "count" builder in
-    let elem_ptr_ptr = L.build_gep elements_ptr [| count |] "elem_ptr" builder in
-  
-    ignore (L.build_store element_ptr elem_ptr_ptr builder);
+    let ptr_to_last_elem = L.build_gep elements_ptr [| count |] "ptr_to_last_elem" builder in
+    ignore (L.build_store new_vertex_ptr ptr_to_last_elem builder);
     
-    (* Increment the count of elements in the graph *)
-    let new_count = L.build_add count (L.const_int (L.i32_type context) 1) "new_count" builder in
-    ignore (L.build_store new_count count_ptr builder);
+    (* 3. Increment the count of elements in the graph *)
+    let one = L.const_int i32_t 1 in
+    let count_plus_one = L.build_add count one "count_plus_one" builder in
+    ignore (L.build_store count_plus_one count_ptr builder);
   
+    (* 4. On success, return pointer to graph *)
     graph
 
-  in *)
+  in
+
   (* =================== MAIN FXN & PROGRAM ENTRY POINT =================== *)
   let main_type = L.function_type i32_t [||] in
   let main_func = L.define_function "main" main_type the_module in
@@ -173,24 +176,21 @@ let translate stmt_list =
       ignore(L.build_store e' llval builder); (e', vmap'')
     | SGraph sgraph_elements ->
       let graph = build_empty_graph builder in
-      (* let sgraph_elem_ptrs = convert_sgraph_elements_to_ptrs context builder sgraph_elements vmap in
-      let add_element_wrapper = (fun (g, vmap') elem ->
-        let g' = add_element_to_graph context builder g graph_element_type elem in 
-        (g',vmap')
-      ) in
-      let graph', _, _ = List.fold_left add_element_wrapper (graph, vmap) sgraph_elem_ptrs in
-      graph', vmap  *)
+      let graph_element_vals = List.map (fun elem -> snd elem) sgraph_elements in
+      let vertex_ids = List.map (fun elem -> match elem with
+          | SVertex { sid = id } -> id
+          | _ -> raise (Invalid_argument "Graph element has to be a Vertex")
+        ) graph_element_vals in
+      List.iter (fun elem -> ignore (add_vertex_to_graph builder graph elem)) vertex_ids;
       graph, vmap
     | SGraphAsn (gname, sexpr) ->
-      let graph, e' = build_expr builder (t,sexpr) vmap in (*Not sure how to add GraphType here, just using Int as a dummy*)
+      let graph, e' = build_expr builder (t,sexpr) vmap in
       let mem_location = begin match (lookup gname vmap) with
         Some v -> v
         | None -> L.build_alloca graph_type gname builder
       end in
       let vmap' = StringMap.add gname graph vmap in
       ignore(L.build_store graph mem_location builder); (graph, vmap')
-      
-      (* graph, vmap' *)
     | _ -> raise (Invalid_argument "expression type not supported")
   in
 
@@ -200,8 +200,6 @@ let translate stmt_list =
   in 
 
   List.fold_left build_sstmt (builder, StringMap.empty) stmt_list;
-  (* List.iter (fun stmt -> ignore (build_sstmt builder stmt)) stmt_list; *)
-  (* add a return to the main function *)
   let _ = L.build_ret (L.const_int i32_t 0) builder in
 
   the_module

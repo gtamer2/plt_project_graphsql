@@ -1,31 +1,44 @@
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Initial Expression: 
-GraphAsn: g1[
-Graph([vertex:vertex1, vertex:vertex2])] 
-GraphAsn: g2[
-Graph([vertex:vertex3, vertex:vertex4])] 
-GraphAsn: g3[
- GraphQuerying...g1uniong2] g3 
-Evaluating expression: 
-GraphAsn: g1[
-Graph([vertex:vertex1, vertex:vertex2])]
-GraphAsn constructor: g1 = 
-Graph([vertex:vertex1, vertex:vertex2])
-Evaluating expression: 
-GraphAsn: g2[
-Graph([vertex:vertex3, vertex:vertex4])]
-GraphAsn constructor: g2 = 
-Graph([vertex:vertex3, vertex:vertex4])
-Evaluating expression: 
-GraphAsn: g3[
- GraphQuerying...g1uniong2]
-GraphAsn constructor: g3 = 
- GraphQuerying...g1uniong2
-we're hereEvaluating expression: 
- GraphQuerying...g1uniong2
-Union/intersect updated in the map with variable g3
-Evaluating expression: g3
-Result: true
+; ModuleID = 'GraphSQL'
+source_filename = "GraphSQL"
+
+@tmp_id = private unnamed_addr constant [8 x i8] c"vertex1\00", align 1
+@tmp_id.1 = private unnamed_addr constant [8 x i8] c"vertex2\00", align 1
+
+define i32 @main() {
+entry:
+  %malloccall = tail call i8* @malloc(i32 ptrtoint ({ [10 x { i8* }], i32 }* getelementptr ({ [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* null, i32 1) to i32))
+  %graph = bitcast i8* %malloccall to { [10 x { i8* }], i32 }*
+  %count = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 1
+  store i32 0, i32* %count, align 4
+  %malloccall1 = tail call i8* @malloc(i32 ptrtoint ({ i8* }* getelementptr ({ i8* }, { i8* }* null, i32 1) to i32))
+  %vertex = bitcast i8* %malloccall1 to { i8* }*
+  %vertex_id = tail call i8* @malloc(i32 ptrtoint (i8* getelementptr (i8, i8* null, i32 1) to i32))
+  store i8* getelementptr inbounds ([8 x i8], [8 x i8]* @tmp_id, i32 0, i32 0), i8* %vertex_id, align 8
+  %id = getelementptr inbounds { i8* }, { i8* }* %vertex, i32 0, i32 0
+  store i8* %vertex_id, i8** %id, align 8
+  %elements = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 0
+  %count3 = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 1
+  %count4 = load i32, i32* %count3, align 4
+  %ptr_to_last_elem = getelementptr [10 x { i8* }], [10 x { i8* }]* %elements, i32 %count4
+  store { i8* }* %vertex, [10 x { i8* }]* %ptr_to_last_elem, align 8
+  %count_plus_one = add i32 %count4, 1
+  store i32 %count_plus_one, i32* %count3, align 4
+  %malloccall5 = tail call i8* @malloc(i32 ptrtoint ({ i8* }* getelementptr ({ i8* }, { i8* }* null, i32 1) to i32))
+  %vertex6 = bitcast i8* %malloccall5 to { i8* }*
+  %vertex_id8 = tail call i8* @malloc(i32 ptrtoint (i8* getelementptr (i8, i8* null, i32 1) to i32))
+  store i8* getelementptr inbounds ([8 x i8], [8 x i8]* @tmp_id.1, i32 0, i32 0), i8* %vertex_id8, align 8
+  %id9 = getelementptr inbounds { i8* }, { i8* }* %vertex6, i32 0, i32 0
+  store i8* %vertex_id8, i8** %id9, align 8
+  %elements10 = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 0
+  %count11 = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 1
+  %count12 = load i32, i32* %count11, align 4
+  %ptr_to_last_elem13 = getelementptr [10 x { i8* }], [10 x { i8* }]* %elements10, i32 %count12
+  store { i8* }* %vertex6, [10 x { i8* }]* %ptr_to_last_elem13, align 8
+  %count_plus_one14 = add i32 %count12, 1
+  store i32 %count_plus_one14, i32* %count11, align 4
+  %g1 = alloca { [10 x { i8* }], i32 }, align 8
+  store { [10 x { i8* }], i32 }* %graph, { [10 x { i8* }], i32 }* %g1, align 8
+  ret i32 0
+}
+
+declare noalias i8* @malloc(i32)

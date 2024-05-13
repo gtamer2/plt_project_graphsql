@@ -1,22 +1,17 @@
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
-Processing all stmts
 SAST: 
+sprogram_string: 
 (Bool : terr = (Bool : true));
 (Bool : eeer = (Bool : false));
-(Bool : er = (Bool : ((Bool : terr) && (Bool : (! (Bool : eeer))))));
-(Bool : iffy = (Bool : ((Bool : (! (Bool : terr))) || (Bool : er))));
-(Bool : fief = (Bool : ((Float : 3.5) > (Int : 1))));
+(Bool : er = (Bool : (Bool : terr) && (Bool : (! (Bool : eeer)))));
+(Bool : iffy = (Bool : (Bool : (! (Bool : terr))) || (Bool : er)));
+(Bool : fief = (Bool : (Float : 3.5) > (Int : 1)));
 (Int : eeeeee = (Int : 33));
-(Bool : lived = (Bool : ((Int : 1) <= (Int : eeeeee))));
-(Bool : insect = (Bool : (! (Bool : ((Int : 3) == (Int : eeeeee))))));
+(Bool : lived = (Bool : (Int : 1) <= (Int : eeeeee)));
+(Bool : insect = (Bool : (! (Bool : (Int : 3) == (Int : eeeeee)))));
 (Bool : e = (Bool : lived));
-
-[e -> (Bool : lived), eeeeee -> 33, eeer -> (Bool : false), er -> (Bool : ((Bool : terr) && (Bool : (! (Bool : eeer))))), fief -> (Bool : ((Float : 3.5) > (Int : 1))), iffy -> (Bool : ((Bool : (! (Bool : terr))) || (Bool : er))), insect -> (Bool : (! (Bool : ((Int : 3) == (Int : eeeeee))))), lived -> (Bool : ((Int : 1) <= (Int : eeeeee))), terr -> (Bool : true)]
+ 
+svarmap_string: 
+[e -> (Bool : lived), eeeeee -> 33, eeer -> (Bool : false), er -> (Bool : (Bool : terr) && (Bool : (! (Bool : eeer)))), fief -> (Bool : (Float : 3.5) > (Int : 1)), iffy -> (Bool : (Bool : (! (Bool : terr))) || (Bool : er)), insect -> (Bool : (! (Bool : (Int : 3) == (Int : eeeeee)))), lived -> (Bool : (Int : 1) <= (Int : eeeeee)), terr -> (Bool : true)]
+ 
+sbindmap_string: 
 [e -> Bool, eeeeee -> Int, eeer -> Bool, er -> Bool, fief -> Bool, iffy -> Bool, insect -> Bool, lived -> Bool, terr -> Bool]
