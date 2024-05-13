@@ -183,7 +183,7 @@ let translate stmt_list =
       List.iter (fun elem -> ignore (add_vertex_to_graph builder graph elem)) vertex_ids;
       graph, vmap
     | SGraphAsn (gname, sexpr) ->
-      let graph, e' = build_expr builder (t,sexpr) vmap in (*Not sure how to add GraphType here, just using Int as a dummy*)
+      let graph, e' = build_expr builder (t,sexpr) vmap in
       let mem_location = begin match (lookup gname vmap) with
         Some v -> v
         | None -> L.build_alloca graph_type gname builder
