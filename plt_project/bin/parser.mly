@@ -37,9 +37,13 @@
 %%
 
 program:
-  | function_declaration { $1 }
-  | stmt_list EOF { $1 }
+  decls EOF { $1}
 
+// first element is stmt_list, second element is fxns
+decls:
+   /* nothing */ { ([], []) }
+| stmt_list decls { (($1 :: fst $2), snd $2 )}
+| function_declaration decls {(fst $2 , ($1 :: snd $2))  }
 
 
 graph_element:
