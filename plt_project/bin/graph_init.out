@@ -8,6 +8,8 @@ entry:
   %elements = getelementptr inbounds { [10 x i8*], i32 }, { [10 x i8*], i32 }* %graph, i32 0, i32 0
   %count = getelementptr inbounds { [10 x i8*], i32 }, { [10 x i8*], i32 }* %graph, i32 0, i32 1
   store i32 0, i32* %count, align 4
+  %g = alloca { [10 x i8*], i32 }, align 8
+  store { [10 x i8*], i32 }* %graph, { [10 x i8*], i32 }* %g, align 8
   ret i32 0
 }
 

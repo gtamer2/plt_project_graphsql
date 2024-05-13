@@ -182,9 +182,15 @@ let translate stmt_list =
       graph', vmap  *)
       graph, vmap
     | SGraphAsn (gname, sexpr) ->
-      let graph, _ = build_expr builder (Int,sexpr) vmap in (*Not sure how to add GraphType here, just using Int as a dummy*)
+      let graph, e' = build_expr builder (t,sexpr) vmap in (*Not sure how to add GraphType here, just using Int as a dummy*)
+      let mem_location = begin match (lookup gname vmap) with
+        Some v -> v
+        | None -> L.build_alloca graph_type gname builder
+      end in
       let vmap' = StringMap.add gname graph vmap in
-      graph, vmap'
+      ignore(L.build_store graph mem_location builder); (graph, vmap')
+      
+      (* graph, vmap' *)
     | _ -> raise (Invalid_argument "expression type not supported")
   in
 
