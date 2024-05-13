@@ -3,30 +3,10 @@ source_filename = "GraphSQL"
 
 define i32 @main() {
 entry:
-  %malloccall = tail call i8* @malloc(i32 ptrtoint ({ [10 x { i32, i8* }*], i32 }* getelementptr ({ [10 x { i32, i8* }*], i32 }, { [10 x { i32, i8* }*], i32 }* null, i32 1) to i32))
-  %graph = bitcast i8* %malloccall to { [10 x { i32, i8* }*], i32 }*
-  %elements = getelementptr inbounds { [10 x { i32, i8* }*], i32 }, { [10 x { i32, i8* }*], i32 }* %graph, i32 0, i32 0
-  %elem_ptr = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 0
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr, align 8
-  %elem_ptr1 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 1
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr1, align 8
-  %elem_ptr2 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 2
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr2, align 8
-  %elem_ptr3 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 3
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr3, align 8
-  %elem_ptr4 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 4
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr4, align 8
-  %elem_ptr5 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 5
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr5, align 8
-  %elem_ptr6 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 6
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr6, align 8
-  %elem_ptr7 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 7
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr7, align 8
-  %elem_ptr8 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 8
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr8, align 8
-  %elem_ptr9 = getelementptr [10 x { i32, i8* }*], [10 x { i32, i8* }*]* %elements, i32 9
-  store { i32, i8* }* null, [10 x { i32, i8* }*]* %elem_ptr9, align 8
-  %count = getelementptr inbounds { [10 x { i32, i8* }*], i32 }, { [10 x { i32, i8* }*], i32 }* %graph, i32 0, i32 1
+  %malloccall = tail call i8* @malloc(i32 ptrtoint ({ [10 x i8*], i32 }* getelementptr ({ [10 x i8*], i32 }, { [10 x i8*], i32 }* null, i32 1) to i32))
+  %graph = bitcast i8* %malloccall to { [10 x i8*], i32 }*
+  %elements = getelementptr inbounds { [10 x i8*], i32 }, { [10 x i8*], i32 }* %graph, i32 0, i32 0
+  %count = getelementptr inbounds { [10 x i8*], i32 }, { [10 x i8*], i32 }* %graph, i32 0, i32 1
   store i32 0, i32* %count, align 4
   ret i32 0
 }

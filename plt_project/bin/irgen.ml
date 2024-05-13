@@ -21,23 +21,21 @@ let translate stmt_list =
   in
 
   (* =================== GRAPH TYPE TRANSLATIONS =================== *)
-  let vertex_type context = 
-    (* pointer to an array of char is used to handle strings *)
-    L.struct_type context [| L.pointer_type (L.i8_type context) |] 
+  let vertex_type = L.pointer_type (L.i8_type context)
   
   in 
 
-  let graph_element_type context vertex_type =
+  (* let graph_element_type context vertex_type =
     L.struct_type context [|
       L.i32_type context;   (* Tag to indicate type: 0 for vertex, 1 for edge *)
       L.pointer_type (L.i8_type context)  (* Pointer to data so the size is dynamic *)
     |]
   
-  in 
+  in  *)
 
-  let graph_type context graph_element_type =
+  let graph_type =
     L.struct_type context [|
-      L.array_type (L.pointer_type graph_element_type) 10;  (* array of pointers to graph elements *)
+      L.array_type vertex_type 10;  (* array of pointers to graph elements *)
       L.i32_type context; (* counter to keep track of the number of elements *)
     |]
   
@@ -61,18 +59,16 @@ let translate stmt_list =
 
   in  *)
 
-  let build_empty_graph context builder =
-    let graph_element_type_param = graph_element_type context vertex_type in
-    let graph_type_param = graph_type context graph_element_type_param in
-    let graph = L.build_malloc graph_type_param "graph" builder in
+  let build_empty_graph builder =
+    let graph = L.build_malloc graph_type "graph" builder in
     let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
     let zero = L.const_int (L.i32_type context) 0 in
   
     (* Initialize array of element pointers to null *)
-    for i = 0 to 9 do
+    (* for i = 0 to 9 do
       let elem_ptr_ptr = L.build_gep elements_ptr [| L.const_int (L.i32_type context) i |] "elem_ptr" builder in
-      ignore (L.build_store (L.const_null (L.pointer_type graph_element_type_param)) elem_ptr_ptr builder);
-    done;
+      ignore (L.build_store (L.const_null vertex_type) elem_ptr_ptr builder);
+    done; *)
   
     (* Initialize the element count to 0 *)
     let count_ptr = L.build_struct_gep graph 1 "count" builder in
@@ -176,7 +172,7 @@ let translate stmt_list =
       let vmap'' = StringMap.add s llval vmap' in
       ignore(L.build_store e' llval builder); (e', vmap'')
     | SGraph sgraph_elements ->
-      let graph = build_empty_graph context builder in
+      let graph = build_empty_graph builder in
       (* let sgraph_elem_ptrs = convert_sgraph_elements_to_ptrs context builder sgraph_elements vmap in
       let add_element_wrapper = (fun (g, vmap') elem ->
         let g' = add_element_to_graph context builder g graph_element_type elem in 
