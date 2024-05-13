@@ -92,8 +92,7 @@ let rec string_of_expr = function
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
   | GraphUpdate(gname, element) ->
     "\n Updating graph element" ^ string_of_graph_element element ^ "in graph: " ^ gname  
-  | FunctionCall(name, args) -> "\n" ^ "FunctionCall:TODO\n"
-  (* | FunctionCall(name, args) -> "\n" ^ "FunctionCall: " ^ name ^ "(" ^ String.concat ", " (List.map string_of_expr args) ^ ")" *)
+  | FunctionCall(name, args) -> "\n" ^ "FunctionCall: " ^ name ^ "(" ^ String.concat ", " (List.map string_of_expr args) ^ ")"
   | Return(expr) -> "RETURN: " ^ string_of_expr expr ^ " "	
   | LambaFunction(expr) -> "Lambda Function: " ^ string_of_expr expr ^ " "	
 
@@ -128,8 +127,7 @@ let rec string_of_stmt = function
   (* | Block(stmts) -> "TODO BLOCK "  *)
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
-  | FunctionCreation(name, body) -> "\n" ^ "FunctionCreation: TODO\n"
-  (* | FunctionCreation(name, body) -> "\n" ^ "FunctionCreation: TODO " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n" *)
+  | FunctionCreation(name, body) -> "\n" ^ "FunctionCreation: TODO " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
   
  and string_of_elif_stmt = function
 | [] -> ""
