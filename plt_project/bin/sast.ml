@@ -5,12 +5,12 @@ type graph_element_type =
   | VertexType
   | EdgeType
 
-(* type unified_type = 
+type unified_type = 
   | Int
   | Bool
   | Float
   | String
-  | GraphType of graph_element_type list *)
+  | GraphType of graph_element_type list
 
 (* SEMANTIC AST - START *)
 type svertex = {
@@ -72,7 +72,7 @@ let string_of_typ t =
   | Bool -> "Bool"
   | Float -> "Float"
   | String -> "String"
-  | Graph gts -> 
+  | GraphType gts -> 
       "GraphType[TODO"
       (* "GraphType[" ^ String.concat ", " (List.map (function
         | VertexType -> "Vertex"

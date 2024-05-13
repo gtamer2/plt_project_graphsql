@@ -137,7 +137,7 @@ let check (statements, functions) =
         | Bool -> ((Bool, SVar var), env)
         | Float -> ((Float, SVar var), env)
         | String -> ((String, SVar var), env)
-        | Graph var_type -> ((Graph var_type, SVar var), env)
+        | GraphType var_type -> ((GraphType var_type, SVar var), env)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
     | Uniop (op, e1) ->
@@ -186,7 +186,7 @@ let check (statements, functions) =
       let sexprs = List.map snd checked_graph_elements in
   
       (* create the return tuple and return  *)
-      ((Graph types, SGraph checked_graph_elements), env)
+      ((GraphType types, SGraph checked_graph_elements), env)
     
     | GraphAccess(graphname, fieldname) -> 
       let binding_type = BindMap.find graphname env.bindings in 

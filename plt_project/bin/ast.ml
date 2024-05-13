@@ -21,10 +21,7 @@ type unified_type =
   | Bool 
   | Float
   | String
-  | GraphElement of graph_element
-  | Graph of graph_element list
-
-type vdecl = unified_type * string
+  | GraphType of graph_element list
 
 type expr =
   | Lit of int
@@ -56,6 +53,8 @@ type stmt =
  elif_stmt = expr * stmt list
 
 type stmt_list = stmt list 
+
+type vdecl = unified_type * string
 
 type func_def = {
   rtyp: unified_type;
