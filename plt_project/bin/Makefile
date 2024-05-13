@@ -52,8 +52,8 @@ graphsql_compile.native:
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
 
-graph_init.out : graphsql graph_init.tb
-	./graphsql < graph_init.tb > graph_init.out
+graph_init.out : graphsql graph_init_empty.tb
+	./graphsql < graph_init_empty.tb > graph_init_empty.out
 
 graph_init2.out : graphsql graph_init2.tb
 	./graphsql < graph_init2.tb > graph_init2.out

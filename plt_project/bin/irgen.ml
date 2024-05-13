@@ -22,7 +22,7 @@ let translate stmt_list =
   in
 
   (* =================== GRAPH TYPE TRANSLATIONS =================== *)
-  let vertex_type = L.pointer_type i8_t
+  let vertex_type = L.struct_type context [| L.pointer_type i8_t |] 
 
   in 
 
@@ -63,14 +63,6 @@ let translate stmt_list =
     (* Create an empty struct *)
     let graph = L.build_malloc graph_type "graph" builder in
     
-    (* Initialize array of element pointers to null *)
-    let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
-    for i = 0 to 9 do
-      let llvm_i = L.const_int i32_t i in
-      let elem_ptr_ptr = L.build_gep elements_ptr [| llvm_i |] "elem_ptr" builder in
-      ignore (L.build_store (L.const_null vertex_type) elem_ptr_ptr builder);
-    done;
-
     (* Initialize the element count to 0 *)
     let zero = L.const_int (L.i32_type context) 0 in
     let count_ptr = L.build_struct_gep graph 1 "count" builder in
