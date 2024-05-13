@@ -69,9 +69,13 @@ let translate stmt_list =
         | A.Or ->  (L.build_or e1' e2' "bool_tmp" builder),  vmap2
         | _ -> raise (Invalid_argument "operation not supported")
       end
-    | SVar var -> (L.build_load (match (lookup var vmap) with 
-          Some v -> v
-        | None -> raise (Invalid_argument "variable not found")) var builder), vmap
+    | SVar var ->
+      let mem_location = begin match (lookup var vmap) with
+        Some v -> v
+        | None -> raise (Invalid_argument "variable not found")
+      end in
+      let load_name = ("load_tmp" ^ var) in
+      (L.build_load mem_location load_name builder), vmap
     | SAsn (s, e) -> let e', vmap' = build_expr builder e vmap in
       let llval = (match (lookup s vmap') with
           Some v -> v
