@@ -1,29 +1,122 @@
 module L = Llvm
 module A = Ast
 open Sast
-
 module StringMap = Map.Make(String)
 
-(* Helper function to check if a statement is an expression *)
-let is_expr = function
-  | SExpr _ -> true
-  | _ -> false
-
 let translate stmt_list =
+  (* =================== IMPORTANT GLOBAL STUFF =================== *)
   let context = L.global_context () in
   let the_module = L.create_module context "GraphSQL" in 
+  let gmap : L.llvalue StringMap.t = StringMap.empty in
 
+  (* =================== PRIMITIVE TYPE TRANSLATIONS =================== *)
   let i32_t = L.i32_type context in 
   let i1_t = L.i1_type context in
   let builder = L.builder context in
 
-    (* Return the LLVM type for a MicroC type *)
+  (* Return the LLVM type for a GraphSQL type *)
   let ltype_of_typ = function
       Int   -> i32_t
     | Bool -> i1_t
   in
 
-  (* define the main function & program entry point *)
+  (* =================== GRAPH TYPE TRANSLATIONS =================== *)
+  let vertex_type context = 
+    (* pointer to an array of char is used to handle strings *)
+    L.struct_type context [| L.pointer_type (L.i8_type context) |] 
+  
+  in 
+
+  let graph_element_type context vertex_type =
+    L.struct_type context [|
+      L.i32_type context;   (* Tag to indicate type: 0 for vertex, 1 for edge *)
+      L.pointer_type (L.i8_type context)  (* Pointer to data so the size is dynamic *)
+    |]
+  
+  in 
+
+  let graph_type context graph_element_type =
+    L.struct_type context [|
+      L.array_type (L.pointer_type graph_element_type) 10;  (* array of pointers to graph elements *)
+      L.i32_type context; (* counter to keep track of the number of elements *)
+    |]
+  
+  in
+
+  (* =================== GRAPH CREATION FUNCTIONS =================== *)
+  (* let create_vertex context builder vertex_id vertex_type =
+    (* allocate memory for vertex *)
+    let vertex_ptr = L.build_malloc vertex_type "vertex" builder in
+  
+    (* allocate memory for id (a string) and copy the id into it. *)
+    let id_len = String.length vertex_id + 1 in (* +1 for null terminator *)
+    let id_ptr = L.build_array_malloc (L.i8_type context) (L.const_int (L.i32_type context) id_len) "vertex_id" builder in
+    ignore (L.build_store (L.build_global_stringptr vertex_id "tmp_id" builder) id_ptr builder);
+  
+    (* Set the vertex's ID field to point to the allocated string. *)
+    let id_field_ptr = L.build_struct_gep vertex_ptr 0 "id" builder in
+    ignore (L.build_store id_ptr id_field_ptr builder);
+  
+    vertex_ptr
+
+  in  *)
+
+  let build_empty_graph context builder =
+    let graph_element_type_param = graph_element_type context vertex_type in
+    let graph_type_param = graph_type context graph_element_type_param in
+    let graph = L.build_malloc graph_type_param "graph" builder in
+    let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
+    let zero = L.const_int (L.i32_type context) 0 in
+  
+    (* Initialize array of element pointers to null *)
+    for i = 0 to 9 do
+      let elem_ptr_ptr = L.build_gep elements_ptr [| L.const_int (L.i32_type context) i |] "elem_ptr" builder in
+      ignore (L.build_store (L.const_null (L.pointer_type graph_element_type_param)) elem_ptr_ptr builder);
+    done;
+  
+    (* Initialize the element count to 0 *)
+    let count_ptr = L.build_struct_gep graph 1 "count" builder in
+    ignore (L.build_store zero count_ptr builder);
+  
+    graph
+
+  in
+
+  (* Convert "sgraph_elements" which is a list of sgraph_elements into a list of element_ptrs *)
+  (* let convert_sgraph_elements_to_ptrs context builder sgraph_elements vmap =
+    let vertex_type = vertex_type context in
+    let rec convert_element_to_ptr elem = match snd elem with
+      | SVertex { sid = id } -> 
+        let is_vertex_in_vmap = StringMap.mem id vmap in 
+        if is_vertex_in_vmap then
+          StringMap.find id vmap
+        else begin
+          let new_vertex_ptr = create_vertex context builder id vertex_type in 
+          StringMap.add id new_vertex_ptr vmap; (* Add the new vertex pointer with id as the key *)
+          new_vertex_ptr
+        end
+      | _ -> raise (Invalid_argument "Graph element has to be a Vertex")
+    in
+    List.map convert_element_to_ptr sgraph_elements
+
+  in *)
+
+  (* let add_element_to_graph context builder graph graph_element_type element_ptr =
+    let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
+    let count_ptr = L.build_struct_gep graph 1 "count" builder in
+    let count = L.build_load count_ptr "count" builder in
+    let elem_ptr_ptr = L.build_gep elements_ptr [| count |] "elem_ptr" builder in
+  
+    ignore (L.build_store element_ptr elem_ptr_ptr builder);
+    
+    (* Increment the count of elements in the graph *)
+    let new_count = L.build_add count (L.const_int (L.i32_type context) 1) "new_count" builder in
+    ignore (L.build_store new_count count_ptr builder);
+  
+    graph
+
+  in *)
+  (* =================== MAIN FXN & PROGRAM ENTRY POINT =================== *)
   let main_type = L.function_type i32_t [||] in
   let main_func = L.define_function "main" main_type the_module in
 
@@ -82,6 +175,20 @@ let translate stmt_list =
         | None -> L.build_alloca (ltype_of_typ t) s builder) in 
       let vmap'' = StringMap.add s llval vmap' in
       ignore(L.build_store e' llval builder); (e', vmap'')
+    | SGraph sgraph_elements ->
+      let graph = build_empty_graph context builder in
+      (* let sgraph_elem_ptrs = convert_sgraph_elements_to_ptrs context builder sgraph_elements vmap in
+      let add_element_wrapper = (fun (g, vmap') elem ->
+        let g' = add_element_to_graph context builder g graph_element_type elem in 
+        (g',vmap')
+      ) in
+      let graph', _, _ = List.fold_left add_element_wrapper (graph, vmap) sgraph_elem_ptrs in
+      graph', vmap  *)
+      graph, vmap
+    | SGraphAsn (gname, sexpr) ->
+      let graph, _ = build_expr builder (Int,sexpr) vmap in (*Not sure how to add GraphType here, just using Int as a dummy*)
+      let vmap' = StringMap.add gname graph vmap in
+      graph, vmap'
     | _ -> raise (Invalid_argument "expression type not supported")
   in
 
