@@ -48,7 +48,6 @@ graphsql.native:
 
 graphsql_compile.native:
 	ocamlbuild -r -pkgs llvm graphsql_compile.native
-	ocamlbuild -pkgs llvm graphsql.native
 
 # calc_test.out : graphsql calc_test.tb
 # 	./graphsql < calc_test.tb > calc_test.out
