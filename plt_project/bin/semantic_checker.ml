@@ -7,7 +7,7 @@ open Sast
 module BindMap = Map.Make(String)
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
-module StringMap = Map.Make(String)
+module FunctionMap = Map.Make(String)
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
@@ -102,7 +102,7 @@ let check (statements, functions) =
   in
 
 
-  let func_map = StringMap.empty in
+  let func_map = FunctionMap.empty in
 
   let add_func map fd =
     let built_in_err = "function " ^ fd.fname ^ " may not be defined"
@@ -110,9 +110,9 @@ let check (statements, functions) =
     and make_err er = raise (Failure er)
     and n = fd.fname (* Name of the function *)
     in match fd with (* No duplicate functions or redefinitions of built-ins *)
-      _ when StringMap.mem n func_map -> make_err built_in_err
-    | _ when StringMap.mem n map -> make_err dup_err
-    | _ ->  StringMap.add n fd map
+      _ when FunctionMap.mem n func_map -> make_err built_in_err
+    | _ when FunctionMap.mem n map -> make_err dup_err
+    | _ ->  FunctionMap.add n fd map
   in
 
   let function_decls = List.fold_left add_func func_map functions 
@@ -121,7 +121,7 @@ let check (statements, functions) =
   
   (* Return a function from our symbol table *)
   let find_func s =
-    try StringMap.find s function_decls
+    try FunctionMap.find s function_decls
     with Not_found -> raise (Failure ("unrecognized function " ^ s))
   
   in
