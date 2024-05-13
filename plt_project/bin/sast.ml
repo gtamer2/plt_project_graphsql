@@ -52,7 +52,7 @@ type sstmt =
   | SIfElse of sexpr * sstmt list * sstmt list
   | SWhile of sexpr * sstmt list
   | SFor of sexpr * sexpr * sexpr * sstmt list
-  (* | SFunctionCreation of string * sstmt list *)
+  | SFunctionCreation of string * sexpr list * sstmt list
 
 let get_graph_sx sgraphexpr = 
   match sgraphexpr with 

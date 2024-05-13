@@ -70,7 +70,7 @@ stmt:
     | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
     | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
-    | FUNCTION VARIABLE LP RP LC stmt_list RC {FunctionCreation($2, $6)}
+    | DEFINE FUNCTION VARIABLE LP RP LC stmt_list RC {FunctionCreation($2, $6)}
 
 elif_stmt_list:
     | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}

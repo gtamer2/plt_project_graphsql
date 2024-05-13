@@ -325,13 +325,8 @@ let check init_program =
         ((t, SAsn(var, (t, e'))), env3)
     
     | FunctionCall(name, args) ->
-      (* Short circuit to true *)
-      if name = "print" then
-        let (t, e), env1 = check_expr env (List.hd args) in
-        ((t, SFunctionCall(name, [(t, e)])), env1)
-      else begin
-        failwith "Function not supported"
-      end
+      let arg_list = List.map (fun arg -> check_expr env arg) args in
+      ((t, SFunctionCall(name, arg_list)), env)
     | _ -> failwith "expression not supported"
       in
 
@@ -364,8 +359,6 @@ let check init_program =
         else
           raise (Failure err)
 
-      (* SFor *)
-
       | For (init, condition, update, body) ->
         let ((t1,init'),env1) = check_expr env init in
         let ((t2,condition'),env2) = check_expr env1 condition in 
@@ -381,9 +374,6 @@ let check init_program =
           (SFor((t1,init'), (t2,condition'), (t3,update'), body'), env4)
         else
           raise (Failure err)
-      
-      (* SIfElse *)
-
       | IfElse (cond, then_stmt, else_stmt) ->
         let ((t1, cond'), env1) = check_expr env cond in
         let (then_stmt', env2) = check_stmt_list env1 then_stmt in
@@ -397,8 +387,6 @@ let check init_program =
           (SIfElse( (t1, cond'), then_stmt', else_stmt' ), env3)
         else
           raise (Failure err)
-      
-      (* While *)
 
       | While (cond, body) ->
         let ((t1, cond'), env1) = check_expr env cond in
@@ -411,7 +399,10 @@ let check init_program =
           (SWhile((t1, cond'), body'), env2)
         else
           raise (Failure err)
-
+      | FunctionCreation(name, args, body) ->
+        let arg_list = List.map (fun arg -> check_expr env arg) args in
+        let (body', env') = check_stmt_list env body in
+        (SFunctionCreation(name, arg_list, body'), env')
       | _ -> failwith "Statement not supported"
   
   in

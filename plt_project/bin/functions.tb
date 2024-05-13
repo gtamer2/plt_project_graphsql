@@ -1,0 +1,7 @@
+x = 2;
+
+DEFINE FUNCTION foobar() {
+    y = 1;
+}
+
+foobar();

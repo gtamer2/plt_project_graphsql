@@ -188,7 +188,7 @@ let translate stmt_list =
 
   let rec build_sstmt (builder, vmap) sstmt = match sstmt with
     | SExpr e -> let _, vmap' = build_expr builder e vmap in builder, vmap'
-    
+    | SFunctionCreation (fname, fargs, fbody) -> builder, vmap
     | _ -> builder, vmap
   in 
 
