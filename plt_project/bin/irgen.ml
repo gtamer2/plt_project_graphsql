@@ -37,7 +37,7 @@ let translate stmt_list =
   let graph_type =
     L.struct_type context [|
       L.array_type vertex_type 10;  (* array of pointers to graph elements *)
-      L.i32_type context; (* counter to keep track of the number of elements *)
+      i32_t; (* counter to keep track of the number of elements *)
     |]
 
   in
@@ -199,8 +199,6 @@ let translate stmt_list =
   in 
 
   List.fold_left build_sstmt (builder, StringMap.empty) stmt_list;
-  (* List.iter (fun stmt -> ignore (build_sstmt builder stmt)) stmt_list; *)
-  (* add a return to the main function *)
   let _ = L.build_ret (L.const_int i32_t 0) builder in
 
   the_module
