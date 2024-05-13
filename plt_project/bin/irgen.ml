@@ -9,6 +9,8 @@ let translate stmt_list =
   let the_module = L.create_module context "GraphSQL" in 
   let gmap : L.llvalue StringMap.t = StringMap.empty in
 
+  
+
   (* =================== PRIMITIVE TYPE TRANSLATIONS =================== *)
   let i32_t = L.i32_type context in 
   let i8_t = L.i8_type context in
@@ -59,7 +61,8 @@ let translate stmt_list =
   
     (* 1b. allocate memory for id (a string) and copy the id into it. *)
     let id_ptr = L.build_malloc i8_t "vertex_id" builder in
-    ignore (L.build_store (L.build_global_stringptr vertex_id "tmp_id" builder) id_ptr builder);
+    let id = L.build_global_stringptr vertex_id "tmp_id" builder in
+    ignore (L.build_store id id_ptr builder);
   
     (* 1c. Set the vertex's ID field to point to the allocated string. *)
     let id_field_ptr = L.build_struct_gep vertex_ptr 0 "id" builder in
@@ -80,7 +83,86 @@ let translate stmt_list =
     (* 3. Return the newly created graph element struct *)
     graph_element
 
+    (* check value at ptr *)
+    (* if value is match, break *)
+    (* increment ptr *)
+    (* load value at ptr *)
+    (* if value is match, break *)
+
   in
+
+  let get_or_create_vertex builder graph vertex_id =
+    create_vertex builder vertex_id
+(*    
+    (* 1. Check if vertex exists in graph by  *)
+    (* 1a. Get the elements array from the graph *)
+    let element_ptrs = L.build_struct_gep graph 0 "elements" builder in
+
+    (* 1b. Get the count of elements in the graph *)
+    let count_ptr = L.build_struct_gep graph 1 "count" builder in
+    let count = L.build_load count_ptr "count" builder in
+
+    (* 1c. Setup values for iteration *)
+    let i = L.const_int i32_t 0 in
+    let vertex_ptr = L.build_alloca vertex_type "vertex" builder in
+    let found_vertex = L.build_alloca i1_t "found_vertex" builder in
+    let zero = L.const_int i1_t 0 in
+    let one = L.const_int i1_t 1 in
+
+    (* 1c. Iterate through the elements array to find the vertex *)
+    (* Create the Basic blocks for loo start and loop end *)
+    let loop_bb = L.append_block context "loop" builder in 
+    let loop_end_bb = L.append_block context "loop_end" builder in
+    (* create the break statment for our loop *)
+    ignore (L.build_br loop_bb builder);
+  
+    (* Start building the loop block *)
+    L.position_at_end loop_bb builder;
+
+    (* Code to load element and element type *)
+    let ptr_to_elem = L.build_gep element_ptrs [| i |] "ptr_to_elem" builder in
+    let elem = L.build_load ptr_to_elem "elem" builder in
+    let tag_ptr = L.build_struct_gep elem 0 "tag" builder in
+    let tag = L.build_load tag_ptr "tag" builder in *)
+
+
+    in
+
+  let create_edge builder graph_ptr src_vertex_id target_vertex_id weight =
+    (* 1. Get or create src_vertex *)
+    let src_vertex_ptr = get_or_create_vertex builder graph_ptr src_vertex_id in
+
+    (* 2. Get or create target_vertex *)
+    let target_vertex_ptr = get_or_create_vertex builder graph_ptr target_vertex_id in
+
+    (* 3. Create edge *)
+    (* 3a. Allocate memory for the edge *)
+    let edge_ptr = L.build_malloc edge_type "edge" builder in
+      
+    (* 3b. Assign the vertex pointers to the edge's fields *)
+    ignore (L.build_store src_vertex_ptr (L.build_struct_gep edge_ptr 0 "src_vertex" builder) builder);
+    ignore (L.build_store target_vertex_ptr (L.build_struct_gep edge_ptr 1 "target_vertex" builder) builder);
+  
+    (* 3c. Assign the weight to the edge's field *)
+    ignore (L.build_store (L.const_int i32_t weight) (L.build_struct_gep edge_ptr 2 "weight" builder) builder);
+
+    (* 4. Create Graph element from edge *)
+    (* 4a. Allocate memory for the graph element *)
+    let graph_element = L.build_malloc graph_element_type "vertex_graph_element" builder in
+
+    (* 4b. Set the graph_element type boolean flag *)
+    let zero = L.const_int i1_t 1 in
+    let tag_ptr = L.build_struct_gep graph_element 0 "tag" builder in
+    ignore (L.build_store zero tag_ptr builder);
+    
+    (* 4c. Set the graph_element data field to point to the vertex *)
+    ignore (L.build_store edge_ptr (L.build_struct_gep graph_element 1 "data" builder) builder);
+    
+    (* 5. Return *)
+    graph_element
+
+  in
+
 
   let build_empty_graph builder =
     (* Create an empty struct *)
@@ -119,14 +201,14 @@ let translate stmt_list =
     (* TODO LATER *)
 
     (* 1. Create a new vertex *)
-    let new_vertex_ptr = create_vertex builder vertex_id in
+    let new_graph_elt_ptr = create_vertex builder vertex_id in
   
     (* 2. Add ptr to new vertex to graph *)
     let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
     let count_ptr = L.build_struct_gep graph 1 "count" builder in
     let count = L.build_load count_ptr "count" builder in
     let ptr_to_last_elem = L.build_gep elements_ptr [| count |] "ptr_to_last_elem" builder in
-    ignore (L.build_store new_vertex_ptr ptr_to_last_elem builder);
+    ignore (L.build_store new_graph_elt ptr_to_last_elem builder);
     
     (* 3. Increment the count of elements in the graph *)
     let one = L.const_int i32_t 1 in
