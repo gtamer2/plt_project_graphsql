@@ -107,11 +107,11 @@ let translate stmt_list =
       StringMap.add name (L.define_function name ftype the_module, fdecl) m in
     List.fold_left function_decl StringMap.empty functions in *)
       (* =================== PRINT UTILS START =================== *)
-  let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
+  (* let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
   let printf_t : L.lltype =
     L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
   let printf_func : L.llvalue =
-    L.declare_function "printf" printf_t the_module in
+    L.declare_function "printf" printf_t the_module in *)
   (* =================== PRINT UTILS END =================== *)
   (* =================== MAIN FXN & PROGRAM ENTRY POINT =================== *)
   let main_type = L.function_type i32_t [||] in
@@ -190,9 +190,10 @@ let translate stmt_list =
       let vmap' = StringMap.add gname graph vmap in
       ignore(L.build_store graph mem_location builder); (graph, vmap')
     | SFunctionCall ("print", [e]) ->
-      let args = [| int_format_str ; fst (build_expr builder e vmap) |] in
-      let ir_name = "printf" in
-      L.build_call printf_func args ir_name builder, vmap
+      let e_result, vmap = build_expr builder e vmap in
+      Printf.printf "Print Function\n. Type of input expression: %s\n"(string_of_sexpr e);
+      Printf.printf "\nExpression output: %s\n" (L.string_of_llvalue e_result);
+      (L.const_int i32_t 0), vmap
     | SFunctionCall (function_name, args) ->
       let zero = L.const_int (L.i32_type context) 0 in
       zero, vmap

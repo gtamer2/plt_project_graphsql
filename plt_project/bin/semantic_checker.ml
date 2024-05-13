@@ -176,13 +176,10 @@ let check init_program =
     
     | GraphAccess(graphname, fieldname) -> 
       let binding_type = BindMap.find graphname env.bindings in 
-      (* Printf.printf "binding_type: %s\n" (string_of_typ binding_type);
-      Printf.printf "graphname: %s\n" graphname; *)
       let schecked_graph_elts = GraphMap.find graphname env.graphs in
       let schecked_graph_elements_types = fst schecked_graph_elts in
       let schecked_graph_elements_exprs = snd schecked_graph_elts in
       let sgraph_elements_list = get_graph_sx schecked_graph_elements_exprs in
-      (* let graph_elements_types = List.map fst schecked_graph_elements in *)
       begin match sgraph_elements_list with
       | sgraph_elem_list ->
         let v_output : sgraph_element list ref = ref [] in
@@ -287,7 +284,6 @@ let check init_program =
         let to_delete_sgraph_element_list = !v_output @ !e_output in
         let updated_sgraph_element_list = List.filter (fun elem -> not (List.mem elem to_delete_sgraph_element_list)) sgraph_elements_list in
         let second_elem = SGraph updated_sgraph_element_list in
-        (* Printf.printf "second_elem: %s\n" (String.concat "" (List.map string_of_sgraph_element updated_sgraph_element_list)); *)
 
         let updated_element_type_list = List.map (fun x -> fst x) updated_sgraph_element_list in
         let first_elem = GraphType updated_element_type_list in
@@ -323,8 +319,6 @@ let check init_program =
       ((GraphType updated_graph_element_type_list, SGraph updated_sgraph_element_list), env)
 
     | Asn (var, e) ->
-      (* let str = var ^ " = " ^ string_of_expr e in
-        Printf.printf "variable Assignment: %s\n" str; *)
       let ((t, e'), env1)  = check_expr env e in
         let env2 = { env1 with bindings = BindMap.add var t env1.bindings } in 
         let env3 = { env2 with vars = VarMap.add var (t, e') env2.vars } in
@@ -335,8 +329,9 @@ let check init_program =
       if name = "print" then
         let (t, e), env1 = check_expr env (List.hd args) in
         ((t, SFunctionCall(name, [(t, e)])), env1)
-      else
+      else begin
         failwith "Function not supported"
+      end
     | _ -> failwith "expression not supported"
       in
 

@@ -100,7 +100,8 @@ let rec string_of_sexpr (t, e) =
     | SGraph(elements) ->
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
     | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname ^ ", Graph([" ^ String.concat ", " (List.map string_of_sgraph_element (get_graph_sx sgraph)) ^ "])"
-    | SFunctionCall(fname, args) -> "FunctionCall: " ^ fname ^ "(" ^ String.concat ", " (List.map string_of_sexpr args) ^ ")"
+    | SFunctionCall(fname, args) -> "FunctionCall:TODO\n"
+    (* | SFunctionCall(fname, args) -> "FunctionCall: " ^ fname ^ "(" ^ String.concat ", " (List.map string_of_sexpr args) ^ ")" *)
     end
   ) ^ ")"
 
