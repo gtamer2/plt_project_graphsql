@@ -98,21 +98,7 @@ let translate stmt_list =
   in
 
   (* =================== FUNCTIONS CODE =================== *)
-  (* let function_decls : (L.llvalue * sfunc_def) StringMap.t =
-    let function_decl m fdecl =
-      let name = fdecl.sfname
-      and formal_types =
-        Array.of_list (List.map (fun (t,_) -> ltype_of_typ t) fdecl.sformals)
-      in let ftype = L.function_type (ltype_of_typ fdecl.srtyp) formal_types in
-      StringMap.add name (L.define_function name ftype the_module, fdecl) m in
-    List.fold_left function_decl StringMap.empty functions in *)
-      (* =================== PRINT UTILS START =================== *)
-  (* let int_format_str = L.build_global_stringptr "%d\n" "fmt" builder in
-  let printf_t : L.lltype =
-    L.var_arg_function_type i32_t [| L.pointer_type i8_t |] in
-  let printf_func : L.llvalue =
-    L.declare_function "printf" printf_t the_module in *)
-  (* =================== PRINT UTILS END =================== *)
+ 
   (* =================== MAIN FXN & PROGRAM ENTRY POINT =================== *)
   let main_type = L.function_type i32_t [||] in
   let main_func = L.define_function "main" main_type the_module in
