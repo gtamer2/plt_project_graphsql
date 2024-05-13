@@ -2,6 +2,7 @@ module L = Llvm
 module A = Ast
 open Sast
 module StringMap = Map.Make(String)
+module FunctionMap = Map.Make(String)
 
 let translate stmt_list =
   (* =================== IMPORTANT GLOBAL STUFF =================== *)
@@ -19,7 +20,7 @@ let translate stmt_list =
   let ltype_of_typ = function
       Int   -> i32_t
     | Bool -> i1_t
-  in
+  in 
 
   (* =================== GRAPH TYPE TRANSLATIONS =================== *)
   let vertex_type = L.struct_type context [| L.pointer_type i8_t |] 
@@ -98,6 +99,11 @@ let translate stmt_list =
   in
 
   (* =================== FUNCTIONS CODE =================== *)
+  (* map from function name to string list, each val in list is a fxn arg *)
+  let function_declarations = FunctionMap.empty in
+  (* map from function name to irgen code of the function body *)
+  let function_bodies = FunctionMap.empty in
+  
  
   (* =================== MAIN FXN & PROGRAM ENTRY POINT =================== *)
   let main_type = L.function_type i32_t [||] in
@@ -111,13 +117,22 @@ let translate stmt_list =
   in
   L.position_at_end entry_block builder;
 
-  (* for now there is a single map, will need multiple maps, likely one for each function *)
-  let vars_map : L.llvalue StringMap.t = StringMap.empty in
-
   let lookup n v_map = 
     try Some (StringMap.find n v_map)
     with Not_found -> None
   in
+
+  (* LLVM insists each basic block end with exactly one "terminator"
+    instruction that transfers control.  This function runs "instr builder"
+    if the current block does not already have a terminator.  Used,
+    e.g., to handle the "fall off the end of the function" case. *)
+    let add_terminal builder instr =
+    match L.block_terminator (L.insertion_block builder) with
+      Some _ -> ()
+    | None -> ignore (instr builder) 
+  
+  in
+  
 
   let rec build_expr builder (t, e) vmap = match e with
     | SLit i -> (L.const_int i32_t i), vmap
@@ -188,7 +203,59 @@ let translate stmt_list =
 
   let rec build_sstmt (builder, vmap) sstmt = match sstmt with
     | SExpr e -> let _, vmap' = build_expr builder e vmap in builder, vmap'
-    | SFunctionCreation (fname, fargs, fbody) -> builder, vmap
+    | SFunctionCreation (fname, fargs, fbody, return_type) -> 
+        (* ====== BUILD FXN BODY ALGO - START ====== *)
+        (* 1. Add the function declaration to fdeclr map *)
+        (* 2. Generate the IR code for the body *)
+        (* 3. Add the IR code to the function_bodies map *)
+        (* ALGO FOR STEP 2 *)
+        (* 2a. Set the builder to the start of the function
+          2b. create a local variables maps, with formal args passed in
+          2c. Build the code for each statement/expression in the function
+          2d. Add a return if the last block falls off the end
+        *)
+        (* ====== BUILD FXN BODY ALGO - END ====== *)
+        (* ====== Step 1 ====== *)
+        ignore(StringMap.add fname fargs function_declarations);
+
+        (* ====== Step 2 ====== *)
+        (* 2a *)
+        let ftype = L.function_type i32_t (Array.make (List.length fargs) i32_t) in
+        let the_function = L.define_function fname ftype the_module in
+        let fbuilder = L.builder_at_end context (L.entry_block the_function) in
+
+        (* 2b *)
+        let local_vars =
+          let add_formal m (t, n) p =
+            L.set_value_name n p;
+            let local = L.build_alloca (ltype_of_typ t) n builder in
+            ignore (L.build_store p local builder);
+            StringMap.add n local m
+    
+          (* Allocate space for any locally declared variables and add the
+           * resulting registers to our map *)
+          and add_local m (t, n) =
+            let local_var = L.build_alloca (ltype_of_typ t) n builder
+            in StringMap.add n local_var m
+          in
+    
+          
+          List.fold_left2 add_formal StringMap.empty fargs
+              (Array.to_list (L.params the_function))
+          (* List.fold_left add_local formals fdecl.slocals *)
+    
+        in
+
+        (* 2c *)
+
+        let builder, _ = List.fold_left build_sstmt (fbuilder, local_vars) fbody in
+
+        (* 2d *)
+        ignore(add_terminal builder (L.build_ret (L.const_int i32_t 0))); builder, vmap
+
+        (* ====== Step 3 ====== *)
+        (* Don't think we need -- come back if error *)
+        (* ignore(StringMap.add fname fbody function_bodies) in *)
     | _ -> builder, vmap
   in 
 

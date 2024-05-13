@@ -13,7 +13,6 @@ type environment = {
   bindings: unified_type BindMap.t;
   vars: sexpr VarMap.t;
   graphs: sexpr GraphMap.t;
-  (* declared_vertices: StringSet.t;   *)
 }
 
 (* Function to check a single graph element *)
@@ -325,8 +324,11 @@ let check init_program =
         ((t, SAsn(var, (t, e'))), env3)
     
     | FunctionCall(name, args) ->
+      (* each arg in args_list is of form ((t, e'), env1) *)
+      (* so to get list of arg_types, we need to take first of first for every element *)
       let arg_list = List.map (fun arg -> check_expr env arg) args in
-      ((t, SFunctionCall(name, arg_list)), env)
+      let arg_types_list = List.map (fun arg -> fst (fst (arg))) arg_list in
+      ((arg_types_list, SFunctionCall(name, arg_list)), env)
     | _ -> failwith "expression not supported"
       in
 
@@ -399,10 +401,10 @@ let check init_program =
           (SWhile((t1, cond'), body'), env2)
         else
           raise (Failure err)
-      | FunctionCreation(name, args, body) ->
+      | FunctionCreation(name, args, body, return_type) ->
         let arg_list = List.map (fun arg -> check_expr env arg) args in
         let (body', env') = check_stmt_list env body in
-        (SFunctionCreation(name, arg_list, body'), env')
+        (SFunctionCreation(name, arg_list, body', return_type), env')
       | _ -> failwith "Statement not supported"
   
   in

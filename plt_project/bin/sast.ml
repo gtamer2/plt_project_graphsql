@@ -31,6 +31,8 @@ and sgraph_element_x =
   | SEdge of sedge
 
 
+type vdecl = unified_type * string
+
 type sexpr = unified_type * sx
 and sx = 
     SLit of int
@@ -52,7 +54,7 @@ type sstmt =
   | SIfElse of sexpr * sstmt list * sstmt list
   | SWhile of sexpr * sstmt list
   | SFor of sexpr * sexpr * sexpr * sstmt list
-  | SFunctionCreation of string * sexpr list * sstmt list
+  | SFunctionCreation of string * vdecl list * sstmt list * unified_type
 
 let get_graph_sx sgraphexpr = 
   match sgraphexpr with 
@@ -126,7 +128,7 @@ and string_of_sstmt = function
   | SIfElse (sexpr, sstmt_list_1, sstmt_list_2) -> string_of_sexpr sexpr ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list_2) ^ "}\n" ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list_2) ^ "}\n"
   | SWhile (sexpr, sstmt_list) -> string_of_sexpr sexpr ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
   | SFor (sexpr1, sexpr2, sexpr3, sstmt_list) -> string_of_sexpr sexpr1 ^ string_of_sexpr sexpr2 ^ string_of_sexpr sexpr3 ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
-  | SFunctionCreation (fname, sstmt_list) -> "Function " ^ fname ^ " {\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
+  | SFunctionCreation (fname, fargs, sstmt_list, return_type) -> "Function " ^ fname ^ " Function args TODO"
     
 
   

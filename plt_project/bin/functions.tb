@@ -1,7 +1,8 @@
 x = 2;
 
-DEFINE FUNCTION foobar() {
+DEFINE FUNCTION Int foobar(x, y) {
     y = 1;
+    return y;
 }
 
 foobar();

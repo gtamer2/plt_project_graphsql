@@ -24,6 +24,8 @@ type unified_type =
   | GraphElement of graph_element
   | Graph of graph_element list
 
+type vdecl = unified_type * string
+
 type expr =
   | Lit of int
   | FloatLit of float 
@@ -50,14 +52,16 @@ type stmt =
   | IfElif of expr * stmt list * elif_stmt list * stmt list
   | While of expr * stmt list
   | For of expr * expr * expr * stmt list
-  | FunctionCreation of string * stmt list
-  
   and
  elif_stmt = expr * stmt list
 
 type stmt_list = stmt list 
 
+type program = 
+  | FunctionCreation of string * vdecl list * stmt list * unified_type
+  | stmt_list
 
+  
 let get_graph_elements expr =
   match expr with
   | Graph elements -> elements
@@ -127,7 +131,7 @@ let rec string_of_stmt = function
   (* | Block(stmts) -> "TODO BLOCK "  *)
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
-  | FunctionCreation(name, body) -> "\n" ^ "FunctionCreation: TODO " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
+  | FunctionCreation(name, args, body, return_type) -> "\n" ^ "FunctionCreation: TODO " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
   
  and string_of_elif_stmt = function
 | [] -> ""
