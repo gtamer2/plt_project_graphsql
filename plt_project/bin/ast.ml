@@ -60,7 +60,7 @@ type stmt_list = stmt list
 type func_def = {
   rtyp: unified_type;
   fname: string;
-  formals: vdecl list; (*"bind list" basically *)
+  formals: vdecl list;
   body: stmt list;
 }
 
@@ -136,7 +136,6 @@ let rec string_of_stmt = function
   (* | Block(stmts) -> "TODO BLOCK "  *)
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
-  (* | FunctionCreation(name, args, body, return_type) -> "\n" ^ "FunctionCreation: TODO " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n" *)
   
  and string_of_elif_stmt = function
 | [] -> ""

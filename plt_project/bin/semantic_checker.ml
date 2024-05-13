@@ -138,11 +138,6 @@ let check (statements, functions) =
         | Float -> ((Float, SVar var), env)
         | String -> ((String, SVar var), env)
         | Graph var_type -> ((Graph var_type, SVar var), env)
-        (* | Int -> ((Int, SVar var), env)
-        | Bool -> ((Bool, SVar var), env)
-        | Float -> ((Float, SVar var), env)
-        | String -> ((String, SVar var), env)
-        | GraphType var_type -> ((GraphType var_type, SVar var), env) *)
       end
     | FloatLit f -> ((Float, SFloatLit f), env)
     | Uniop (op, e1) ->
