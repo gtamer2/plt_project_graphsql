@@ -26,17 +26,26 @@ let translate stmt_list =
 
   in 
 
-  (* let graph_element_type context vertex_type =
+  let edge_type =
     L.struct_type context [|
-      L.i32_type context;   (* Tag to indicate type: 0 for vertex, 1 for edge *)
-      L.pointer_type (L.i8_type context)  (* Pointer to data so the size is dynamic *)
+      L.pointer_type vertex_type; 
+      L.pointer_type vertex_type; 
+      i32_t;
     |]
 
-  in  *)
+  in 
+
+  let graph_element_type =
+    L.struct_type context [|
+      i1_t;   (* Tag to indicate type: 0 for vertex, 1 for edge *)
+      L.pointer_type i8_t  (* Pointer to data so the size is dynamic *)
+    |]
+
+  in
 
   let graph_type =
     L.struct_type context [|
-      L.array_type vertex_type 10;  (* array of pointers to graph elements *)
+      L.array_type graph_element_type 10;  (* array of pointers to graph elements *)
       i32_t; (* counter to keep track of the number of elements *)
     |]
 
@@ -44,20 +53,34 @@ let translate stmt_list =
 
   (* =================== GRAPH CREATION FUNCTIONS =================== *)
   let create_vertex builder vertex_id =
-    (* allocate memory for vertex *)
+    (* 1. Build the vertex struct *)
+    (* 1a. allocate memory for vertex *)
     let vertex_ptr = L.build_malloc vertex_type "vertex" builder in
   
-    (* allocate memory for id (a string) and copy the id into it. *)
+    (* 1b. allocate memory for id (a string) and copy the id into it. *)
     let id_ptr = L.build_malloc i8_t "vertex_id" builder in
     ignore (L.build_store (L.build_global_stringptr vertex_id "tmp_id" builder) id_ptr builder);
   
-    (* Set the vertex's ID field to point to the allocated string. *)
+    (* 1c. Set the vertex's ID field to point to the allocated string. *)
     let id_field_ptr = L.build_struct_gep vertex_ptr 0 "id" builder in
     ignore (L.build_store id_ptr id_field_ptr builder);
-  
-    vertex_ptr
 
-  in 
+    (* 2. Build Graph Element from vertex *)
+    (* 2a. Allocate memory for the graph element *)
+    let graph_element = L.build_malloc graph_element_type "vertex_graph_element" builder in
+
+    (* 2b. Set the graph_element type boolean flag *)
+    let zero = L.const_int i1_t 0 in
+    let tag_ptr = L.build_struct_gep graph_element 0 "tag" builder in
+    ignore (L.build_store zero tag_ptr builder);
+
+    (* 2c. Set the graph_element data field to point to the vertex *)
+    ignore (L.build_store vertex_ptr (L.build_struct_gep graph_element 1 "data" builder) builder);
+
+    (* 3. Return the newly created graph element struct *)
+    graph_element
+
+  in
 
   let build_empty_graph builder =
     (* Create an empty struct *)

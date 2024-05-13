@@ -6,9 +6,9 @@ source_filename = "GraphSQL"
 
 define i32 @main() {
 entry:
-  %malloccall = tail call i8* @malloc(i32 ptrtoint ({ [10 x { i8* }], i32 }* getelementptr ({ [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* null, i32 1) to i32))
-  %graph = bitcast i8* %malloccall to { [10 x { i8* }], i32 }*
-  %count = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 1
+  %malloccall = tail call i8* @malloc(i32 ptrtoint ({ [10 x { i1, i8* }], i32 }* getelementptr ({ [10 x { i1, i8* }], i32 }, { [10 x { i1, i8* }], i32 }* null, i32 1) to i32))
+  %graph = bitcast i8* %malloccall to { [10 x { i1, i8* }], i32 }*
+  %count = getelementptr inbounds { [10 x { i1, i8* }], i32 }, { [10 x { i1, i8* }], i32 }* %graph, i32 0, i32 1
   store i32 0, i32* %count, align 4
   %malloccall1 = tail call i8* @malloc(i32 ptrtoint ({ i8* }* getelementptr ({ i8* }, { i8* }* null, i32 1) to i32))
   %vertex = bitcast i8* %malloccall1 to { i8* }*
@@ -16,28 +16,40 @@ entry:
   store i8* getelementptr inbounds ([8 x i8], [8 x i8]* @tmp_id, i32 0, i32 0), i8* %vertex_id, align 8
   %id = getelementptr inbounds { i8* }, { i8* }* %vertex, i32 0, i32 0
   store i8* %vertex_id, i8** %id, align 8
-  %elements = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 0
-  %count3 = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 1
-  %count4 = load i32, i32* %count3, align 4
-  %ptr_to_last_elem = getelementptr [10 x { i8* }], [10 x { i8* }]* %elements, i32 %count4
-  store { i8* }* %vertex, [10 x { i8* }]* %ptr_to_last_elem, align 8
-  %count_plus_one = add i32 %count4, 1
-  store i32 %count_plus_one, i32* %count3, align 4
-  %malloccall5 = tail call i8* @malloc(i32 ptrtoint ({ i8* }* getelementptr ({ i8* }, { i8* }* null, i32 1) to i32))
-  %vertex6 = bitcast i8* %malloccall5 to { i8* }*
-  %vertex_id8 = tail call i8* @malloc(i32 ptrtoint (i8* getelementptr (i8, i8* null, i32 1) to i32))
-  store i8* getelementptr inbounds ([8 x i8], [8 x i8]* @tmp_id.1, i32 0, i32 0), i8* %vertex_id8, align 8
-  %id9 = getelementptr inbounds { i8* }, { i8* }* %vertex6, i32 0, i32 0
-  store i8* %vertex_id8, i8** %id9, align 8
-  %elements10 = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 0
-  %count11 = getelementptr inbounds { [10 x { i8* }], i32 }, { [10 x { i8* }], i32 }* %graph, i32 0, i32 1
-  %count12 = load i32, i32* %count11, align 4
-  %ptr_to_last_elem13 = getelementptr [10 x { i8* }], [10 x { i8* }]* %elements10, i32 %count12
-  store { i8* }* %vertex6, [10 x { i8* }]* %ptr_to_last_elem13, align 8
-  %count_plus_one14 = add i32 %count12, 1
-  store i32 %count_plus_one14, i32* %count11, align 4
-  %g1 = alloca { [10 x { i8* }], i32 }, align 8
-  store { [10 x { i8* }], i32 }* %graph, { [10 x { i8* }], i32 }* %g1, align 8
+  %malloccall3 = tail call i8* @malloc(i32 ptrtoint ({ i1, i8* }* getelementptr ({ i1, i8* }, { i1, i8* }* null, i32 1) to i32))
+  %vertex_graph_element = bitcast i8* %malloccall3 to { i1, i8* }*
+  %tag = getelementptr inbounds { i1, i8* }, { i1, i8* }* %vertex_graph_element, i32 0, i32 0
+  store i1 false, i1* %tag, align 1
+  %data = getelementptr inbounds { i1, i8* }, { i1, i8* }* %vertex_graph_element, i32 0, i32 1
+  store { i8* }* %vertex, i8** %data, align 8
+  %elements = getelementptr inbounds { [10 x { i1, i8* }], i32 }, { [10 x { i1, i8* }], i32 }* %graph, i32 0, i32 0
+  %count4 = getelementptr inbounds { [10 x { i1, i8* }], i32 }, { [10 x { i1, i8* }], i32 }* %graph, i32 0, i32 1
+  %count5 = load i32, i32* %count4, align 4
+  %ptr_to_last_elem = getelementptr [10 x { i1, i8* }], [10 x { i1, i8* }]* %elements, i32 %count5
+  store { i1, i8* }* %vertex_graph_element, [10 x { i1, i8* }]* %ptr_to_last_elem, align 8
+  %count_plus_one = add i32 %count5, 1
+  store i32 %count_plus_one, i32* %count4, align 4
+  %malloccall6 = tail call i8* @malloc(i32 ptrtoint ({ i8* }* getelementptr ({ i8* }, { i8* }* null, i32 1) to i32))
+  %vertex7 = bitcast i8* %malloccall6 to { i8* }*
+  %vertex_id9 = tail call i8* @malloc(i32 ptrtoint (i8* getelementptr (i8, i8* null, i32 1) to i32))
+  store i8* getelementptr inbounds ([8 x i8], [8 x i8]* @tmp_id.1, i32 0, i32 0), i8* %vertex_id9, align 8
+  %id10 = getelementptr inbounds { i8* }, { i8* }* %vertex7, i32 0, i32 0
+  store i8* %vertex_id9, i8** %id10, align 8
+  %malloccall11 = tail call i8* @malloc(i32 ptrtoint ({ i1, i8* }* getelementptr ({ i1, i8* }, { i1, i8* }* null, i32 1) to i32))
+  %vertex_graph_element12 = bitcast i8* %malloccall11 to { i1, i8* }*
+  %tag13 = getelementptr inbounds { i1, i8* }, { i1, i8* }* %vertex_graph_element12, i32 0, i32 0
+  store i1 false, i1* %tag13, align 1
+  %data14 = getelementptr inbounds { i1, i8* }, { i1, i8* }* %vertex_graph_element12, i32 0, i32 1
+  store { i8* }* %vertex7, i8** %data14, align 8
+  %elements15 = getelementptr inbounds { [10 x { i1, i8* }], i32 }, { [10 x { i1, i8* }], i32 }* %graph, i32 0, i32 0
+  %count16 = getelementptr inbounds { [10 x { i1, i8* }], i32 }, { [10 x { i1, i8* }], i32 }* %graph, i32 0, i32 1
+  %count17 = load i32, i32* %count16, align 4
+  %ptr_to_last_elem18 = getelementptr [10 x { i1, i8* }], [10 x { i1, i8* }]* %elements15, i32 %count17
+  store { i1, i8* }* %vertex_graph_element12, [10 x { i1, i8* }]* %ptr_to_last_elem18, align 8
+  %count_plus_one19 = add i32 %count17, 1
+  store i32 %count_plus_one19, i32* %count16, align 4
+  %g1 = alloca { [10 x { i1, i8* }], i32 }, align 8
+  store { [10 x { i1, i8* }], i32 }* %graph, { [10 x { i1, i8* }], i32 }* %g1, align 8
   ret i32 0
 }
 
