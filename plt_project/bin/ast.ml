@@ -50,7 +50,7 @@ type stmt =
   | IfElif of expr * stmt list * elif_stmt list * stmt list
   | While of expr * stmt list
   | For of expr * expr * expr * stmt list
-  (* | FunctionCreation of string * stmt list *)
+  | FunctionCreation of string * stmt list
   
   and
  elif_stmt = expr * stmt list
