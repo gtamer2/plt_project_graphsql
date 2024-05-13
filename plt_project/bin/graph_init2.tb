@@ -2,11 +2,3 @@ CREATE GRAPH (
 	[VERTEX ("vertex1"),
 	VERTEX ("vertex2")]
 ) AS g1;
-
-CREATE GRAPH (
-	[VERTEX ("vertex3"),
-	VERTEX ("vertex4")]
-) AS g2;
-
-(g1 UNION g2) AS g3;
-g3;
