@@ -4,14 +4,4 @@ z = 2 - 1;
 f = 2 * 1;
 g = 4 / 2;
 
-# boolean operator
-andop = True AND False;
-orop = True OR False;
-notop = NOT andop;
-
-# comparison operator
-y = x > z;
-eql = 4 == 1;
-geql = 4 >= 1;
-leql = 4 <= 1;
-neql = 4 != 1;
+print(x,z,f,g);

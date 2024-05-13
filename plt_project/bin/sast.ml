@@ -41,11 +41,9 @@ and sx =
   | SUniop of uniop * sexpr
   | SBinop of sexpr * binop * sexpr
   | SGraph of sgraph_element list
-  (* | SGraphAccess of string * string *)
   | SGraphAsn of string * sx
-  (* | SGraphOp of string * sgraph_element list * string
-  | SGraphQuery of string * string * string
-  | SGraphUpdate of string * graph_element *)
+  | SFunctionCall of string * sexpr list
+  | Return of sexpr
 
 type sstmt = 
   | SBlock of sstmt list
@@ -54,6 +52,7 @@ type sstmt =
   | SIfElse of sexpr * sstmt list * sstmt list
   | SWhile of sexpr * sstmt list
   | SFor of sexpr * sexpr * sexpr * sstmt list
+  (* | SFunctionCreation of string * sstmt list *)
 
 let get_graph_sx sgraphexpr = 
   match sgraphexpr with 
@@ -101,6 +100,7 @@ let rec string_of_sexpr (t, e) =
     | SGraph(elements) ->
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
     | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname ^ ", Graph([" ^ String.concat ", " (List.map string_of_sgraph_element (get_graph_sx sgraph)) ^ "])"
+    | SFunctionCall(fname, args) -> "FunctionCall: " ^ fname ^ "(" ^ String.concat ", " (List.map string_of_sexpr args) ^ ")"
     end
   ) ^ ")"
 
@@ -126,16 +126,7 @@ and string_of_sstmt = function
   | SIfElse (sexpr, sstmt_list_1, sstmt_list_2) -> string_of_sexpr sexpr ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list_2) ^ "}\n" ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list_2) ^ "}\n"
   | SWhile (sexpr, sstmt_list) -> string_of_sexpr sexpr ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
   | SFor (sexpr1, sexpr2, sexpr3, sstmt_list) -> string_of_sexpr sexpr1 ^ string_of_sexpr sexpr2 ^ string_of_sexpr sexpr3 ^ "{\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
-
-
-  (* 
-  SIf of sexpr * sstmt list
-  | SIfElse of sexpr * sstmt list * sstmt list
-  | SWhile of sexpr * sstmt list
-  | SFor of sexpr * sexpr * sexpr * sstmt list   
-  *)
-  
-
+  | SFunctionCreation (fname, sstmt_list) -> "Function " ^ fname ^ " {\n" ^ String.concat "" (List.map string_of_sstmt sstmt_list) ^ "}\n"
     
 
   

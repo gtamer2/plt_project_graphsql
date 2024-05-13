@@ -72,24 +72,6 @@ let translate stmt_list =
 
   in
 
-  (* Convert "sgraph_elements" which is a list of sgraph_elements into a list of element_ptrs *)
-  (* let convert_sgraph_elements_to_ptrs context builder sgraph_elements vmap =
-    let vertex_type = vertex_type context in
-    let rec convert_element_to_ptr elem = match snd elem with
-      | SVertex { sid = id } -> 
-        let is_vertex_in_vmap = StringMap.mem id vmap in 
-        if is_vertex_in_vmap then
-          StringMap.find id vmap
-        else begin
-          let new_vertex_ptr = create_vertex context builder id vertex_type in 
-          StringMap.add id new_vertex_ptr vmap; (* Add the new vertex pointer with id as the key *)
-          new_vertex_ptr
-        end
-      | _ -> raise (Invalid_argument "Graph element has to be a Vertex")
-    in
-    List.map convert_element_to_ptr sgraph_elements
-
-  in *)
 
   let add_vertex_to_graph builder graph vertex_id =
     (* 0. Check if the graph is full *)
@@ -115,6 +97,8 @@ let translate stmt_list =
 
   in
 
+  (* =================== FUNCTIONS CODE =================== *)
+ 
   (* =================== MAIN FXN & PROGRAM ENTRY POINT =================== *)
   let main_type = L.function_type i32_t [||] in
   let main_func = L.define_function "main" main_type the_module in
@@ -191,11 +175,20 @@ let translate stmt_list =
       end in
       let vmap' = StringMap.add gname graph vmap in
       ignore(L.build_store graph mem_location builder); (graph, vmap')
+    | SFunctionCall ("print", [e]) ->
+      let e_result, vmap = build_expr builder e vmap in
+      Printf.printf "Print Function\n. Type of input expression: %s\n"(string_of_sexpr e);
+      Printf.printf "\nExpression output: %s\n" (L.string_of_llvalue e_result);
+      (L.const_int i32_t 0), vmap
+    | SFunctionCall (function_name, args) ->
+      let zero = L.const_int (L.i32_type context) 0 in
+      zero, vmap
     | _ -> raise (Invalid_argument "expression type not supported")
   in
 
   let rec build_sstmt (builder, vmap) sstmt = match sstmt with
     | SExpr e -> let _, vmap' = build_expr builder e vmap in builder, vmap'
+    
     | _ -> builder, vmap
   in 
 

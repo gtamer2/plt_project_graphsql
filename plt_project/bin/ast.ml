@@ -34,11 +34,11 @@ type expr =
   | Binop of expr * binop * expr
   | Graph of graph_element list
   | GraphAsn of string * expr
-  | GraphAccess of string * string (* graph_name * field_name *)
+  | GraphAccess of string * string
   | GraphOp of string * graph_element list * string
   | GraphQuery of string * string * string
   | GraphUpdate of string * graph_element
-  | FunctionCall of string 
+  | FunctionCall of string * expr list
   | Return of expr
   | LambaFunction of expr
 
@@ -92,7 +92,7 @@ let rec string_of_expr = function
     "\n" ^ "Graph:" ^ gname ^ "[" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "]" ^ "OpType:" ^ optype
   | GraphUpdate(gname, element) ->
     "\n Updating graph element" ^ string_of_graph_element element ^ "in graph: " ^ gname  
-  | FunctionCall(name) -> "\n" ^ "FunctionCall: " ^ name
+  | FunctionCall(name, args) -> "\n" ^ "FunctionCall: " ^ name ^ "(" ^ String.concat ", " (List.map string_of_expr args) ^ ")"
   | Return(expr) -> "RETURN: " ^ string_of_expr expr ^ " "	
   | LambaFunction(expr) -> "Lambda Function: " ^ string_of_expr expr ^ " "	
 
@@ -127,7 +127,7 @@ let rec string_of_stmt = function
   (* | Block(stmts) -> "TODO BLOCK "  *)
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
-  | FunctionCreation(name, body) -> "\n" ^ "FunctionCall: " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
+  | FunctionCreation(name, body) -> "\n" ^ "FunctionCreation: TODO " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
   
  and string_of_elif_stmt = function
 | [] -> ""
