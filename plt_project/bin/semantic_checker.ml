@@ -7,13 +7,13 @@ open Sast
 module BindMap = Map.Make(String)
 module VarMap = Map.Make(String)
 module GraphMap = Map.Make(String)
+module FunctionMap = Map.Make(String)
 
 (* Define a new environment type that includes both variable and graph maps *)
 type environment = {
   bindings: unified_type BindMap.t;
   vars: sexpr VarMap.t;
   graphs: sexpr GraphMap.t;
-  (* declared_vertices: StringSet.t;   *)
 }
 
 (* Function to check a single graph element *)
@@ -84,20 +84,48 @@ let get_common_sgraph_elements graph1_elements graph2_elements =
   ) common_elements in 
   adjusted_elements
 
-let check init_program = 
+let check (statements, functions) = 
 
   let init_env = {
     bindings = BindMap.empty;
     vars = VarMap.empty;
     graphs = GraphMap.empty;
   } in
+  let check_assign lvaluet rvaluet err =
+    if lvaluet = rvaluet then lvaluet else raise (Failure err)
+  in
 
   (* Return a variable from our symbol table *)
   let type_of_identifier s bindings =
     try BindMap.find s bindings
     with Not_found -> raise (Failure ("undeclared identifier " ^ s))
   in
+
+
+  let func_map = FunctionMap.empty in
+
+  let add_func map fd =
+    let built_in_err = "function " ^ fd.fname ^ " may not be defined"
+    and dup_err = "duplicate function " ^ fd.fname
+    and make_err er = raise (Failure er)
+    and n = fd.fname (* Name of the function *)
+    in match fd with (* No duplicate functions or redefinitions of built-ins *)
+      _ when FunctionMap.mem n func_map -> make_err built_in_err
+    | _ when FunctionMap.mem n map -> make_err dup_err
+    | _ ->  FunctionMap.add n fd map
+  in
+
+  let function_decls = List.fold_left add_func func_map functions 
+
+  in
   
+  (* Return a function from our symbol table *)
+  let find_func s =
+    try FunctionMap.find s function_decls
+    with Not_found -> raise (Failure ("unrecognized function " ^ s))
+  
+  in
+
   (* return a semantically checked expression, which also constructs the environment *)
   let rec check_expr env = function
       Lit l -> ((Int, SLit l), env)
@@ -105,11 +133,6 @@ let check init_program =
     | Var var -> 
       let var_type = type_of_identifier var env.bindings in
       begin match var_type with
-        | Int -> ((Int, SVar var), env)
-        | Bool -> ((Bool, SVar var), env)
-        | Float -> ((Float, SVar var), env)
-        | String -> ((String, SVar var), env)
-        | GraphType var_type -> ((GraphType var_type, SVar var), env)
         | Int -> ((Int, SVar var), env)
         | Bool -> ((Bool, SVar var), env)
         | Float -> ((Float, SVar var), env)
@@ -127,8 +150,6 @@ let check init_program =
       let ((t1, e1'), env1) = check_expr env e1 in
       let ((t2, e2'), env2) = check_expr env1 e2 in
       let err = "illegal binary operator " ^
-                (* string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
-                string_of_typ (t2) ^ " in " ^ string_of_expr e *)
                 string_of_typ (t1) ^ " " ^ string_of_op op ^ " " ^
                 string_of_typ (t2) ^ " in " ^ string_of_expr e
       in
@@ -152,13 +173,6 @@ let check init_program =
         ((t, SBinop((t1, e1'), op, (t2, e2'))), env2)
       else
         raise (Failure err)
-
-
-    (* | Seq (e1, e2) -> 
-      let se1, env1 = check_expr env e1 in
-      let se2, env2 = check_expr env1 e2 in
-      (((* what type is an seq*), SSeq (se1, se2)), env2) *)
-    
     | Graph (graph_elements) ->
       (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
       (* If one of the graph_elements is not valid object Vertex or Edge, this operation will fail *)
@@ -323,15 +337,22 @@ let check init_program =
         let env2 = { env1 with bindings = BindMap.add var t env1.bindings } in 
         let env3 = { env2 with vars = VarMap.add var (t, e') env2.vars } in
         ((t, SAsn(var, (t, e'))), env3)
-    
-    | FunctionCall(name, args) ->
-      (* Short circuit to true *)
-      if name = "print" then
-        let (t, e), env1 = check_expr env (List.hd args) in
-        ((t, SFunctionCall(name, [(t, e)])), env1)
-      else begin
-        failwith "Function not supported"
-      end
+    | FunctionCall(fname, args) as call ->
+      let fd = find_func fname in
+      let param_length = List.length fd.formals in
+      if List.length args != param_length then
+        raise (Failure ("expecting " ^ string_of_int param_length ^
+                        " arguments in " ^ string_of_expr call))
+      else 
+        let args_types = List.map (fun x -> fst (check_expr env x)) args in
+      let any_mismatch = List.exists (fun (t1, _) -> List.exists (fun (t2, _) -> t1 != t2) args_types) fd.formals in
+      if any_mismatch then
+        raise (Failure ("illegal argument found in " ^ string_of_expr call))
+      else
+        (fd.rtyp, SFunctionCall(fname, args_types)), env
+    | Return e ->
+      let ((t, e'), env1) = check_expr env e in
+      (t, SReturn (t, e')), env1
     | _ -> failwith "expression not supported"
       in
 
@@ -364,8 +385,6 @@ let check init_program =
         else
           raise (Failure err)
 
-      (* SFor *)
-
       | For (init, condition, update, body) ->
         let ((t1,init'),env1) = check_expr env init in
         let ((t2,condition'),env2) = check_expr env1 condition in 
@@ -381,9 +400,6 @@ let check init_program =
           (SFor((t1,init'), (t2,condition'), (t3,update'), body'), env4)
         else
           raise (Failure err)
-      
-      (* SIfElse *)
-
       | IfElse (cond, then_stmt, else_stmt) ->
         let ((t1, cond'), env1) = check_expr env cond in
         let (then_stmt', env2) = check_stmt_list env1 then_stmt in
@@ -397,8 +413,6 @@ let check init_program =
           (SIfElse( (t1, cond'), then_stmt', else_stmt' ), env3)
         else
           raise (Failure err)
-      
-      (* While *)
 
       | While (cond, body) ->
         let ((t1, cond'), env1) = check_expr env cond in
@@ -411,8 +425,27 @@ let check init_program =
           (SWhile((t1, cond'), body'), env2)
         else
           raise (Failure err)
-
       | _ -> failwith "Statement not supported"
   
   in
-  check_stmt_list init_env init_program
+    (* Verify a list of bindings has no duplicate names *)
+    let check_binds (kind : string) (binds : (unified_type * string) list) =
+      let rec dups = function
+          [] -> ()
+        |	((_,n1) :: (_,n2) :: _) when n1 = n2 ->
+          raise (Failure ("duplicate " ^ kind ^ " " ^ n1))
+        | _ :: t -> dups t
+      in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
+    in
+  let check_func func =
+    (* Make sure no formals or locals are void or duplicates *)
+    check_binds "formal" func.formals;
+    { srtyp = func.rtyp;
+      sfname = func.fname;
+      sformals = func.formals;
+      sbody = fst (check_stmt_list init_env func.body)
+    }
+  in
+  let checked_prog_statements = fst (check_stmt_list init_env statements) in
+  let checked_functions = List.map check_func functions in
+  (checked_prog_statements, checked_functions)

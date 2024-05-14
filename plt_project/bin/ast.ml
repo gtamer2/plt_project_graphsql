@@ -11,18 +11,21 @@ type edge = {
   weight: int; 
 }
 
-type graph_element =
-  | Vertex of string
-  | Edge of string * string * int
-
+type graph_element_type =
+  | VertexType
+  | EdgeType
 
 type unified_type = 
   | Int
   | Bool 
   | Float
   | String
-  | GraphElement of graph_element
-  | Graph of graph_element list
+  | GraphType of graph_element_type list
+
+
+type graph_element =
+| Vertex of string
+| Edge of string * string * int
 
 type expr =
   | Lit of int
@@ -50,14 +53,23 @@ type stmt =
   | IfElif of expr * stmt list * elif_stmt list * stmt list
   | While of expr * stmt list
   | For of expr * expr * expr * stmt list
-  | FunctionCreation of string * stmt list
-  
   and
  elif_stmt = expr * stmt list
 
 type stmt_list = stmt list 
 
+type vdecl = unified_type * string
 
+type func_def = {
+  rtyp: unified_type;
+  fname: string;
+  formals: vdecl list;
+  body: stmt list;
+}
+
+type program = stmt_list * func_def list
+
+  
 let get_graph_elements expr =
   match expr with
   | Graph elements -> elements
@@ -83,9 +95,7 @@ let rec string_of_expr = function
     "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
   | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
-    (* "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements "  *)
     "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ string_of_expr elt_list ^ "]"
-    (* "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ String.concat ", " (List.map string_of_expr elt_list) ^ "]" *)
   | GraphQuery(gname1, gname2, queryType) ->
     "\n GraphQuerying..." ^ gname1 ^ queryType ^ gname2
   | GraphOp(gname, elements, optype) -> 
@@ -124,10 +134,9 @@ let rec string_of_stmt = function
   | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ " ELSE " ^ string_of_stmt_list elsebody
   | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
   | Expr(expr) -> string_of_expr expr ^ " "
-  (* | Block(stmts) -> "TODO BLOCK "  *)
+  | Block(stmts) -> "TODO BLOCK " 
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
-  | FunctionCreation(name, body) -> "\n" ^ "FunctionCreation: TODO " ^ name ^ "() {" ^ string_of_stmt_list body ^ "}\n"
   
  and string_of_elif_stmt = function
 | [] -> ""
@@ -135,3 +144,23 @@ let rec string_of_stmt = function
 and  string_of_stmt_list = function
   | [] -> ""
   | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest
+
+  and string_of_func_list = function
+  | [] -> ""
+  | func :: rest -> string_of_func func ^ string_of_func_list rest
+
+and string_of_vdecl (typ, name) =
+  match typ with
+  | Int -> "int " ^ name
+  | Bool -> "bool " ^ name
+  | Float -> "float " ^ name
+  | String -> "string " ^ name
+  | GraphType _ -> "graph " ^ name
+
+and string_of_func func = 
+  "FUNCTION: " ^ func.fname ^ "(" ^ String.concat ", " (List.map string_of_vdecl func.formals) ^ ") -> " ^ string_of_stmt_list func.body
+
+
+
+and string_of_proram (stmts, funcs) = 
+  string_of_stmt_list stmts ^ string_of_func_list funcs

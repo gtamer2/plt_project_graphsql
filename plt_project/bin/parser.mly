@@ -11,6 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
+%token INT BOOLEAN FLOAT
 %token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE FOR RETURN 
 
 %token QUOTES
@@ -31,10 +32,20 @@
 %right NOT
 %left GT LT GTEQ LTEQ
 
-%start stmt_list
-%type <Ast.stmt_list> stmt_list
+%start program
+%type <Ast.program> program
 
 %%
+
+program:
+  decls EOF { $1}
+
+// first element is stmt_list, second element is fxns
+decls:
+   /* nothing */ { ([], []) }
+| stmt_list decls { (($1 @ fst $2), snd $2 )}
+| function_declaration decls {(fst $2 , ($1 :: snd $2))  }
+
 
 graph_element:
     | VERTEX LP QUOTES VARIABLE QUOTES RP { Vertex($4) }
@@ -60,7 +71,30 @@ graph_operation:
 
 stmt_list: 
     /* nothing */ { [] }
-    | stmt stmt_list { $1::$2 }
+    | stmt stmt_list { $1 :: $2 }
+
+vdecl_list:
+  /*nothing*/ { [] }
+  | vdecl SEMICOLON vdecl_list  {  $1 :: $3 }
+
+/* int x */
+vdecl:
+  unified_type VARIABLE { ($1, $2) }
+
+unified_type:
+| INT    { Int }
+| FLOAT { Float }
+| BOOLEAN { Bool }
+//   | STRING { String }
+//   | GRAPH { GraphType }
+
+formals_opt:
+  /*nothing*/ { [] }
+  | formals_list { $1 }
+
+formals_list:
+  vdecl { [$1] }
+  | vdecl COMMA formals_list { $1::$3 }
 
 stmt:
     | expr SEMICOLON { Expr($1) }
@@ -70,7 +104,17 @@ stmt:
     | IF LP expr RP LC stmt_list RC ELSE LC stmt_list RC { IfElse($3, $6, $10)}
     | WHILE LP expr RP LC stmt_list RC { While($3, $6)}
     | FOR LP expr SEMICOLON expr SEMICOLON expr RP LC stmt_list RC { For($3, $5, $7, $10)}
-    | FUNCTION VARIABLE LP RP LC stmt_list RC {FunctionCreation($2, $6)}
+
+function_declaration:
+    DEFINE FUNCTION unified_type VARIABLE LP formals_opt RP LC stmt_list RC
+    {
+        {
+            fname=$4;
+            formals=$6;
+            body=$9;
+            rtyp=$3;
+        }
+    }
 
 elif_stmt_list:
     | ELIF LP expr RP LC stmt_list RC  {[($3, $6)]}
@@ -114,7 +158,3 @@ expr:
     | expr AND expr { Binop($1, And, $3) }
     | expr OR expr { Binop($1, Or, $3) }
     | LP expr RP { $2 } //should this be moved
-
-
-entry:
-| expr EOF { $1 }

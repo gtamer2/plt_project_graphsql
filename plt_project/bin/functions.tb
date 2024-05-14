@@ -1,0 +1,11 @@
+DEFINE FUNCTION Int foo() {
+    y = 1;
+    return y;
+}
+
+DEFINE FUNCTION Int bar() {
+    x = 2;
+    return x;
+}
+
+foo();
