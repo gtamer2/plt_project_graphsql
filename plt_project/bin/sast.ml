@@ -1,16 +1,16 @@
 open Ast  
 
 (* TYPES - START *)
-type graph_element_type =
+(* type graph_element_type =
   | VertexType
-  | EdgeType
+  | EdgeType *)
 
-type unified_type = 
+(* type unified_type = 
   | Int
   | Bool
   | Float
   | String
-  | GraphType of graph_element_type list
+  | GraphType of graph_element_type list *)
 
 (* SEMANTIC AST - START *)
 type svertex = {
@@ -114,9 +114,9 @@ let rec string_of_sexpr (t, e) =
   ) ^ ")"
 
 and string_of_sgraph_element = function
-  | (VertexType, SVertex { sid }) -> "Vertex(" ^ sid ^ ")"
-  | (EdgeType, SEdge { ssource; starget; sweight }) ->
-      "Edge(" ^ ssource ^ ", " ^ starget ^ ", " ^ string_of_int sweight ^ ")"
+  | (VertexType, SVertex svertex) -> string_of_svertex svertex
+  | (EdgeType, SEdge sedge) -> string_of_sedge sedge
+  | _ -> "Invalid graph element"
 
 and string_of_svertex svertex =
   "\"" ^ svertex.sid ^ "\""

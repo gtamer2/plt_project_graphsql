@@ -349,7 +349,7 @@ let check (statements, functions) =
         in (check_assign ft (fst et) err, e')
       in
       let args_list = List.map2 check_call fd.formals args
-      in (fd.return_type, SFunctionCall(name, args_list)), env
+      in (fd.rtyp, SFunctionCall(fname, args_list)), env
     | _ -> failwith "expression not supported"
       in
 

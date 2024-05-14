@@ -11,17 +11,21 @@ type edge = {
   weight: int; 
 }
 
-type graph_element =
-  | Vertex of string
-  | Edge of string * string * int
-
+type graph_element_type =
+  | VertexType
+  | EdgeType
 
 type unified_type = 
   | Int
   | Bool 
   | Float
   | String
-  | GraphType of graph_element list
+  | GraphType of graph_element_type list
+
+
+type graph_element =
+| Vertex of string
+| Edge of string * string * int
 
 type expr =
   | Lit of int
@@ -91,9 +95,7 @@ let rec string_of_expr = function
     "\n" ^ "Graph([" ^ String.concat ", " (List.map string_of_graph_element elements) ^ "])"
   | GraphAccess(graphname, fieldname) -> "\n" ^ "GraphAccessing... graphname:" ^ graphname ^ ", fieldname:" ^ fieldname
   | GraphAsn(v, elt_list) -> 
-    (* "\n" ^ "GraphAsn: " ^ v  ^ "TODO print all elements "  *)
     "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ string_of_expr elt_list ^ "]"
-    (* "\n" ^ "GraphAsn: " ^ v  ^ "[" ^ String.concat ", " (List.map string_of_expr elt_list) ^ "]" *)
   | GraphQuery(gname1, gname2, queryType) ->
     "\n GraphQuerying..." ^ gname1 ^ queryType ^ gname2
   | GraphOp(gname, elements, optype) -> 
@@ -132,7 +134,7 @@ let rec string_of_stmt = function
   | IfElse(condition, truebody, elsebody) -> "\n" ^ "IF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ " ELSE " ^ string_of_stmt_list elsebody
   | While(condition, body) -> "WHILE(" ^ string_of_expr condition ^ ") DO " ^ string_of_stmt_list body
   | Expr(expr) -> string_of_expr expr ^ " "
-  (* | Block(stmts) -> "TODO BLOCK "  *)
+  | Block(stmts) -> "TODO BLOCK " 
   | For(init, condition, increment, body) -> "FOR (" ^ string_of_expr init ^ "; " ^ string_of_expr condition ^ "; " ^ (string_of_expr increment) ^ ") {" ^ string_of_stmt_list  body ^ "}"
   | IfElif(condition, truebody, eliflist, elsebody) -> "\nIF(" ^ string_of_expr condition ^ ") THEN " ^ string_of_stmt_list truebody ^ string_of_elif_stmt eliflist  ^ " ELSE " ^ string_of_stmt_list elsebody ^ "\n"
   
