@@ -6,7 +6,7 @@
 # WARN - CHATGPT
 # Define the default target
 # all: graph_init.out graph_init2.out semant_test.out semant_test2.out
-all: graphsql_compile.native 
+all: graphsql_compile.native semant_eval
 
 
 # WARN - CHATGPT

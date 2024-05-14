@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Define the paths to your testbenches directory and expected output directory
-testbenches_dir="testing/test/"
-expected_outputs_dir="testing/expected_outputs/"
-outputs_dir="testing/output/"
+testbenches_dir="testing_irgen/test/"
+expected_outputs_dir="testing_irgen/expected_outputs/"
+outputs_dir="testing_irgen/output/"
 
 # Compile your OCaml program
-dune clean; dune build;
+cd bin; make clean; make; cd ..;
 
 # Loop through each file in the testbenches directory
 for test_file in ${testbenches_dir}*.tb; do
@@ -16,7 +16,7 @@ for test_file in ${testbenches_dir}*.tb; do
     # Check if the testbench file name contains "test"
     if [[ $test_base == *"test"* ]]; then
         # Run your OCaml program with the current testbench file and capture output
-        ./_build/default/bin/graphsql.exe < "${testbenches_dir}${test_base}" > "${outputs_dir}${test_base%.*}.out" 2> temp_error.out
+        ./bin/graphsql_compile.native < "${testbenches_dir}${test_base}" > "${outputs_dir}${test_base%.*}.out" 2> temp_error.out
         
         # Check if an error occurred (non-empty error output)
         if [ -s temp_error.out ]; then
