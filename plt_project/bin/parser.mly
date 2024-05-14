@@ -40,7 +40,6 @@
 program:
   decls EOF { $1}
 
-// first element is stmt_list, second element is fxns
 decls:
    /* nothing */ { ([], []) }
 | stmt_list decls { (($1 @ fst $2), snd $2 )}
@@ -62,7 +61,7 @@ graph_elements_list:
 
 
 graph_operation:
-    | CREATE GRAPH LP RP { Graph([]) } //eventually can remove this 
+    | CREATE GRAPH LP RP { Graph([]) }
     | CREATE GRAPH LP graph_elements_list RP { Graph($4) }
     | SELECT VARIABLE DOT VERTICES FROM VARIABLE { GraphAccess($6, "vertices") }
     | SELECT VARIABLE DOT EDGES FROM VARIABLE { GraphAccess($6, "edges") }
@@ -77,7 +76,6 @@ vdecl_list:
   /*nothing*/ { [] }
   | vdecl SEMICOLON vdecl_list  {  $1 :: $3 }
 
-/* int x */
 vdecl:
   unified_type VARIABLE { ($1, $2) }
 
@@ -129,26 +127,26 @@ args:
   | expr COMMA args { $1::$3 }
 
 expr:    
-    | LITERAL    { Lit($1) } //done
-    | FLOATLIT { FloatLit($1) } //done
+    | LITERAL    { Lit($1) }
+    | FLOATLIT { FloatLit($1) }
     | BLIT     { BoolLit($1) }
-    | VARIABLE ASSIGN expr {Asn($1, $3)} //done
-    | VARIABLE { Var($1) } //done
+    | VARIABLE ASSIGN expr {Asn($1, $3)}
+    | VARIABLE { Var($1) }
     | VARIABLE LP args_opt RP{FunctionCall($1, $3) } 
     | LAMBDA COLON LP expr RP {LambaFunction($4)} 
     | RETURN expr {Return($2) }
-    | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") } // done. TODO: check if need to change order?
-    | VARIABLE DOT EDGES { GraphAccess($1, "edges") }  // done
-    | graph_operation AS VARIABLE {GraphAsn($3, $1)} // DONE
+    | VARIABLE DOT VERTICES { GraphAccess($1, "vertices") }
+    | VARIABLE DOT EDGES { GraphAccess($1, "edges") }
+    | graph_operation AS VARIABLE {GraphAsn($3, $1)}
     | INSERT INTO VARIABLE graph_elements_list {GraphOp($3, $4, "insert")}
     | DELETE graph_elements_list FROM VARIABLE {GraphOp($4, $2, "delete")}
     | UPDATE graph_element FROM VARIABLE { GraphUpdate($4, $2) }
     | NOT expr { Uniop(Not, $2) }
-    | expr PLUS expr {Binop($1, Add, $3) } //done
-    | expr MINUS expr { Binop($1, Sub, $3) } //done
-    | expr TIMES expr { Binop($1, Mul, $3) } //done
-    | expr DIVIDE expr { Binop($1, Div, $3) } //done
-    | expr MODULUS expr { Binop($1, Mod, $3) } //done
+    | expr PLUS expr {Binop($1, Add, $3) }
+    | expr MINUS expr { Binop($1, Sub, $3) }
+    | expr TIMES expr { Binop($1, Mul, $3) }
+    | expr DIVIDE expr { Binop($1, Div, $3) }
+    | expr MODULUS expr { Binop($1, Mod, $3) }
     | expr EQL expr { Binop($1, Eq, $3) }
     | expr NOTEQL expr { Binop($1, Neq, $3) }
     | expr GT expr { Binop($1, Gt, $3) }
@@ -157,4 +155,4 @@ expr:
     | expr LTEQ expr { Binop($1, Lteq, $3) }
     | expr AND expr { Binop($1, And, $3) }
     | expr OR expr { Binop($1, Or, $3) }
-    | LP expr RP { $2 } //should this be moved
+    | LP expr RP { $2 }
