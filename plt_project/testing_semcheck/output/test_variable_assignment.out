@@ -1,0 +1,9 @@
+SAST: 
+sprogram_string: 
+(Int : b = (Int : 6));
+ 
+svarmap_string: 
+[b -> 6]
+ 
+sbindmap_string: 
+[b -> Int]

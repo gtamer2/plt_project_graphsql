@@ -208,7 +208,7 @@ let translate stmt_list =
     let count_ptr = L.build_struct_gep graph 1 "count" builder in
     let count = L.build_load count_ptr "count" builder in
     let ptr_to_last_elem = L.build_gep elements_ptr [| count |] "ptr_to_last_elem" builder in
-    ignore (L.build_store new_graph_elt ptr_to_last_elem builder);
+    ignore (L.build_store elements_ptr ptr_to_last_elem builder);
     
     (* 3. Increment the count of elements in the graph *)
     let one = L.const_int i32_t 1 in
