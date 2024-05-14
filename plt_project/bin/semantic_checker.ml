@@ -17,8 +17,8 @@ type environment = {
 }
 
 (* Function to check a single graph element *)
+(* RETURNS TUPLE, where first element is a tuple of (graph_elt_type, graph_elt), env *)
 let check_graph_element env elem =
-  (* RETURNS TUPLE, where first element is a tuple of (graph_elt_type, graph_elt), env *)
   begin match elem with
   | Vertex id ->
     (VertexType, SVertex { sid = id }), env
@@ -27,6 +27,8 @@ let check_graph_element env elem =
   | _ -> failwith("unsupported graph element")
   end
 
+(* Helper function to Union opertaion:
+   Get a list of unique sgraph elements from a list of sgraph elements *)
 let get_unique_sgraph_elements sgraph_element_list =
   List.fold_left (fun acc elem ->
     (* handle the case with duplicate edges *)
@@ -50,6 +52,9 @@ let get_unique_sgraph_elements sgraph_element_list =
     end
   ) [] sgraph_element_list
 
+
+(* Helper function to Intersect opertaion:
+   Get a list of overlapping sgraph elements from two lists of sgraph elements *)
 let get_common_sgraph_elements graph1_elements graph2_elements = 
   (* filter out all common elements from graph1 *)
   let common_elements =     
@@ -66,7 +71,8 @@ let get_common_sgraph_elements graph1_elements graph2_elements =
       ) graph2_elements
   ) graph1_elements in
   
-  (* when exist duplicate common edges, keep the one with lesser weight*)
+  (* For Intersect operation:
+     when exist duplicate common edges, keep the one with lesser weight*)
   let adjusted_elements = List.map (fun elem ->
     match elem with
     | (EdgeType, SEdge { ssource; starget; sweight }) ->
@@ -84,6 +90,7 @@ let get_common_sgraph_elements graph1_elements graph2_elements =
   ) common_elements in 
   adjusted_elements
 
+(* Function used to semantically checked a list of statments and functions*)
 let check (statements, functions) = 
 
   let init_env = {
@@ -175,9 +182,6 @@ let check (statements, functions) =
         raise (Failure err)
     | Graph (graph_elements) ->
       (* checked_graph... will be list of tuple of ((graph_elt_type, graph_elt), env) *)
-      (* If one of the graph_elements is not valid object Vertex or Edge, this operation will fail *)
-      (* So we want code that does the try/catch ocaml pattern *)
-      (* assuming success, or upon sanity check success, return ((GraphType, SGraph elts), final_env) *)
       let checked_graph_elements_with_envs = List.map (check_graph_element env) graph_elements in
 
       (* Extract stuff... note we assume valid at this point because of failwith thrown in check_graph_element *)
@@ -356,6 +360,7 @@ let check (statements, functions) =
     | _ -> failwith "expression not supported"
       in
 
+  (* Function used to semantically check stmt list *)
   let rec check_stmt_list env = function
         [] -> ([], env)
       | stmt :: rest ->
