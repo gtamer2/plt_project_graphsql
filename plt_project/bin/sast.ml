@@ -40,7 +40,7 @@ and sx =
   | SGraph of sgraph_element list
   | SGraphAsn of string * sx
   | SFunctionCall of string * sexpr list
-  | Return of sexpr
+  | SReturn of sexpr
 
 type sstmt = 
   | SBlock of sstmt list
@@ -109,7 +109,7 @@ let rec string_of_sexpr (t, e) =
         "Graph([" ^ String.concat ", " (List.map string_of_sgraph_element elements) ^ "])"
     | SGraphAsn(gname, sgraph) -> "GraphAsn: " ^ gname ^ ", Graph([" ^ String.concat ", " (List.map string_of_sgraph_element (get_graph_sx sgraph)) ^ "])"
     | SFunctionCall(fname, args) -> "FunctionCall: " ^ fname ^ "(" ^ String.concat ", " (List.map string_of_sexpr args) ^ ")"
-    | Return(e) -> "Return(" ^ string_of_sexpr e ^ ")"
+    | SReturn(e) -> "Return(" ^ string_of_sexpr e ^ ")"
     end
   ) ^ ")"
 

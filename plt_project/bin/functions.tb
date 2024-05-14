@@ -1,8 +1,8 @@
-x = 2;
+a = 5;
 
-DEFINE FUNCTION Int foobar(x, y) {
+DEFINE FUNCTION Int foobar(Int foo, Int bar) {
     y = 1;
-    return y;
+    return foo + bar + y;
 }
 
-foobar();
+foobar(2,a);

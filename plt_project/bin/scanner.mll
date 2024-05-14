@@ -26,10 +26,15 @@ rule tokenize = parse
 | ":" {COLON}
 | ';' { SEMICOLON }
 | '=' { ASSIGN }
+(* Return types *)
+| "Int" { INT }
+| "Float" { FLOAT }
+| "Boolean" { BOOLEAN }
+(* Return types *)
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
 | '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
-| "RETURN" { RETURN }
+| "return" { RETURN }
 | "LAMBDA" {LAMBDA}
 | "AND" { AND }
 | "OR" { OR }

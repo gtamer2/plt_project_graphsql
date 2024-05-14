@@ -11,6 +11,7 @@
 %token <string> STRINGLIT
 
 %token EQL NOTEQL GT LT GTEQ LTEQ AND OR NOT
+%token INT BOOLEAN FLOAT
 %token CREATE SELECT FROM AS WHERE INSERT INTO DELETE UNION INTERSECT UPDATE APPLY WHILE FOR RETURN 
 
 %token QUOTES
@@ -81,9 +82,9 @@ vdecl:
   unified_type VARIABLE { ($1, $2) }
 
 unified_type:
-| LITERAL    { Int }
-| FLOATLIT { Float }
-| BLIT     { Bool }
+| INT    { Int }
+| FLOAT { Float }
+| BOOLEAN { Bool }
 //   | STRING { String }
 //   | GRAPH { GraphType }
 

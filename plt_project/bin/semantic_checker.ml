@@ -350,6 +350,9 @@ let check (statements, functions) =
         raise (Failure ("illegal argument found in " ^ string_of_expr call))
       else
         (fd.rtyp, SFunctionCall(fname, args_types)), env
+    | Return e ->
+      let ((t, e'), env1) = check_expr env e in
+      (t, SReturn (t, e')), env1
     | _ -> failwith "expression not supported"
       in
 
