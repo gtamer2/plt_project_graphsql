@@ -1,4 +1,6 @@
 CREATE GRAPH (
-	[VERTEX ("vertex1"),
-	VERTEX ("vertex2")]
+	[
+    # VERTEX ("vertex1"),
+	# VERTEX ("vertex2"),
+    EDGE ("vertex1" - "vertex2", 0)]
 ) AS g1;
