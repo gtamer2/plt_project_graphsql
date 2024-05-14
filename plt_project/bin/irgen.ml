@@ -220,6 +220,32 @@ let translate stmt_list =
 
   in
 
+  (* ====== Adding edge to graph ====== *)
+
+  let add_edge_to_graph builder graph source_id target_id weight =
+    (* 0. Check if the graph is full *)
+    (* TODO LATER *)
+
+    (* 1. Create a new edge *)
+    let new_graph_elt_ptr = create_edge builder graph source_id target_id weight in
+  
+    (* 2. Add ptr to new edge to graph *)
+    let elements_ptr = L.build_struct_gep graph 0 "elements" builder in
+    let count_ptr = L.build_struct_gep graph 1 "count" builder in
+    let count = L.build_load count_ptr "count" builder in
+    let ptr_to_last_elem = L.build_gep elements_ptr [| count |] "ptr_to_last_elem" builder in
+    ignore (L.build_store elements_ptr ptr_to_last_elem builder);
+    
+    (* 3. Increment the count of elements in the graph *)
+    let one = L.const_int i32_t 1 in
+    let count_plus_one = L.build_add count one "count_plus_one" builder in
+    ignore (L.build_store count_plus_one count_ptr builder);
+  
+    (* 4. On success, return pointer to graph *)
+    graph
+
+  in
+
   (* =================== MAIN FXN & PROGRAM ENTRY POINT =================== *)
   let main_type = L.function_type i32_t [||] in
   let main_func = L.define_function "main" main_type the_module in
