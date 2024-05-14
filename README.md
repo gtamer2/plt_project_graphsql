@@ -1,10 +1,18 @@
-### GraphSQL ###
+### GraphSQL
 
 === Versions Used ===
 LLVM: 14.0.6
 Ocaml: 4.13.1
 
 === Steps to Run ===
+
+```
+brew uninstall llvm
+brew install llvm@14
+brew link --overwrite llvm@14 --force
+llvm-config # version This should output 14.0.6
+opam reinstall llvm.14.0.6
+```
 
 === Automated Testing ===
 Make the test scripts executable:
@@ -23,8 +31,8 @@ There are two cases for testing:
 
 -> If the test file name contains "fail", the test checks for errors (i.e an error is expected to be thrown).
 -> If the test file name contains "test", there are two possibilities:
-    -> The test compiles but the output is different from the expected_outputs.
-    -> The test doesn't compile or throws errors.
+-> The test compiles but the output is different from the expected_outputs.
+-> The test doesn't compile or throws errors.
 
 Three folders are associated with testing:
 tests: Add test files (.tb) here.
