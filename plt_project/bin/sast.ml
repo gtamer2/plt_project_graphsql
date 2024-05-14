@@ -1,18 +1,5 @@
 open Ast  
 
-(* TYPES - START *)
-(* type graph_element_type =
-  | VertexType
-  | EdgeType *)
-
-(* type unified_type = 
-  | Int
-  | Bool
-  | Float
-  | String
-  | GraphType of graph_element_type list *)
-
-(* SEMANTIC AST - START *)
 type svertex = {
   sid: string;
 }

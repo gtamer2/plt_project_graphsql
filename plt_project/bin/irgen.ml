@@ -3,7 +3,7 @@ module A = Ast
 open Sast
 module StringMap = Map.Make(String)
 module FunctionMap = Map.Make(String)
-
+ 
 let translate (stmt_list, functions) =
   (* =================== IMPORTANT GLOBAL STUFF =================== *)
   let context = L.global_context () in
@@ -82,16 +82,13 @@ let translate (stmt_list, functions) =
     (* 3. Return the newly created graph element struct *)
     graph_element
 
-    (* check value at ptr *)
-    (* if value is match, break *)
-    (* increment ptr *)
-    (* load value at ptr *)
-    (* if value is match, break *)
-
   in
 
   let get_or_create_vertex builder graph vertex_id =
     create_vertex builder vertex_id
+    (* NOTE: the commented out code below was almost complete, and would check
+       for vertex conflicts in a graph before allocating more memory. Due to time constraints,
+       we assume the hapy path and leave it commented out *)
 (*    
     (* 1. Check if vertex exists in graph   *)
     (* 1a. Get the elements array from the graph *)
@@ -123,7 +120,6 @@ let translate (stmt_list, functions) =
     let elem = L.build_load ptr_to_elem "elem" builder in
     let tag_ptr = L.build_struct_gep elem 0 "tag" builder in
     let tag = L.build_load tag_ptr "tag" builder in *)
-
 
     in
 
@@ -348,17 +344,8 @@ let translate (stmt_list, functions) =
   let build_function_body fdecl = 
     let (the_function, _) = StringMap.find fdecl.sfname function_decls in
     let builder = L.builder_at_end context (L.entry_block the_function) in
-    (* LLVM insists each basic block end with exactly one "terminator"
-      instruction that transfers control.  This function runs "instr builder"
-      if the current block does not already have a terminator.  Used,
-      e.g., to handle the "fall off the end of the function" case. *)
-    
 
-    (* let ftype = L.function_type i32_t (Array.make (List.length fargs) i32_t) in
-    let the_function = L.define_function fname ftype the_module in
-    let fbuilder = L.builder_at_end context (L.entry_block the_function) in *)
-
-    (* 2b *)
+    (* Construct local vars map, initialized with function's formals *)
     let local_vars =
       let add_formal m (t, n) p =
         L.set_value_name n p;
@@ -375,17 +362,10 @@ let translate (stmt_list, functions) =
 
       List.fold_left2 add_formal StringMap.empty fdecl.sformals
           (Array.to_list (L.params the_function))
-      (* List.fold_left2 add_formal StringMap.empty fdecl.sformals
-          (Array.to_list (L.params the_function)) *)
 
     in
 
-    
-
-    
     let builder, vmap = List.fold_left build_sstmt (builder, local_vars) fdecl.sbody in
-
-    (* Add a return if the last block falls off the end *)
     add_terminal builder (fun builder -> L.build_ret (L.const_int i32_t 0) builder)
 
   in

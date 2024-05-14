@@ -1,20 +1,24 @@
 { open Parser }
 
+(* Standard letter/digit. *)
 let letter = ['a'-'z' 'A'-'Z']
 let digit = ['0'-'9']
 let quote = '\"'
 
 rule tokenize = parse
+(* Whitespace insensitive language *)
   [' ' '\t' '\r' '\n'] { tokenize lexbuf }
+(* Basic arithmetic operators *)
 | '+' { PLUS }
 | '-' { MINUS }
 | '*' { TIMES }
 | '/' { DIVIDE }
 | ';' { SEMICOLON }
 | "." { DOT }
+(* Ints and Floats *)
 | ('-'?)['0'-'9']+ as lit { LITERAL(int_of_string lit) }
-| "vertices" { VERTICES }
-| "edges" { EDGES }
+| '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
+(* Other operators *)
 | eof { EOF }
 | '%' { MODULUS}
 | '<' { LT }
@@ -26,14 +30,16 @@ rule tokenize = parse
 | ":" {COLON}
 | ';' { SEMICOLON }
 | '=' { ASSIGN }
-(* Return types *)
+(* Return types - start *)
 | "Int" { INT }
 | "Float" { FLOAT }
 | "Boolean" { BOOLEAN }
-(* Return types *)
+(* Return types -end *)
+(* Keywords - start *)
+| "vertices" { VERTICES }
+| "edges" { EDGES }
 | "True" { BLIT(true) }
 | "False" { BLIT(false) }
-| '-'?digit*'.'digit* as fltlit { FLOATLIT(float_of_string fltlit) }
 | "return" { RETURN }
 | "LAMBDA" {LAMBDA}
 | "AND" { AND }
@@ -61,7 +67,9 @@ rule tokenize = parse
 | "IF" { IF }
 | "ELSE" { ELSE }
 | "ELIF" { ELIF }
+(* Keywords - end *)
 | letter (letter | digit | '_')* as id { VARIABLE( id ) }
+(* Miscellaneous *)
 | "," {COMMA}
 | "\"" {QUOTES}
 | "(" { LP }

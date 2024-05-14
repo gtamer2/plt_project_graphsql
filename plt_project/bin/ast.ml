@@ -1,20 +1,16 @@
 type binop = Add | Sub | Mul | Div | Mod | Eq | Neq | Gteq | Lteq | Gt | Lt | And | Or
 type uniop = Not | Dot
 
-type vertex = {
-  id: string;
-}
-
-type edge = {
-  source: string;
-  target: string;
-  weight: int; 
-}
-
+(* Graph Types *)
 type graph_element_type =
   | VertexType
   | EdgeType
 
+type graph_element =
+| Vertex of string
+| Edge of string * string * int
+
+(* Unified type interface used in semantic checking and to help with function declarations *)
 type unified_type = 
   | Int
   | Bool 
@@ -22,11 +18,8 @@ type unified_type =
   | String
   | GraphType of graph_element_type list
 
-
-type graph_element =
-| Vertex of string
-| Edge of string * string * int
-
+(* expr has similar meaning as in MicroC *)
+(*  *)
 type expr =
   | Lit of int
   | FloatLit of float 
@@ -35,19 +28,24 @@ type expr =
   | Asn of string * expr 
   | Uniop of uniop * expr
   | Binop of expr * binop * expr
+  (* Graph specific expressions -- start *)
   | Graph of graph_element list
   | GraphAsn of string * expr
   | GraphAccess of string * string
   | GraphOp of string * graph_element list * string
   | GraphQuery of string * string * string
   | GraphUpdate of string * graph_element
+  (* Graph specific expressions -- end *)
   | FunctionCall of string * expr list
   | Return of expr
   | LambaFunction of expr
 
+(* stmt has similar meaning as in MicroC *)
 type stmt = 
   | Block of stmt list
   | Expr of expr
+  (* Note that we split if/elif/else into several cases to help with recursive
+     definitions  *)
   | If of expr * stmt list
   | IfElse of expr * stmt list * stmt list
   | IfElif of expr * stmt list * elif_stmt list * stmt list
@@ -56,10 +54,11 @@ type stmt =
   and
  elif_stmt = expr * stmt list
 
-type stmt_list = stmt list 
-
 type vdecl = unified_type * string
 
+(* Equivalent to microc, but we removed locals. This is beacuse in our language,
+   local variables do not need to be defined at the top of functions. So it would be expensive/
+   convoluted to get a list of local vars in a function definition. *)
 type func_def = {
   rtyp: unified_type;
   fname: string;
@@ -67,14 +66,13 @@ type func_def = {
   body: stmt list;
 }
 
+type stmt_list = stmt list
+
+(* program is the entry point to the AST/SAST *)
 type program = stmt_list * func_def list
 
-  
-let get_graph_elements expr =
-  match expr with
-  | Graph elements -> elements
-  | _ -> []
 
+(* ===== Pretty printer for the AST ===== *)
 let rec string_of_expr = function
   | Lit(l) -> string_of_int l
   | FloatLit(f) -> string_of_float f
