@@ -194,8 +194,13 @@ let translate (stmt_list, functions) =
         Printf.printf "\nExpression output: %s\n" (L.string_of_llvalue e_result);
         (L.const_int i32_t 0), vmap
       | SFunctionCall (function_name, args) ->
-        let zero = L.const_int (L.i32_type context) 0 in
-        zero, vmap
+        let (fdef, fdecl) = StringMap.find function_name function_decls in
+        (* let llargs = List.map (fun arg -> build_expr builder arg vmap) args in *)
+        let llargs = List.map (fun arg -> fst (build_expr builder arg vmap)) args in
+        let result = function_name ^ "_result" in
+        (L.build_call fdef (Array.of_list llargs) result builder), vmap
+      | SReturn e -> let e', vmap' = build_expr builder e vmap in
+        ignore(L.build_ret e' builder); (e', vmap')
       | _ -> raise (Invalid_argument "expression type not supported")
     in
   
@@ -211,7 +216,7 @@ let translate (stmt_list, functions) =
   in
   let build_function_body fdecl = 
     let (the_function, _) = StringMap.find fdecl.sfname function_decls in
-
+    let builder = L.builder_at_end context (L.entry_block the_function) in
     (* LLVM insists each basic block end with exactly one "terminator"
       instruction that transfers control.  This function runs "instr builder"
       if the current block does not already have a terminator.  Used,
