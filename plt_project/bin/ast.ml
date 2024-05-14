@@ -144,3 +144,23 @@ let rec string_of_stmt = function
 and  string_of_stmt_list = function
   | [] -> ""
   | stmt :: rest -> string_of_stmt stmt ^ string_of_stmt_list rest
+
+  and string_of_func_list = function
+  | [] -> ""
+  | func :: rest -> string_of_func func ^ string_of_func_list rest
+
+and string_of_vdecl (typ, name) =
+  match typ with
+  | Int -> "int " ^ name
+  | Bool -> "bool " ^ name
+  | Float -> "float " ^ name
+  | String -> "string " ^ name
+  | GraphType _ -> "graph " ^ name
+
+and string_of_func func = 
+  "FUNCTION: " ^ func.fname ^ "(" ^ String.concat ", " (List.map string_of_vdecl func.formals) ^ ") -> " ^ string_of_stmt_list func.body
+
+
+
+and string_of_proram (stmts, funcs) = 
+  string_of_stmt_list stmts ^ string_of_func_list funcs

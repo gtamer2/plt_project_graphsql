@@ -425,4 +425,24 @@ let check (statements, functions) =
       | _ -> failwith "Statement not supported"
   
   in
-  check_stmt_list init_env statements
+    (* Verify a list of bindings has no duplicate names *)
+    let check_binds (kind : string) (binds : (unified_type * string) list) =
+      let rec dups = function
+          [] -> ()
+        |	((_,n1) :: (_,n2) :: _) when n1 = n2 ->
+          raise (Failure ("duplicate " ^ kind ^ " " ^ n1))
+        | _ :: t -> dups t
+      in dups (List.sort (fun (_,a) (_,b) -> compare a b) binds)
+    in
+  let check_func func =
+    (* Make sure no formals or locals are void or duplicates *)
+    check_binds "formal" func.formals;
+    { srtyp = func.rtyp;
+      sfname = func.fname;
+      sformals = func.formals;
+      sbody = fst (check_stmt_list init_env func.body)
+    }
+  in
+  let checked_prog_statements = fst (check_stmt_list init_env statements) in
+  let checked_functions = List.map check_func functions in
+  (checked_prog_statements, checked_functions)
