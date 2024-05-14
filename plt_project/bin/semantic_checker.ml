@@ -343,13 +343,13 @@ let check (statements, functions) =
       if List.length args != param_length then
         raise (Failure ("expecting " ^ string_of_int param_length ^
                         " arguments in " ^ string_of_expr call))
-      else let check_call (ft, _) e =
-        let (et, e') = check_expr env e in
-        let err = "illegal argument found."
-        in (check_assign ft (fst et) err, e')
-      in
-      let args_list = List.map2 check_call fd.formals args
-      in (fd.rtyp, SFunctionCall(fname, args_list)), env
+      else 
+        let args_types = List.map (fun x -> fst (check_expr env x)) args in
+      let any_mismatch = List.exists (fun (t1, _) -> List.exists (fun (t2, _) -> t1 != t2) args_types) fd.formals in
+      if any_mismatch then
+        raise (Failure ("illegal argument found in " ^ string_of_expr call))
+      else
+        (fd.rtyp, SFunctionCall(fname, args_types)), env
     | _ -> failwith "expression not supported"
       in
 
@@ -425,4 +425,4 @@ let check (statements, functions) =
       | _ -> failwith "Statement not supported"
   
   in
-  check_stmt_list init_env init_program
+  check_stmt_list init_env statements
